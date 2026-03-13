@@ -1,0 +1,45 @@
+@startuml UC_Client_Connecte
+title Cas d'utilisation - Client (Connecte)
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecaseFontSize 12
+skinparam actorFontSize 13
+
+actor "Client\n(Connecte)" as CLIENT_CO
+
+rectangle "Application Immobilier" {
+  package "Espace Client" {
+    usecase "Se connecter" as UC_LOGIN
+    usecase "Consulter les biens\ndisponibles" as UC_BROWSE
+    usecase "Filtrer les biens\n(type, categorie, statut)" as UC_FILTER
+    usecase "Voir la fiche\nd'un bien" as UC_VIEW_BIEN
+    usecase "Soumettre une\ndemande de visite" as UC_VISITE
+    usecase "Soumettre une\ndemande de location" as UC_LOCATION
+    usecase "Suivre ses demandes" as UC_SUIVI_DEMANDE
+    usecase "Consulter son bail" as UC_BAIL
+    usecase "Voir ses paiements" as UC_PAIEMENTS
+    usecase "Telecharger ses\nquittances" as UC_QUITTANCE
+    usecase "Recevoir des\nnotifications" as UC_NOTIF_CLIENT
+    usecase "Mettre a jour son\nprofil" as UC_PROFIL
+  }
+}
+
+CLIENT_CO --> UC_LOGIN
+CLIENT_CO --> UC_BROWSE
+CLIENT_CO --> UC_FILTER
+CLIENT_CO --> UC_VIEW_BIEN
+CLIENT_CO --> UC_VISITE
+CLIENT_CO --> UC_LOCATION
+CLIENT_CO --> UC_SUIVI_DEMANDE
+CLIENT_CO --> UC_BAIL
+CLIENT_CO --> UC_PAIEMENTS
+CLIENT_CO --> UC_QUITTANCE
+CLIENT_CO --> UC_NOTIF_CLIENT
+CLIENT_CO --> UC_PROFIL
+
+UC_VISITE .> UC_LOGIN : <<include>>
+UC_LOCATION .> UC_LOGIN : <<include>>
+UC_QUITTANCE .> UC_PAIEMENTS : <<include>>
+
+@enduml

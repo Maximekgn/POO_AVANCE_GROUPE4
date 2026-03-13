@@ -1,0 +1,34 @@
+@startuml DS08_Creation_Bail
+title DS08 - Creation de Bail apres Acceptation Proprietaire
+
+autonumber
+actor "Proprietaire/Agence" as PROPRIO
+boundary "Espace Proprietaire" as UI
+control "BailController" as BAILC
+control "BailService" as BAILS
+database "DemandeRepository" as DREPO
+database "BailRepository" as BAREPO
+database "BienRepository" as BREPO
+control "NotificationService" as NOTIF
+
+PROPRIO -> UI : Cree un bail pour une demande acceptee
+UI -> BAILC : POST /baux
+BAILC -> BAILS : creerBail(proprioId, demandeId, dates, loyer, depot)
+BAILS -> DREPO : findById(demandeId)
+alt Demande non eligible
+  DREPO --> BAILS : statut != ACCEPTEE_PROPRIETAIRE
+  BAILS --> BAILC : erreur DEMANDE_NON_ELIGIBLE
+  BAILC --> UI : 409 Conflict
+else Demande eligible
+  DREPO --> BAILS : demande valide
+  BAILS -> BAREPO : save(Bail)
+  BAREPO --> BAILS : bail cree
+  BAILS -> BREPO : update(bienId, statut=LOUE)
+  BREPO --> BAILS : bien mis a jour
+  BAILS -> NOTIF : notifierClient(Bail cree)
+  NOTIF --> BAILS : notification envoyee
+  BAILS --> BAILC : creation OK
+  BAILC --> UI : 201 Created + bailId
+  UI --> PROPRIO : Bail cree
+end
+@enduml

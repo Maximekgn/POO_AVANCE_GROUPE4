@@ -1,0 +1,272 @@
+@startuml DiagrammeClasses_ImmobilierApp_v4
+title Diagramme de Classes — Application Location & Vente Immobilier (v4)
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam packageStyle rectangle
+
+' ─────────────────────────────────────────
+' UTILISATEURS
+' ─────────────────────────────────────────
+package "Utilisateurs" {
+
+  class Utilisateur {
+    - id : Long
+    - nom : String
+    - prenom : String
+    - email : String
+    - telephone : String
+    - motDePasse : String
+    - role : RoleUtilisateur
+    - dateCreation : DateTime
+    + seConnecter()
+    + seDeconnecter()
+    + mettreAJourProfil()
+  }
+
+  enum RoleUtilisateur {
+    CLIENT
+    PROPRIETAIRE
+    AGENCE
+    ADMIN
+  }
+
+  class Garant {
+    - id : Long
+    - nom : String
+    - prenom : String
+    - email : String
+    - telephone : String
+    - pieceIdentite : String
+  }
+
+  Utilisateur --> RoleUtilisateur : possède
+}
+
+' ─────────────────────────────────────────
+' PATRIMOINE
+' ─────────────────────────────────────────
+package "Gestion du Patrimoine" {
+
+  class Categorie {
+    - id : Long
+    - libelle : String
+  }
+
+  class Bien {
+    - id : Long
+    - titre : String
+    - adresse : String
+    - description : String
+    - photos : List<String>
+    - equipements : List<String>
+    - loyerHC : Double
+    - charges : Double
+    - geolocalisation : String
+    - statut : StatutBien
+    + getStatut() : StatutBien
+    + changerStatut(s : StatutBien)
+  }
+
+  enum StatutBien {
+    DISPONIBLE
+    LOUE
+    EN_TRAVAUX
+  }
+
+  Bien --> Categorie : appartient à
+  Bien --> StatutBien : a un statut
+  Utilisateur "1" --> "0..*" Bien : gère
+}
+
+' ─────────────────────────────────────────
+' DEMANDES
+' ─────────────────────────────────────────
+package "Demandes" {
+
+  abstract class Demande {
+    - id : Long
+    - dateSoumission : DateTime
+    - messageClient : String
+    - statut : StatutDemande
+    - dateValidationAdmin : DateTime
+    - motifRefusAdmin : String
+    - dateDecisionProprietaire : DateTime
+    - motifRefusProprietaire : String
+    + soumettre()
+    + annuler()
+  }
+
+  class DemandeVisite {
+    - dateVisiteSouhaitee : DateTime
+  }
+
+  class DemandeLocation {
+    - pieceIdentite : String
+    - justificatifRevenu : String
+  }
+
+  enum StatutDemande {
+    SOUMISE
+    VALIDEE_ADMIN
+    REFUSEE_ADMIN
+    TRANSMISE_PROPRIETAIRE
+    ACCEPTEE_PROPRIETAIRE
+    REFUSEE_PROPRIETAIRE
+    ANNULEE_CLIENT
+  }
+
+  Demande <|-- DemandeVisite
+  Demande <|-- DemandeLocation
+
+  Demande --> StatutDemande : a un statut
+  Demande "1" --> "1" Bien : concerne
+  Demande "0..*" --> "1" Utilisateur : soumise par (role=CLIENT)
+  Demande "0..*" --> "0..1" Utilisateur : validée/refusée par (role=ADMIN)
+  Demande "0..*" --> "0..1" Utilisateur : traitée par (role=PROPRIETAIRE/AGENCE)
+  DemandeLocation "1" --> "0..1" Garant : accompagnée de
+}
+
+' ─────────────────────────────────────────
+' LOCATIONS
+' ─────────────────────────────────────────
+package "Gestion des Locations" {
+
+  class Bail {
+    - id : Long
+    - dateEntree : Date
+    - dateSortie : Date
+    - revisionAnnuellePct : Double
+    - depotGarantie : Double
+    - loyerMensuel : Double
+    + calculerRevisionLoyer()
+    + estExpireBientot() : Boolean
+  }
+
+  Utilisateur "1" -- "0..*" Bail : signe (role=CLIENT)
+  Bail "1" --> "1" Bien : concerne
+  DemandeLocation "1" --> "0..1" Bail : génère
+}
+
+' ─────────────────────────────────────────
+' PAIEMENTS
+' ─────────────────────────────────────────
+package "Paiements" {
+
+  class Paiement {
+    - id : Long
+    - montant : Double
+    - datePaiement : Date
+    - statut : StatutPaiement
+    - modePaiement : String
+    + valider()
+    + annuler()
+  }
+
+  enum StatutPaiement {
+    EN_ATTENTE
+    VALIDE
+    IMPAYE
+    ANNULE
+  }
+
+  class Quittance {
+    - id : Long
+    - dateEmission : Date
+    - fichierPDF : String
+    + generer()
+    + envoyerParMail()
+  }
+
+  Paiement --> StatutPaiement : a un statut
+  Paiement "1" --> "1" Bail : associé à
+  Paiement "1" --> "0..1" Quittance : génère
+  Quittance "0..*" --> "1" Utilisateur : destinée à (role=CLIENT)
+}
+
+' ─────────────────────────────────────────
+' COMPTABILITÉ
+' ─────────────────────────────────────────
+package "Module Comptabilité" {
+
+  class Revenu {
+    - id : Long
+    - montant : Double
+    - dateEncaissement : Date
+    - description : String
+  }
+
+  class Depense {
+    - id : Long
+    - montant : Double
+    - dateDepense : Date
+    - typeDepense : TypeDepense
+    - description : String
+    - facturePDF : String
+  }
+
+  enum TypeDepense {
+    TRAVAUX
+    TAXES
+    FRAIS_AGENCE
+    COPROPRIETE
+    AUTRE
+  }
+
+  class BalanceComptable {
+    - id : Long
+    - periode : String
+    - totalRevenus : Double
+    - totalDepenses : Double
+    - beneficeNet : Double
+    + calculerBeneficeNet()
+    + exporterFormulaire2044() : File
+  }
+
+  Depense --> TypeDepense : de type
+  Revenu "0..*" --> "1" Bien : lié à
+  Depense "0..*" --> "1" Bien : lié à
+  BalanceComptable "1" --> "1" Bien : calculée pour
+  BalanceComptable o-- Revenu
+  BalanceComptable o-- Depense
+}
+
+' ─────────────────────────────────────────
+' NOTIFICATIONS
+' ─────────────────────────────────────────
+package "Notifications & Alertes" {
+
+  class Notification {
+    - id : Long
+    - type : TypeNotification
+    - message : String
+    - dateEnvoi : DateTime
+    - estLue : Boolean
+    + envoyer()
+    + marquerCommeLue()
+  }
+
+  enum TypeNotification {
+    NOUVELLE_DEMANDE
+    DEMANDE_VALIDEE_ADMIN
+    DEMANDE_REFUSEE_ADMIN
+    DEMANDE_ACCEPTEE_PROPRIETAIRE
+    DEMANDE_REFUSEE_PROPRIETAIRE
+    LOYER_IMPAYE
+    FIN_BAIL_PROCHE
+    QUITTANCE_GENEREE
+  }
+
+  Notification --> TypeNotification : de type
+  Notification --> Utilisateur : destinée à
+  Notification --> Bien : concerne
+  Notification --> Demande : liée à
+}
+
+note bottom of Demande
+Flux obligatoire du cahier des charges :
+Client soumet -> Admin valide/refuse ->
+puis seulement Propriétaire traite.
+end note
+
+@enduml

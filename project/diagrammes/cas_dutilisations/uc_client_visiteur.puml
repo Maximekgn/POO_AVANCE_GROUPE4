@@ -1,0 +1,27 @@
+@startuml UC_Client_Visiteur
+title Cas d'utilisation - Client (Visiteur)
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecaseFontSize 12
+skinparam actorFontSize 13
+
+actor "Client\n(Visiteur)" as CLIENT
+
+rectangle "Application Immobilier" {
+  package "Acces Public" {
+    usecase "Consulter les biens\ndisponibles" as UC_BROWSE
+    usecase "Filtrer les biens\n(type, categorie, statut)" as UC_FILTER
+    usecase "Voir la fiche\nd'un bien" as UC_VIEW_BIEN
+    usecase "Creer un compte" as UC_REGISTER
+    usecase "Se connecter" as UC_LOGIN
+  }
+}
+
+CLIENT --> UC_BROWSE
+CLIENT --> UC_FILTER
+CLIENT --> UC_VIEW_BIEN
+CLIENT --> UC_REGISTER
+CLIENT --> UC_LOGIN
+
+@enduml

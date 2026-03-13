@@ -1,0 +1,52 @@
+@startuml DS01_Inscription_Connexion
+title DS01 - Inscription et Connexion Client
+
+autonumber
+actor Client
+boundary "Web App" as UI
+control "AuthController" as AUTHC
+control "AuthService" as AUTHS
+database "UtilisateurRepository" as UREPO
+control "TokenService" as TOK
+control "MailService" as MAIL
+
+Client -> UI : Remplit formulaire inscription
+UI -> AUTHC : POST /auth/register
+AUTHC -> AUTHS : register(payload)
+AUTHS -> UREPO : findByEmail(email)
+alt Email deja utilise
+  UREPO --> AUTHS : utilisateur trouve
+  AUTHS --> AUTHC : erreur EMAIL_DEJA_UTILISE
+  AUTHC --> UI : 409 Conflict
+  UI --> Client : Message d'erreur
+else Email disponible
+  UREPO --> AUTHS : aucun utilisateur
+  AUTHS -> UREPO : save(utilisateur role=CLIENT)
+  UREPO --> AUTHS : utilisateur cree
+  AUTHS -> TOK : genererTokenActivation(userId)
+  TOK --> AUTHS : tokenActivation
+  AUTHS -> MAIL : envoyerMailActivation(email, token)
+  MAIL --> AUTHS : accuse envoi
+  AUTHS --> AUTHC : inscription OK
+  AUTHC --> UI : 201 Created
+  UI --> Client : Compte cree
+end
+
+== Connexion ==
+Client -> UI : Saisit email + mot de passe
+UI -> AUTHC : POST /auth/login
+AUTHC -> AUTHS : login(credentials)
+AUTHS -> UREPO : findByEmail(email)
+alt Identifiants invalides
+  UREPO --> AUTHS : utilisateur absent ou mdp invalide
+  AUTHS --> AUTHC : erreur AUTH_FAILED
+  AUTHC --> UI : 401 Unauthorized
+else Identifiants valides
+  UREPO --> AUTHS : utilisateur valide
+  AUTHS -> TOK : genererAccessToken(userId, role)
+  TOK --> AUTHS : accessToken
+  AUTHS --> AUTHC : session ouverte
+  AUTHC --> UI : 200 OK + token
+  UI --> Client : Connecte
+end
+@enduml

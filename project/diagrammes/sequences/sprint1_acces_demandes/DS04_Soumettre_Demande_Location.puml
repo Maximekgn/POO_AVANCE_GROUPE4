@@ -1,0 +1,36 @@
+@startuml DS04_Soumettre_Demande_Location
+title DS04 - Soumission Demande de Location
+
+autonumber
+actor Client
+boundary "Web App" as UI
+control "DemandeController" as DEMC
+control "DemandeService" as DEMS
+database "BienRepository" as BREPO
+database "DemandeRepository" as DREPO
+database "GarantRepository" as GREPO
+control "NotificationService" as NOTIF
+
+Client -> UI : Soumet dossier (identite, revenus, garant)
+UI -> DEMC : POST /demandes/location
+DEMC -> DEMS : creerDemandeLocation(payload)
+DEMS -> BREPO : findById(payload.bienId)
+alt Bien indisponible
+  BREPO --> DEMS : bien statut != DISPONIBLE
+  DEMS --> DEMC : erreur BIEN_NON_DISPONIBLE
+  DEMC --> UI : 409 Conflict
+else Bien disponible
+  BREPO --> DEMS : bien valide
+  opt Garant renseigne
+    DEMS -> GREPO : save(garant)
+    GREPO --> DEMS : garantId
+  end
+  DEMS -> DREPO : save(DemandeLocation statut=SOUMISE)
+  DREPO --> DEMS : demande creee
+  DEMS -> NOTIF : notifierAdmin(NOUVELLE_DEMANDE)
+  NOTIF --> DEMS : notification envoyee
+  DEMS --> DEMC : demande enregistree
+  DEMC --> UI : 201 Created
+  UI --> Client : Demande envoyee (en attente admin)
+end
+@enduml

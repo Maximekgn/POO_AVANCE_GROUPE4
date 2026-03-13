@@ -1,0 +1,47 @@
+@startuml DS07_Decision_Proprietaire
+title DS07 - Decision Proprietaire/Agence sur Demande
+
+autonumber
+actor "Proprietaire/Agence" as PROPRIO
+boundary "Espace Proprietaire" as UI
+control "ProprietaireDemandeController" as PDC
+control "ProprietaireDemandeService" as PDS
+database "DemandeRepository" as DREPO
+database "BienRepository" as BREPO
+control "NotificationService" as NOTIF
+
+PROPRIO -> UI : Ouvre demande transmise
+UI -> PDC : POST /proprietaire/demandes/{id}/decision
+PDC -> PDS : traiterDemande(proprioId, demandeId, decision, motif)
+PDS -> DREPO : findById(demandeId)
+alt Demande inexistante
+  DREPO --> PDS : null
+  PDS --> PDC : erreur DEMANDE_INTROUVABLE
+  PDC --> UI : 404 Not Found
+else Demande trouvee
+  DREPO --> PDS : demande
+  alt statut != TRANSMISE_PROPRIETAIRE
+    PDS --> PDC : erreur STATUT_INVALIDE
+    PDC --> UI : 409 Conflict
+  else statut valide
+    PDS -> BREPO : verifierGestionBien(proprioId, demande.bienId)
+    BREPO --> PDS : autorisation OK
+    alt Decision = ACCEPTER
+      PDS -> DREPO : update(statut=ACCEPTEE_PROPRIETAIRE, dateDecisionProprietaire=now)
+      DREPO --> PDS : demande acceptee
+      PDS -> NOTIF : notifierClient(DEMANDE_ACCEPTEE_PROPRIETAIRE)
+      NOTIF --> PDS : notification envoyee
+      PDS --> PDC : decision enregistree
+      PDC --> UI : 200 OK
+    else Decision = REFUSER
+      PDS -> DREPO : update(statut=REFUSEE_PROPRIETAIRE, motifRefusProprietaire=motif, dateDecisionProprietaire=now)
+      DREPO --> PDS : demande refusee
+      PDS -> NOTIF : notifierClient(DEMANDE_REFUSEE_PROPRIETAIRE, motif)
+      NOTIF --> PDS : notification envoyee
+      PDS --> PDC : decision enregistree
+      PDC --> UI : 200 OK
+    end
+    UI --> PROPRIO : Traitement termine
+  end
+end
+@enduml
