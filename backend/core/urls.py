@@ -1,22 +1,17 @@
 """
 URL configuration for core project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+Toutes les routes API sont préfixées par /api/.
 """
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
+    # Interface d'administration Django
     path('admin/', admin.site.urls),
+
+    # ── API ImmobilierPro ──────────────────────────────────────────────────────
+    # Toutes les routes de l'app immobilier sont accessibles sous /api/
+    # Ex: POST /api/auth/register, POST /api/auth/login, etc.
+    path('api/', include('immobilier.urls', namespace='immobilier')),
 ]
