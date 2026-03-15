@@ -1,0 +1,43 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+  {% if signe_par_tous %}🎉 Bail signé{% else %}✍️ Signature de bail requise{% endif %} — ImmobilierPro
+{% endblock %}
+
+{% block body %}
+  <p class="greeting">
+    {% if signe_par_tous %}🎉 Votre bail est officiellement signé !{% else %}✍️ Votre signature est requise{% endif %}
+  </p>
+  <div class="content">
+    <p>Bonjour <strong>{{ prenom }}</strong>,</p>
+
+    {% if signe_par_tous %}
+      <p>Les deux parties ont signé le bail. Votre bail est maintenant actif et pleinement valide.</p>
+    {% else %}
+      <p>Le bail pour le bien <strong>{{ reference_bien }}</strong> est en attente de votre signature. Veuillez vous connecter pour finaliser cette étape.</p>
+    {% endif %}
+
+    <div class="info-box">
+      <p>🏠 Bien : <strong>{{ adresse_bien }}</strong><br/>
+      📋 Numéro de bail : <strong>{{ numero_bail }}</strong><br/>
+      📅 Date d'entrée : <strong>{{ date_entree }}</strong><br/>
+      💶 Loyer mensuel : <strong>{{ loyer }} €/mois</strong></p>
+    </div>
+
+    {% if not signe_par_tous %}
+      <p>Cette action est requise pour que votre bail puisse prendre effet.</p>
+    {% else %}
+      <p>Vous pouvez télécharger votre exemplaire du bail signé depuis votre espace personnel.</p>
+    {% endif %}
+  </div>
+
+  <div class="cta-wrapper">
+    <a href="{{ url_bail }}" class="cta-btn">
+      {% if signe_par_tous %}Télécharger mon bail{% else %}Signer mon bail{% endif %}
+    </a>
+  </div>
+
+  <div class="content">
+    <p>Cordialement,<br/><strong>L'équipe ImmobilierPro</strong></p>
+  </div>
+{% endblock %}

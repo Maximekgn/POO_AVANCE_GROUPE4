@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Immobilier Pro{% endblock %}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f4f8; color: #2d3748; }
+    .wrapper { max-width: 620px; margin: 30px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #1A4A8A 0%, #2563EB 100%); padding: 32px 40px; text-align: center; }
+    .header .logo { font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: 1px; }
+    .header .logo span { color: #93C5FD; }
+    .header .tagline { color: #BFDBFE; font-size: 13px; margin-top: 4px; }
+
+    /* Body */
+    .body { padding: 40px 40px 24px; }
+    .greeting { font-size: 22px; font-weight: 600; color: #1A4A8A; margin-bottom: 16px; }
+    .content { font-size: 15px; line-height: 1.7; color: #4a5568; }
+    .content p { margin-bottom: 12px; }
+
+    /* Alert box */
+    .info-box { background: #EFF6FF; border-left: 4px solid #2563EB; border-radius: 6px; padding: 16px 20px; margin: 20px 0; }
+    .info-box p { font-size: 14px; color: #1e40af; margin: 0; }
+
+    /* CTA Button */
+    .cta-wrapper { text-align: center; margin: 28px 0; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #1A4A8A, #2563EB); color: #ffffff !important; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+
+    /* Footer */
+    .footer { background: #f7fafc; padding: 20px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #a0aec0; line-height: 1.6; }
+    .footer a { color: #2563EB; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">Immobilier<span>Pro</span></div>
+      <div class="tagline">Votre gestionnaire immobilier de confiance</div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+      {% block body %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <hr class="divider" />
+      <p>Vous recevez cet email car vous êtes inscrit sur <a href="#">ImmobilierPro</a>.<br/>
+      Si vous n'êtes pas à l'origine de cette action, ignorez ce message.<br/>
+      &copy; {{ year }} ImmobilierPro &mdash; Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>

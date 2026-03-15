@@ -1,0 +1,42 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+  {% if impaye %}⚠️ Loyer impayé{% else %}📅 Rappel de paiement{% endif %} — ImmobilierPro
+{% endblock %}
+
+{% block body %}
+  <p class="greeting">
+    {% if impaye %}⚠️ Loyer impayé — Action requise{% else %}📅 Rappel : votre loyer est bientôt dû{% endif %}
+  </p>
+  <div class="content">
+    <p>Bonjour <strong>{{ prenom }}</strong>,</p>
+    {% if impaye %}
+      <p>Votre loyer du mois de <strong>{{ mois_echeance }}</strong> est en retard de <strong>{{ nb_jours_retard }} jour(s)</strong>.</p>
+    {% else %}
+      <p>Votre prochain loyer arrive à échéance le <strong>{{ date_echeance }}</strong>.</p>
+    {% endif %}
+
+    <div class="info-box">
+      <p>🏠 Bien : <strong>{{ adresse_bien }}</strong><br/>
+      📋 Référence bail : <strong>{{ numero_bail }}</strong><br/>
+      💶 Montant dû : <strong>{{ montant }} €</strong><br/>
+      📅 Date d'échéance : <strong>{{ date_echeance }}</strong>
+      {% if impaye %}<br/>🔴 Jours de retard : <strong>{{ nb_jours_retard }}</strong>{% endif %}
+      </p>
+    </div>
+
+    {% if impaye %}
+      <p>Merci de régulariser votre situation dans les plus brefs délais afin d'éviter des pénalités supplémentaires.</p>
+    {% else %}
+      <p>Pensez à effectuer votre virement avant la date d'échéance pour éviter tout retard.</p>
+    {% endif %}
+  </div>
+
+  <div class="cta-wrapper">
+    <a href="{{ url_paiements }}" class="cta-btn">Consulter mes paiements</a>
+  </div>
+
+  <div class="content">
+    <p>Cordialement,<br/><strong>L'équipe ImmobilierPro</strong></p>
+  </div>
+{% endblock %}

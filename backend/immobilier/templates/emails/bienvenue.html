@@ -1,0 +1,29 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Bienvenue sur ImmobilierPro{% endblock %}
+
+{% block body %}
+  <p class="greeting">Bienvenue, {{ prenom }} ! 🎉</p>
+  <div class="content">
+    <p>Votre compte <strong>ImmobilierPro</strong> a été créé avec succès. Nous sommes ravis de vous compter parmi nos utilisateurs.</p>
+    <p>Vous pouvez dès à présent vous connecter et profiter de toutes les fonctionnalités de notre plateforme selon votre profil :</p>
+
+    <div class="info-box">
+      <p>
+        📧 Email : <strong>{{ email }}</strong><br/>
+        👤 Rôle : <strong>{{ role }}</strong>
+      </p>
+    </div>
+
+    <p>Pour commencer, cliquez sur le bouton ci-dessous et complétez votre profil.</p>
+  </div>
+
+  <div class="cta-wrapper">
+    <a href="{{ url_connexion }}" class="cta-btn">Accéder à mon espace</a>
+  </div>
+
+  <div class="content">
+    <p>Si vous avez des questions, notre équipe est disponible pour vous accompagner.</p>
+    <p>À très bientôt,<br/><strong>L'équipe ImmobilierPro</strong></p>
+  </div>
+{% endblock %}

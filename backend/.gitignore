@@ -1,1 +1,10 @@
-venv
+venv/
+.env
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+*.log
+.DS_Store
+models_old.py.bak

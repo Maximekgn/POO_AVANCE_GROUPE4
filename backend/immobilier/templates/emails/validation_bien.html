@@ -1,0 +1,37 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+  {% if valide %}Bien validé{% else %}Bien refusé{% endif %} — ImmobilierPro
+{% endblock %}
+
+{% block body %}
+  <p class="greeting">
+    {% if valide %}✅ Votre bien a été validé{% else %}❌ Votre bien a été refusé{% endif %}
+  </p>
+  <div class="content">
+    <p>Bonjour <strong>{{ prenom }}</strong>,</p>
+
+    {% if valide %}
+      <p>Votre bien <strong>{{ reference_bien }}</strong> situé à <strong>{{ adresse_bien }}</strong> a été <strong>validé</strong> par notre équipe de modération. Il est maintenant visible sur la plateforme.</p>
+      <div class="info-box">
+        <p>🏠 Référence : <strong>{{ reference_bien }}</strong><br/>
+        📍 Adresse : <strong>{{ adresse_bien }}</strong><br/>
+        💶 Loyer : <strong>{{ loyer }} €/mois</strong></p>
+      </div>
+    {% else %}
+      <p>Votre bien <strong>{{ reference_bien }}</strong> situé à <strong>{{ adresse_bien }}</strong> n'a pas pu être validé pour la raison suivante :</p>
+      <div class="info-box">
+        <p>📋 Motif de refus : <strong>{{ motif_refus }}</strong></p>
+      </div>
+      <p>Vous pouvez corriger les informations et soumettre à nouveau votre bien dans votre espace propriétaire.</p>
+    {% endif %}
+  </div>
+
+  <div class="cta-wrapper">
+    <a href="{{ url_mon_espace }}" class="cta-btn">Voir mon espace propriétaire</a>
+  </div>
+
+  <div class="content">
+    <p>Cordialement,<br/><strong>L'équipe ImmobilierPro</strong></p>
+  </div>
+{% endblock %}
