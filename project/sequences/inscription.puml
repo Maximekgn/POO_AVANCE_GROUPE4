@@ -1,0 +1,98 @@
+@startuml diagramme_sequence_inscription
+
+' --- Configuration du style ---
+skinparam maxMessageSize 180
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam sequenceMessageAlign center
+autonumber
+
+' --- Définition des Acteurs et Systèmes ---
+actor "Utilisateur\n(Client / Propriétaire)" as User
+participant "Interface Web\n(Frontend)" as Front
+participant "API REST\n(Backend Django)" as API
+database "Base de Données\n(PostgreSQL)" as DB
+participant "Serveur SMTP\n(Ex: Mailjet / SendGrid)" as SMTP
+
+' ==========================================
+== Phase 1 : Inscription de l'Utilisateur ==
+' ==========================================
+
+User -> Front : Remplit le formulaire d'inscription\n(nom, prenom, email, mdp, telephone, role)
+activate Front
+
+Front -> Front : Validation côté client\n(Format email, force du mdp, champs requis)
+
+Front -> API : POST /api/auth/register \n{\n "nom": "Dupont",\n "email": "user@mail.com",\n "motDePasse": "********",\n "role": "CLIENT"\n}
+activate API
+
+API -> DB : SELECT id FROM Utilisateur WHERE email = "user@mail.com"
+activate DB
+DB --> API : Résultat : 0 ligne (Email disponible)
+deactivate DB
+
+API -> API : Hashage sécurisé du mot de passe\n(ex: algorithme Argon2 ou PBKDF2)
+
+API -> DB : INSERT INTO Utilisateur (..., actif, dateCreation)\nVALUES (..., False, NOW())
+activate DB
+DB --> API : Retourne l'ID du nouvel utilisateur
+deactivate DB
+
+API -> API : Génération du Token JWT de validation\n(Lié à l'ID de l'utilisateur, expire dans 24h)
+
+' Envoi de l'email en asynchrone (pour ne pas bloquer la réponse UI)
+API -> SMTP : [Processus Asynchrone / Celery]\nDemande d'envoi d'email avec lien\nhttps://mon-app.com/verify-email?token=eyJhb...
+activate SMTP
+
+API --> Front : HTTP 201 Created \n{ "message": "Compte créé. Vérifiez vos emails." }
+deactivate API
+
+Front --> User : Affiche l'écran : "Inscription réussie.\nUn email de confirmation vous a été envoyé."
+deactivate Front
+
+' ==========================================
+== Phase 2 : Réception de l'email et Clic ==
+' ==========================================
+
+SMTP --> User : Délivre l'email de bienvenue dans la boîte mail
+deactivate SMTP
+
+User -> User : Ouvre l'email et clique sur le bouton "Valider mon compte"
+
+User -> Front : Accède à l'URL :\n /verify-email?token=eyJhb...
+activate Front
+Front -> Front : Extrait le paramètre "token" de l'URL
+
+' ==========================================
+== Phase 3 : Validation et Activation du compte ==
+' ==========================================
+
+Front -> API : POST /api/auth/verify-email \n{ "token": "eyJhb..." }
+activate API
+
+API -> API : Vérifie la validité et la signature du Token
+
+alt Token Valide (Non expiré et non altéré)
+    API -> DB : SELECT id, actif FROM Utilisateur WHERE id = {id_extrait}
+    activate DB
+    DB --> API : Retourne Utilisateur (actif = False)
+    
+    API -> DB : UPDATE Utilisateur SET actif = True WHERE id = {id_extrait}
+    DB --> API : Confirmation de mise à jour
+    deactivate DB
+    
+    API --> Front : HTTP 200 OK \n{ "message": "Compte activé avec succès" }
+    
+    Front --> User : Affiche : "Votre compte est activé !"
+    Front -> Front : Redirige vers la page de Connexion (/login)
+
+else Token Invalide ou Expiré
+    API --> Front : HTTP 400 Bad Request \n{ "error": "Le lien est invalide ou a expiré" }
+    
+    Front --> User : Affiche : "Lien expiré. Veuillez demander\nun nouveau lien d'activation."
+end
+
+deactivate API
+deactivate Front
+
+@enduml

@@ -1,0 +1,84 @@
+from django.db import models
+from .enums import StatutDossierEnum, StatutBailEnum, TypeSignataireEnum
+from .utilisateurs import Client, Utilisateur
+from .patrimoine import Bien
+
+class Dossier(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='dossiers')
+    bien = models.ForeignKey(Bien, on_delete=models.CASCADE, related_name='dossiers_candidats')
+    date_demande = models.DateTimeField(auto_now_add=True)
+    statut = models.CharField(max_length=50, choices=StatutDossierEnum.choices, default=StatutDossierEnum.SOUMIS)
+    note_proprietaire = models.TextField(blank=True, null=True)
+    motif_refus = models.TextField(blank=True, null=True)
+    date_traitement = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Dossier {self.id} - {self.client} pour Bien {self.bien}"
+
+    def mettreEnEtude(self) -> None: pass
+    def valider(self) -> None: pass
+    def refuser(self, motif: str) -> None: pass
+    def ajouterDocument(self, doc) -> None: pass
+    def supprimerDocument(self, docId: int) -> None: pass
+    def listerDocuments(self) -> list: return []
+    def estComplet(self) -> bool: return False
+    def getDocumentsManquants(self) -> list: return []
+    def genererBail(self): pass
+
+class Bail(models.Model):
+    bien = models.ForeignKey(Bien, on_delete=models.RESTRICT, related_name='baux')
+    client = models.ForeignKey(Client, on_delete=models.RESTRICT, related_name='baux')
+    dossier = models.OneToOneField(Dossier, on_delete=models.SET_NULL, null=True, blank=True, related_name='bail_resultant')
+    numero_bail = models.CharField(max_length=100, unique=True)
+    date_entree = models.DateField()
+    date_sortie = models.DateField(null=True, blank=True)
+    date_signature_proprietaire = models.DateTimeField(null=True, blank=True)
+    date_signature_client = models.DateTimeField(null=True, blank=True)
+    loyer_actuel = models.DecimalField(max_digits=10, decimal_places=2)
+    depot_garantie = models.DecimalField(max_digits=10, decimal_places=2)
+    statut = models.CharField(max_length=50, choices=StatutBailEnum.choices, default=StatutBailEnum.BROUILLON)
+
+    class Meta:
+        verbose_name_plural = 'Baux'
+
+    def __str__(self):
+        return f"Bail {self.numero_bail} - {self.bien}"
+
+    def signerParProprietaire(self, imageSignature: str) -> None: pass
+    def signerParClient(self, imageSignature: str) -> None: pass
+    def estSigneParProprietaire(self) -> bool: return False
+    def estSigneParClient(self) -> bool: return False
+    def estSigneParTous(self) -> bool: return False
+    def getSignatureProprietaire(self): pass
+    def getSignatureClient(self): pass
+    def activer(self) -> None: pass
+    def resilier(self, motif: str) -> None: pass
+    def renouveler(self, nouvelleDateSortie) -> None: pass
+    def expirer(self) -> None: pass
+    def estActif(self) -> bool: return False
+    def estExpirantBientot(self, joursAvant: int) -> bool: return False
+    def getDureeRestante(self) -> int: return 0
+    def genererEcheancier(self) -> list: return []
+    def calculerTotalPercu(self) -> float: return 0.0
+    def calculerTotalDu(self) -> float: return 0.0
+    def getSoldeLocataire(self) -> float: return 0.0
+    def getImpayes(self) -> list: return []
+    def getProchaineEcheance(self): pass
+    def genererDocumentBail(self): pass
+
+class SignatureBail(models.Model):
+    bail = models.ForeignKey(Bail, on_delete=models.CASCADE, related_name='signatures')
+    utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='signatures_baux')
+    type_signataire = models.CharField(max_length=50, choices=TypeSignataireEnum.choices)
+    image_signature_url = models.URLField(max_length=500, blank=True, null=True)
+    image_signature = models.ImageField(upload_to='signatures/', blank=True, null=True)
+    ip_adresse = models.GenericIPAddressField(null=True, blank=True)
+    date_signature = models.DateTimeField(auto_now_add=True)
+    hash_integrite = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"Signature {self.type_signataire} pour Bail {self.bail_id}"
+
+    def verifierIntegrite(self) -> bool: return True
+    def getImageSignature(self): pass
+    def estValide(self) -> bool: return True
