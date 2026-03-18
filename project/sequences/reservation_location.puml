@@ -1,0 +1,114 @@
+@startuml diagramme_sequence_reservation_location
+
+' --- Configuration du style ---
+skinparam maxMessageSize 180
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam sequenceMessageAlign center
+autonumber
+
+' --- Définition des Acteurs et Systèmes ---
+actor "Client" as Client
+participant "Interface Web\n(Frontend)" as Front
+participant "API REST\n(Backend Django)" as API
+database "Base de Données\n(PostgreSQL)" as DB
+actor "Propriétaire / Admin" as Owner
+
+' ==========================================
+== Phase 1 : Demande de Visite / Réservation ==
+' ==========================================
+
+Client -> Front : Consulte les détails d'un bien immobilier
+activate Front
+
+Client -> Front : Clique sur "Demander une visite" ou "Réserver"
+Front -> Front : Affiche le formulaire de demande\n(Date souhaitée, messages, garants éventuels)
+
+Client -> Front : Soumet la demande
+Front -> API : POST /api/reservations/ \n{\n "bien_id": 123,\n "date_souhaitee": "2026-04-01",\n "type": "VISITE"\n}
+activate API
+
+API -> DB : Vérifie la disponibilité du bien
+activate DB
+DB --> API : Bien disponible
+deactivate DB
+
+API -> DB : INSERT INTO Demande (client_id, bien_id, statut, ...)\nVALUES (..., "EN_ATTENTE", ...)
+activate DB
+DB --> API : Retourne l'ID de la demande
+deactivate DB
+
+API --> Front : HTTP 201 Created\n{ "message": "Demande envoyée avec succès" }
+deactivate API
+
+Front --> Client : Affiche confirmation de la demande
+deactivate Front
+
+' ==========================================
+== Phase 2 : Validation par le Propriétaire / Admin ==
+' ==========================================
+
+Owner -> Front : Se connecte et consulte ses demandes en attente
+activate Front
+Front -> API : GET /api/reservations/pending/
+activate API
+API -> DB : SELECT * FROM Demande WHERE statut = "EN_ATTENTE"
+activate DB
+DB --> API : Liste des demandes
+deactivate DB
+API --> Front : Retourne la liste
+deactivate API
+Front --> Owner : Affiche les demandes
+deactivate Front
+
+Owner -> Front : Accepte la demande du client
+activate Front
+Front -> API : PATCH /api/reservations/{id}/ \n{ "statut": "ACCEPTEE" }
+activate API
+
+API -> DB : UPDATE Demande SET statut = "ACCEPTEE" WHERE id = {id}
+activate DB
+DB --> API : Confirmation
+deactivate DB
+
+API -> API : Génération d'une notification ou d'un email pour le client
+
+API --> Front : HTTP 200 OK
+deactivate API
+Front --> Owner : Affiche confirmation de validation
+deactivate Front
+
+' ==========================================
+== Phase 3 :  Paiement et Processus de Location (Bail) ==
+' ==========================================
+
+Client -> Front : Reçoit la notification et accède au récapitulatif
+activate Front
+
+Client -> Front : Valide et procède au paiement (frais de visite / caution)
+Front -> API : POST /api/paiements/ \n{ "demande_id": {id}, "montant": 500 }
+activate API
+
+API -> API : Intégration Service de Paiement (ex: Stripe)
+API -> DB : Enregistre la transaction de paiement
+activate DB
+DB --> API : Transaction OK
+deactivate DB
+
+API -> DB : UPDATE Bien SET statut = "LOUE" WHERE id = 123
+activate DB
+DB --> API : Bien mis à jour
+deactivate DB
+
+API -> DB : INSERT INTO Bail (client_id, bien_id, date_debut, signature_client, signature_proprio_admin)\nVALUES (...)
+activate DB
+DB --> API : Bail généré
+deactivate DB
+
+API --> Front : HTTP 200 OK\n{ "message": "Paiement validé, bail généré" }
+deactivate API
+
+Front --> Client : Affiche le succès et le bail à signer
+deactivate Front
+
+@enduml
