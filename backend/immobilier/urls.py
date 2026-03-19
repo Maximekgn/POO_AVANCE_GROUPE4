@@ -5,15 +5,48 @@ Préfixe global : /api/  (défini dans core/urls.py)
 """
 
 from django.urls import path
+from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from immobilier.views import RegisterView, VerifyEmailView, ResendVerificationView
+from immobilier.views import (
+    RegisterView,
+    VerifyEmailView,
+    ResendVerificationView,
+    CategorieBienListCreateView,
+    CategorieBienDetailView,
+    SousTypeBienListCreateView,
+    SousTypeBienDetailView,
+)
 
 app_name = 'immobilier'
 
+
+def api_root(_request):
+    return JsonResponse(
+        {
+            'message': 'Bienvenue sur l\'API ImmobilierPro',
+            'endpoints': {
+                'register': '/api/auth/register',
+                'verify_email': '/api/auth/verify-email',
+                'resend_verification': '/api/auth/resend-verification',
+                'login': '/api/auth/login',
+                'refresh_token': '/api/auth/token/refresh',
+                'categories': '/api/categories',
+                'category_detail': '/api/categories/{id}',
+                'sous_types': '/api/sous-types',
+                'sous_type_detail': '/api/sous-types/{id}',
+            },
+        }
+    )
+
 urlpatterns = [
+    # GET /api/
+    #   → Point d'entrée informatif de l'API
+    path('', api_root, name='api-root'),
+
     # ── Authentification ──────────────────────────────────────────────────────
     #
+    
     # POST /api/auth/register
     #   Body: { nom, prenom, email, motDePasse, telephone?, role }
     #   → Crée le compte (inactif) + envoie email de vérification
@@ -43,4 +76,15 @@ urlpatterns = [
     #   → Retourne un nouvel access token
     #   → HTTP 200 | 401
     path('auth/token/refresh', TokenRefreshView.as_view(), name='auth-token-refresh'),
+
+    # ── Catégories de biens (Sprint 2) ───────────────────────────────────────
+    # GET/POST /api/categories
+    path('categories', CategorieBienListCreateView.as_view(), name='categories-list-create'),
+    # GET/PATCH/DELETE /api/categories/{id}
+    path('categories/<int:pk>', CategorieBienDetailView.as_view(), name='categories-detail'),
+
+    # GET/POST /api/sous-types?categorie={id}
+    path('sous-types', SousTypeBienListCreateView.as_view(), name='sous-types-list-create'),
+    # GET/PATCH/DELETE /api/sous-types/{id}
+    path('sous-types/<int:pk>', SousTypeBienDetailView.as_view(), name='sous-types-detail'),
 ]

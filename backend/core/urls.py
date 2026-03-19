@@ -5,8 +5,12 @@ Toutes les routes API sont préfixées par /api/.
 
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    # Redirige la racine vers l'index de l'API
+    path('', RedirectView.as_view(pattern_name='immobilier:api-root', permanent=False)),
+
     # Interface d'administration Django
     path('admin/', admin.site.urls),
 

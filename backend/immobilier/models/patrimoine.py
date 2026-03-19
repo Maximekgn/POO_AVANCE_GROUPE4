@@ -2,8 +2,59 @@ from django.db import models
 from .enums import StatutBienEnum
 from .utilisateurs import Proprietaire
 
+
+class CategorieBien(models.Model):
+    nom = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=140, unique=True)
+    ordre = models.PositiveIntegerField(default=0)
+    actif = models.BooleanField(default=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['ordre', 'nom']
+        verbose_name = 'Categorie de bien'
+        verbose_name_plural = 'Categories de biens'
+
+    def __str__(self):
+        return self.nom
+
+
+class SousTypeBien(models.Model):
+    categorie = models.ForeignKey(CategorieBien, on_delete=models.CASCADE, related_name='sous_types')
+    nom = models.CharField(max_length=120)
+    slug = models.SlugField(max_length=140)
+    ordre = models.PositiveIntegerField(default=0)
+    actif = models.BooleanField(default=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['ordre', 'nom']
+        constraints = [
+            models.UniqueConstraint(fields=['categorie', 'nom'], name='uniq_sous_type_nom_par_categorie'),
+            models.UniqueConstraint(fields=['categorie', 'slug'], name='uniq_sous_type_slug_par_categorie'),
+        ]
+        verbose_name = 'Sous-type de bien'
+        verbose_name_plural = 'Sous-types de biens'
+
+    def __str__(self):
+        return f"{self.categorie.nom} - {self.nom}"
+
 class Bien(models.Model):
     proprietaire = models.ForeignKey(Proprietaire, on_delete=models.CASCADE, related_name='biens')
+    categorie = models.ForeignKey(
+        CategorieBien,
+        on_delete=models.RESTRICT,
+        related_name='biens',
+        null=True,
+        blank=True,
+    )
+    sous_type = models.ForeignKey(
+        SousTypeBien,
+        on_delete=models.RESTRICT,
+        related_name='biens',
+        null=True,
+        blank=True,
+    )
     reference = models.CharField(max_length=100, unique=True)
     adresse = models.CharField(max_length=255)
     ville = models.CharField(max_length=100)
