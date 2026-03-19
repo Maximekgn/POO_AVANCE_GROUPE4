@@ -16,6 +16,12 @@ from immobilier.views import (
     CategorieBienDetailView,
     SousTypeBienListCreateView,
     SousTypeBienDetailView,
+    BienListCreateView,
+    BienDetailView,
+    BienStatutUpdateView,
+    BienPhotoListCreateView,
+    BienPhotoReorderView,
+    PhotoDetailView,
 )
 
 app_name = 'immobilier'
@@ -35,6 +41,12 @@ def api_root(_request):
                 'category_detail': '/api/categories/{id}',
                 'sous_types': '/api/sous-types',
                 'sous_type_detail': '/api/sous-types/{id}',
+                'biens': '/api/biens',
+                'bien_detail': '/api/biens/{id}',
+                'bien_statut_update': '/api/biens/{id}/statut',
+                'bien_photos': '/api/biens/{id}/photos',
+                'bien_photos_reorder': '/api/biens/{id}/photos/reorder',
+                'photo_detail': '/api/photos/{id}',
             },
         }
     )
@@ -87,4 +99,20 @@ urlpatterns = [
     path('sous-types', SousTypeBienListCreateView.as_view(), name='sous-types-list-create'),
     # GET/PATCH/DELETE /api/sous-types/{id}
     path('sous-types/<int:pk>', SousTypeBienDetailView.as_view(), name='sous-types-detail'),
+
+    # ── Biens immobiliers (Sprint 3) ────────────────────────────────────────
+    # GET/POST /api/biens
+    path('biens', BienListCreateView.as_view(), name='biens-list-create'),
+    # GET/PATCH/DELETE /api/biens/{id}
+    path('biens/<int:pk>', BienDetailView.as_view(), name='biens-detail'),
+    # PATCH /api/biens/{id}/statut
+    path('biens/<int:pk>/statut', BienStatutUpdateView.as_view(), name='biens-statut-update'),
+
+    # ── Photos de biens (Sprint 3) ───────────────────────────────────────────
+    # GET/POST /api/biens/{id}/photos
+    path('biens/<int:bien_id>/photos', BienPhotoListCreateView.as_view(), name='bien-photos-list-create'),
+    # PATCH /api/biens/{id}/photos/reorder
+    path('biens/<int:bien_id>/photos/reorder', BienPhotoReorderView.as_view(), name='bien-photos-reorder'),
+    # GET/PATCH/DELETE /api/photos/{id}
+    path('photos/<int:pk>', PhotoDetailView.as_view(), name='photos-detail'),
 ]

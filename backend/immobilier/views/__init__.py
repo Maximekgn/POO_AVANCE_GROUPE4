@@ -5,6 +5,8 @@ from .category_views import (
 	SousTypeBienListCreateView,
 	SousTypeBienDetailView,
 )
+from .property_views import BienListCreateView, BienDetailView, BienStatutUpdateView
+from .photo_views import BienPhotoListCreateView, PhotoDetailView, BienPhotoReorderView
 
 __all__ = [
 	'RegisterView',
@@ -14,4 +16,10 @@ __all__ = [
 	'CategorieBienDetailView',
 	'SousTypeBienListCreateView',
 	'SousTypeBienDetailView',
+	'BienListCreateView',
+	'BienDetailView',
+	'BienStatutUpdateView',
+	'BienPhotoListCreateView',
+	'BienPhotoReorderView',
+	'PhotoDetailView',
 ]
