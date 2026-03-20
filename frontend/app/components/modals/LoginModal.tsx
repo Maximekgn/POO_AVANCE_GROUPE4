@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useCallback, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -29,25 +29,31 @@ const LoginModal = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
 
-    signIn("credentials", {
+    const response = await signIn("credentials", {
       ...data,
       redirect: false,
-    }).then((response) => {
-      setIsLoading(false);
-
-      if (response?.ok) {
-        toast.success("Connexion réussie");
-        router.refresh();
-        loginModal.onClose();
-      }
-
-      if (response?.error) {
-        toast.error(response.error);
-      }
     });
+
+    setIsLoading(false);
+
+    if (response?.ok) {
+      toast.success("Connexion réussie");
+      const session = await getSession();
+      loginModal.onClose();
+
+      if ((session as any)?.isAdmin) {
+        router.push("/admin/dashboard");
+      } else {
+        router.refresh();
+      }
+    }
+
+    if (response?.error) {
+      toast.error(response.error);
+    }
   };
 
   const toggle = useCallback(() => {
@@ -121,4 +127,3 @@ const LoginModal = () => {
 };
 
 export default LoginModal;
-

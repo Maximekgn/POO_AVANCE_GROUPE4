@@ -1,10 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from .enums import RoleEnum
+
 
 class Utilisateur(AbstractUser):
+    """
+    Utilisateur de base du système.
+    La distinction Admin se fait via is_staff/is_superuser.
+    Les attributs métiers spécifiques sont gérés dans ProprietaireInfo et ClientInfo.
+    """
     telephone = models.CharField(max_length=20, blank=True, null=True)
-    role = models.CharField(max_length=20, choices=RoleEnum.choices, default=RoleEnum.CLIENT)
+    email_verifie = models.BooleanField(default=False)
+    documents_complets = models.BooleanField(default=False)
+    date_creation = models.DateTimeField(auto_now_add=True, null=True)
+    dernier_login_custom = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
@@ -24,58 +32,35 @@ class Utilisateur(AbstractUser):
     def mettreAJourProfil(self) -> None:
         pass
 
-    def getMessages(self) -> list:
-        return []
+    def getMessages(self):
+        from .messagerie import Message
+        return Message.objects.filter(destinataire=self)
 
     def getMessagesNonLus(self) -> int:
-        return 0
+        return self.getMessages().filter(lu=False).count()
 
-class Admin(Utilisateur):
+    def isAdmin(self) -> bool:
+        return bool(self.is_staff or self.is_superuser)
+
     class Meta:
-        proxy = True
-        verbose_name = 'Administrateur'
-        verbose_name_plural = 'Administrateurs'
+        verbose_name = 'Utilisateur'
+        verbose_name_plural = 'Utilisateurs'
 
-    def save(self, *args, **kwargs):
-        self.role = RoleEnum.ADMIN
-        self.is_staff = True
-        self.is_superuser = True
-        super().save(*args, **kwargs)
 
-    def validerCompte(self, userId: int) -> None: pass
-    def suspendreCompte(self, userId: int) -> None: pass
-    def reactiverCompte(self, userId: int) -> None: pass
-    def listerUtilisateurs(self, filtre: str) -> list: return []
-    def validerBien(self, bienId: int) -> None: pass
-    def rejeterBien(self, bienId: int, motif: str) -> None: pass
-    def consulterTousLesBiens(self, filtre: str) -> list: return []
-    def modifierBienPour(self, bienId: int, bien) -> 'Bien': pass
-    def archiverBienPour(self, bienId: int) -> None: pass
-    def consulterToutesLesLocations(self) -> list: return []
-    def validerDossierPour(self, dossierId: int) -> None: pass
-    def rejeterDossierPour(self, dossierId: int, motif: str) -> None: pass
-    def resilierBailPour(self, bailId: int, motif: str) -> None: pass
-    def consulterFinancesGlobales(self) -> dict: return {}
-    def listerTousImpayes(self) -> list: return []
-    def enregistrerPaiementPour(self, bailId: int, paiement) -> None: pass
-    def consulterTableauDeBord(self) -> dict: return {}
-    def envoyerMessageGlobal(self, message: str) -> None: pass
-    def envoyerMessageA(self, userId: int, message: str) -> None: pass
-
-class Proprietaire(Utilisateur):
+class ProprietaireInfo(models.Model):
+    """
+    Informations spécifiques à un propriétaire.
+    Une personne peut avoir une ProprietaireInfo et une ClientInfo simultanément.
+    """
+    utilisateur = models.OneToOneField(Utilisateur, on_delete=models.CASCADE, related_name='proprietaire_info')
     iban = models.CharField(max_length=34, blank=True, null=True)
     adresse_fiscale = models.TextField(blank=True, null=True)
     numero_piece = models.CharField(max_length=100, blank=True, null=True)
     carte_identite = models.ForeignKey('immobilier.Document', on_delete=models.SET_NULL, null=True, blank=True, related_name='proprietaire_identite')
+    date_creation = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        verbose_name = 'Propriétaire'
-        verbose_name_plural = 'Propriétaires'
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.role = RoleEnum.PROPRIETAIRE
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"ProprietaireInfo: {self.utilisateur.email}"
 
     def uploaderCarteIdentite(self, doc) -> None: pass
     def getCarteIdentite(self): pass
@@ -99,20 +84,25 @@ class Proprietaire(Utilisateur):
     def exporterSynthese(self, format: str): pass
     def listerMesLocataires(self) -> list: return []
 
-class Client(Utilisateur):
+    class Meta:
+        verbose_name = 'Information Propriétaire'
+        verbose_name_plural = 'Informations Propriétaires'
+
+
+class ClientInfo(models.Model):
+    """
+    Informations spécifiques à un client (locataire potentiel).
+    Une personne peut avoir une ClientInfo et une ProprietaireInfo simultanément.
+    """
+    utilisateur = models.OneToOneField(Utilisateur, on_delete=models.CASCADE, related_name='client_info')
     profession = models.CharField(max_length=150, blank=True, null=True)
     numero_piece = models.CharField(max_length=100, blank=True, null=True)
     carte_identite = models.ForeignKey('immobilier.Document', on_delete=models.SET_NULL, null=True, blank=True, related_name='client_identite')
     revenus_mensuels = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        verbose_name = 'Client'
-        verbose_name_plural = 'Clients'
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.role = RoleEnum.CLIENT
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"ClientInfo: {self.utilisateur.email}"
 
     def uploaderCarteIdentite(self, doc) -> None: pass
     def getCarteIdentite(self): pass
@@ -134,8 +124,17 @@ class Client(Utilisateur):
     def telechargerQuittance(self, mois: int, annee: int): pass
     def signalerProbleme(self, bailId: int, description: str): pass
 
+    class Meta:
+        verbose_name = 'Information Client'
+        verbose_name_plural = 'Informations Clients'
+
+
 class Garant(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='garants')
+    """
+    Garant d'un client (locataire).
+    Lié à ClientInfo au lieu de Client.
+    """
+    client_info = models.ForeignKey(ClientInfo, on_delete=models.CASCADE, related_name='garants', null=True, blank=True)
     nom = models.CharField(max_length=150)
     prenom = models.CharField(max_length=150)
     telephone = models.CharField(max_length=20, blank=True, null=True)
@@ -147,6 +146,10 @@ class Garant(models.Model):
 
     def __str__(self):
         return f"Garant: {self.prenom} {self.nom}"
+
+    class Meta:
+        verbose_name = 'Garant'
+        verbose_name_plural = 'Garants'
 
     def uploaderCarteIdentite(self, doc) -> None: pass
     def getCarteIdentite(self): pass

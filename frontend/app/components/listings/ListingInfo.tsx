@@ -1,7 +1,6 @@
 "use client";
 
 import useCountries from "@/app/hooks/useCountries";
-import { User } from "@prisma/client";
 import { IconType } from "react-icons";
 import Avatar from "../Avatar";
 import ListingCategory from "./ListingCategory";
@@ -12,12 +11,15 @@ const Map = dynamic(() => import("../Map"), {
 });
 
 interface IListingInfoProps {
-  user: User;
+  user: { name?: string | null; image?: string | null };
   description: string;
   guestCount: number;
   roomCount: number;
   bathroomCount: number;
   locationValue: string;
+  locationLabel?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   category:
     | {
         label: string;
@@ -34,11 +36,21 @@ const ListingInfo: React.FC<IListingInfoProps> = ({
   roomCount,
   bathroomCount,
   locationValue,
+  locationLabel,
+  latitude,
+  longitude,
   category,
 }) => {
   const { getByValue } = useCountries();
 
-  const coordinates = getByValue(locationValue)?.latlng;
+  const fallbackCoordinates = getByValue(locationValue)?.latlng;
+  const coordinates =
+    latitude !== null &&
+    latitude !== undefined &&
+    longitude !== null &&
+    longitude !== undefined
+      ? [latitude, longitude]
+      : fallbackCoordinates;
 
   return (
     <div className="col-span-4 flex flex-col gap-8">
@@ -53,7 +65,7 @@ const ListingInfo: React.FC<IListingInfoProps> = ({
             gap-2
           "
         >
-          <div>Hosted by {user?.name}</div>
+          <div>Hosted by {user?.name || "Proprietaire"}</div>
           <Avatar src={user?.image} />
         </div>
         <div
@@ -82,6 +94,10 @@ const ListingInfo: React.FC<IListingInfoProps> = ({
       <hr />
       <div className="text-lg font-light text-neutral-500">{description}</div>
       <hr />
+      {locationLabel && (
+        <div className="text-sm text-neutral-500">{locationLabel}</div>
+      )}
+      {locationLabel && <hr />}
       <Map center={coordinates} />
     </div>
   );

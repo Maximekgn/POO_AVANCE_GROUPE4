@@ -1,6 +1,6 @@
 "use client";
 
-import { Listing, Reservation, User } from "@prisma/client";
+import type { CurrentUser } from "@/app/actions/getCurrentUser";
 import Container from "../components/Container";
 import Heading from "../components/Heading";
 import { useRouter } from "next/navigation";
@@ -9,11 +9,27 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import ListingCard from "../components/listings/ListingCard";
 
+type ListingItem = {
+  id: string;
+  imageSrc?: string;
+  locationValue?: string;
+  ville?: string;
+  category?: string;
+  price?: number;
+  priceMonthly?: number;
+};
+
+type ReservationItem = {
+  id: string;
+  totalPrice?: number;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  listing: ListingItem;
+};
+
 interface TripsClientProps {
-  currentUser?: User | null;
-  reservations: (Reservation & {
-    listing: Listing;
-  })[];
+  currentUser?: CurrentUser | null;
+  reservations: ReservationItem[];
 }
 
 const TripsClient: React.FC<TripsClientProps> = ({
@@ -40,7 +56,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           setDeletingId("");
         });
     },
-    [router]
+    [router],
   );
 
   return (

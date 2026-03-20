@@ -1,35 +1,79 @@
 "use client";
 
+import { useEffect } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 
 import "leaflet/dist/leaflet.css";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import marketIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x.src,
-  iconUrl: marketIcon.src,
-  shadowUrl: markerShadow.src,
+const defaultMarkerIcon = L.icon({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
 interface MapProps {
   center?: number[];
+  onSelectPosition?: (latlng: [number, number]) => void;
 }
 
-const Map: React.FC<MapProps> = ({ center }) => {
+const ClickHandler: React.FC<{
+  onSelectPosition: (latlng: [number, number]) => void;
+}> = ({ onSelectPosition }) => {
+  useMapEvents({
+    click(event) {
+      onSelectPosition([event.latlng.lat, event.latlng.lng]);
+    },
+  });
+
+  return null;
+};
+
+const RecenterMap: React.FC<{ center?: number[] }> = ({ center }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!center || center.length < 2) return;
+
+    map.setView(center as L.LatLngExpression, map.getZoom(), {
+      animate: false,
+    });
+  }, [center, map]);
+
+  return null;
+};
+
+const Map: React.FC<MapProps> = ({ center, onSelectPosition }) => {
+  const mapCenter =
+    (center as L.LatLngExpression) || ([6.1319, 1.2228] as L.LatLngExpression);
+
   return (
     <MapContainer
-      center={(center as L.LatLngExpression) || [-12.04318, -77.02824]}
-      zoom={center ? 4 : 2}
+      center={mapCenter}
+      zoom={center ? 13 : 7}
       scrollWheelZoom={false}
       className="h-[35vh] rounded-lg z-0"
     >
+      <RecenterMap center={center} />
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {center && <Marker position={center as L.LatLngExpression} />}
+      {onSelectPosition && <ClickHandler onSelectPosition={onSelectPosition} />}
+      {center && (
+        <Marker
+          position={center as L.LatLngExpression}
+          icon={defaultMarkerIcon}
+        />
+      )}
     </MapContainer>
   );
 };

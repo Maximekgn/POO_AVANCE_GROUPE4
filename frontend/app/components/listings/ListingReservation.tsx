@@ -6,23 +6,36 @@ import Button from "../Button";
 
 interface IListingReservationProps {
   price: number;
+  monthlyPrice?: number;
   dateRange: Range;
   totalPrice: number;
+  nightCount: number;
   onChangeDate: (value: Range) => void;
-  onSubmit: () => void;
+  onBookVisit: () => void;
+  onDirectRent: () => void;
+  onPrivatize: () => void;
   disabled?: boolean;
   disabledDates?: Date[];
 }
 
 const ListingReservation: React.FC<IListingReservationProps> = ({
   price,
+  monthlyPrice,
   dateRange,
   totalPrice,
+  nightCount,
   onChangeDate,
-  onSubmit,
+  onBookVisit,
+  onDirectRent,
+  onPrivatize,
   disabled,
   disabledDates = [],
 }) => {
+  const monthlyPriceValue =
+    typeof monthlyPrice === "number" && monthlyPrice > 0
+      ? monthlyPrice
+      : price * 30;
+
   return (
     <div
       className="
@@ -33,9 +46,14 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
         overflow-hidden
       "
     >
-      <div className="flex flex-row items-center gap-1 p-4">
-        <div className="text-2xl font-semibold">$ {price}</div>
-        <div className="font-light text-neutral-600">night</div>
+      <div className="p-4">
+        <div className="flex flex-row items-center gap-1">
+          <div className="text-2xl font-semibold">FCFA{price}</div>
+          <div className="font-light text-neutral-600">/ nuit</div>
+        </div>
+        <div className="mt-1 text-sm text-neutral-600">
+          FCFA{monthlyPriceValue} / mois
+        </div>
       </div>
       <hr />
       <Calendar
@@ -45,21 +63,44 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
       />
       <hr />
       <div className="p-4">
-        <Button disabled={disabled} onClick={onSubmit} label="Reserve" />
+        <div className="flex flex-col gap-2">
+          <Button
+            disabled={disabled}
+            onClick={onBookVisit}
+            outline
+            label="Reserver une visite"
+          />
+          <Button
+            disabled={disabled}
+            onClick={onDirectRent}
+            label="Louer directement"
+          />
+          <Button
+            disabled={disabled}
+            onClick={onPrivatize}
+            outline
+            label="Privatiser pour la periode"
+          />
+        </div>
       </div>
       <div
         className="
         p-4
         flex
-        flex-row
-        items-center
-        justify-between
+        flex-col
+        gap-2
         font-semibold
-        text-lg
+        text-base
         "
       >
-        <div>Total</div>
-        <div>$ {totalPrice}</div>
+        <div className="flex items-center justify-between text-neutral-700">
+          <span>Nuits selectionnees</span>
+          <span>{nightCount}</span>
+        </div>
+        <div className="flex items-center justify-between text-lg text-neutral-900">
+          <span>Total location</span>
+          <span>FCFA{totalPrice}</span>
+        </div>
       </div>
     </div>
   );

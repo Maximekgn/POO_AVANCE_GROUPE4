@@ -14,6 +14,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from django.db.models import Q
+
+from immobilier.models import Utilisateur
 
 
 class EmailService:
@@ -78,7 +81,7 @@ class EmailService:
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
                 "email": utilisateur.email,
-                "role": utilisateur.get_role_display() if hasattr(utilisateur, 'get_role_display') else utilisateur.role,
+                "role": "Admin" if (utilisateur.is_staff or utilisateur.is_superuser) else "Utilisateur",
                 "url_connexion": url_connexion,
             },
             destinataire=utilisateur.email,
@@ -142,6 +145,41 @@ class EmailService:
             },
             destinataire=proprietaire.email,
         )
+
+    @classmethod
+    def envoyer_nouveau_bien_admin(cls, bien, url_dashboard_admin: str = "/admin/dashboard/biens") -> bool:
+        """Informe tous les administrateurs qu'un nouveau bien a ete soumis."""
+        admin_emails = list(
+            Utilisateur.objects.filter(Q(is_staff=True) | Q(is_superuser=True))
+            .exclude(email__isnull=True)
+            .exclude(email='')
+            .values_list('email', flat=True)
+            .distinct()
+        )
+
+        if not admin_emails:
+            return False
+
+        sent_all = True
+        owner = getattr(getattr(bien, 'proprietaire_info', None), 'utilisateur', None)
+        owner_name = (owner.get_full_name() or owner.email) if owner else 'Inconnu'
+
+        for email in admin_emails:
+            sent = cls._envoyer(
+                sujet="Nouveau bien soumis pour validation",
+                template="emails/nouveau_bien_admin.html",
+                contexte={
+                    "reference_bien": bien.reference,
+                    "adresse_bien": bien.adresse,
+                    "ville": bien.ville,
+                    "proprietaire": owner_name,
+                    "url_dashboard_admin": url_dashboard_admin,
+                },
+                destinataire=email,
+            )
+            sent_all = sent_all and sent
+
+        return sent_all
 
     # ─────────────────────────────────────────────
     #  4. Mise à jour du statut d'un dossier

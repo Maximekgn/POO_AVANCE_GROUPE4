@@ -21,12 +21,6 @@ skinparam roundcorner 6
 '  ENUMERATIONS
 ' ══════════════════════════════════════════════════════
 
-enum RoleEnum << (E,#AACFFF) >> {
-  ADMIN
-  PROPRIETAIRE
-  CLIENT
-}
-
 enum StatutBienEnum << (E,#AACFFF) >> {
   EN_ATTENTE_VALIDATION
   VACANT
@@ -71,14 +65,13 @@ enum TypeSignataireEnum << (E,#AACFFF) >> {
 '  UTILISATEURS
 ' ══════════════════════════════════════════════════════
 
-abstract class Utilisateur {
+class Utilisateur {
   - Long id
   - String nom
   - String prenom
   - String email
   - String motDePasse
   - String telephone
-  - RoleEnum role
   - Boolean actif
   - Date dateCreation
   - Date dernierLogin
@@ -92,37 +85,12 @@ abstract class Utilisateur {
   + mettreAJourProfil() : void
   + getMessages() : List<Message>
   + getMessagesNonLus() : Integer
+  + isAdmin() : Boolean
 }
 
-class Admin {
-  --
-  .. Gestion comptes ..
-  + validerCompte(userId : Long) : void
-  + suspendreCompte(userId : Long) : void
-  + reactiverCompte(userId : Long) : void
-  + listerUtilisateurs(filtre : String) : List<Utilisateur>
-  .. Gestion biens (tous propriétaires) ..
-  + validerBien(bienId : Long) : void
-  + rejeterBien(bienId : Long, motif : String) : void
-  + consulterTousLesBiens(filtre : String) : List<Bien>
-  + modifierBienPour(bienId : Long, bien : Bien) : Bien
-  + archiverBienPour(bienId : Long) : void
-  .. Gestion locative (tous) ..
-  + consulterToutesLesLocations() : List<Bail>
-  + validerDossierPour(dossierId : Long) : void
-  + rejeterDossierPour(dossierId : Long, motif : String) : void
-  + resilierBailPour(bailId : Long, motif : String) : void
-  .. Financier global ..
-  + consulterFinancesGlobales() : Map<String, Double>
-  + listerTousImpayes() : List<Paiement>
-  + enregistrerPaiementPour(bailId : Long, paiement : Paiement) : void
-  + consulterTableauDeBord() : Map<String, Object>
-  .. Communication ..
-  + envoyerMessageGlobal(message : String) : void
-  + envoyerMessageA(userId : Long, message : String) : void
-}
-
-class Proprietaire {
+class ProprietaireInfo {
+  - Long id
+  - Long utilisateurId <<FK>> UNIQUE
   - String iban
   - String adresseFiscale
   - String numeroPiece
@@ -153,10 +121,12 @@ class Proprietaire {
   + listerImpayes() : List<Paiement>
   + exporterSynthese(format : String) : Document
   .. Locataires ..
-  + listerMesLocataires() : List<Client>
+  + listerMesLocataires() : List<Utilisateur>
 }
 
-class Client {
+class ClientInfo {
+  - Long id
+  - Long utilisateurId <<FK>> UNIQUE
   - String profession
   - String numeroPiece
   - Long carteIdentiteId <<FK>>
@@ -188,6 +158,16 @@ class Client {
   .. Réclamation ..
   + signalerProbleme(bailId : Long, description : String) : Message
 }
+
+note right of ProprietaireInfo
+  Une personne peut être à la fois
+  Propriétaire ET Client
+end note
+
+note right of ClientInfo
+  Une personne peut être à la fois
+  Propriétaire ET Client
+end note
 
 class Garant {
   - Long id
@@ -428,48 +408,46 @@ class Message {
 }
 
 ' ══════════════════════════════════════════════════════
-'  HÉRITAGE
+'  HÉRITAGE ET ASSOCIATIONS UTILISATEURS
 ' ══════════════════════════════════════════════════════
 
-Utilisateur <|-- Admin
-Utilisateur <|-- Proprietaire
-Utilisateur <|-- Client
+Utilisateur "1" o-- "0..1" ProprietaireInfo : peut avoir >
+Utilisateur "1" o-- "0..1" ClientInfo : peut avoir >
 
 ' ══════════════════════════════════════════════════════
 '  ASSOCIATIONS MÉTIER
 ' ══════════════════════════════════════════════════════
 
-Proprietaire   "1"    -->  "0..*" Bien             : possède >
-Proprietaire   "1"    -->  "1"    Document         : carte identité >
-Bien           "1"    *--  "0..*" Photo            : illustré par
-Bien           "1"    -->  "0..1" Bail             : couvert par >
-Client         "1"    -->  "1"    Document         : carte identité >
-Client         "1"    *--  "0..*" Garant           : possède >
-Garant         "1"    -->  "1"    Document         : carte identité >
-Client         "1"    -->  "0..*" Dossier          : soumet >
-Dossier        "0..1" -->  "0..1" Bail             : aboutit à >
-Bail           "1"    *--  "1..2" SignatureBail    : signé par
-Bail           "1"    -->  "0..*" Paiement         : génère >
-Proprietaire   "1"    -->  "0..*" Depense          : enregistre >
-Bien           "1"    -->  "0..*" Depense          : concerne >
-Paiement       "1"    -->  "0..1" Document         : produit quittance >
-Bail           "1"    -->  "0..*" Document         : associé à >
-Dossier        "1"    -->  "0..*" Document         : contient >
-Depense        "1"    -->  "0..1" Document         : justifié par >
-SignatureBail  "0..*" -->  "1"    Utilisateur      : signataire >
-Message        "0..*" -->  "1"    Utilisateur      : expéditeur >
-Message        "0..*" -->  "1"    Utilisateur      : destinataire >
+ProprietaireInfo "1" --> "0..*" Bien : possède >
+ProprietaireInfo "1" --> "1" Document : carte identité >
+Bien "1" *-- "0..*" Photo : illustré par
+Bien "1" --> "0..1" Bail : couvert par >
+ClientInfo "1" --> "1" Document : carte identité >
+ClientInfo "1" *-- "0..*" Garant : possède >
+Garant "1" --> "1" Document : carte identité >
+ClientInfo "1" --> "0..*" Dossier : soumet >
+Dossier "0..1" --> "0..1" Bail : aboutit à >
+Bail "1" *-- "1..2" SignatureBail : signé par
+Bail "1" --> "0..*" Paiement : génère >
+ProprietaireInfo "1" --> "0..*" Depense : enregistre >
+Bien "1" --> "0..*" Depense : concerne >
+Paiement "1" --> "0..1" Document : produit quittance >
+Bail "1" --> "0..*" Document : associé à >
+Dossier "1" --> "0..*" Document : contient >
+Depense "1" --> "0..1" Document : justifié par >
+SignatureBail "0..*" --> "1" Utilisateur : signataire >
+Message "0..*" --> "1" Utilisateur : expéditeur >
+Message "0..*" --> "1" Utilisateur : destinataire >
 
 ' ══════════════════════════════════════════════════════
 '  UTILISATION DES ENUMS
 ' ══════════════════════════════════════════════════════
 
-Utilisateur    ..> RoleEnum
-Bien           ..> StatutBienEnum
-Bail           ..> StatutBailEnum
-Dossier        ..> StatutDossierEnum
-Paiement       ..> StatutPaiementEnum
-Document       ..> TypeDocumentEnum
-SignatureBail  ..> TypeSignataireEnum
+Bien ..> StatutBienEnum
+Bail ..> StatutBailEnum
+Dossier ..> StatutDossierEnum
+Paiement ..> StatutPaiementEnum
+Document ..> TypeDocumentEnum
+SignatureBail ..> TypeSignataireEnum
 
 @enduml

@@ -5,8 +5,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from immobilier.models import CategorieBien, SousTypeBien, Proprietaire, Bien, Utilisateur
-from immobilier.models.enums import RoleEnum
+from immobilier.models import CategorieBien, SousTypeBien, ProprietaireInfo, Bien, Utilisateur, Role
+from immobilier.models.enums import TypeRoleEnum
 
 
 class CategoriesApiTests(APITestCase):
@@ -16,24 +16,28 @@ class CategoriesApiTests(APITestCase):
 			username='admin@test.com',
 			email='admin@test.com',
 			password='AdminPass123!',
-			role=RoleEnum.ADMIN,
 			is_staff=True,
 			is_superuser=True,
 		)
+		admin_role, _ = Role.objects.get_or_create(nom=TypeRoleEnum.ADMIN)
+		cls.admin_user.roles.add(admin_role)
+		
 		cls.client_user = Utilisateur.objects.create_user(
 			username='client@test.com',
 			email='client@test.com',
 			password='ClientPass123!',
-			role=RoleEnum.CLIENT,
 		)
+		client_role, _ = Role.objects.get_or_create(nom=TypeRoleEnum.CLIENT)
+		cls.client_user.roles.add(client_role)
 
-		cls.proprietaire = Proprietaire.objects.create(
+		cls.proprietaire_user = Utilisateur.objects.create_user(
 			username='prop@test.com',
 			email='prop@test.com',
-			role=RoleEnum.PROPRIETAIRE,
+			password='PropPass123!',
 		)
-		cls.proprietaire.set_password('PropPass123!')
-		cls.proprietaire.save()
+		proprietaire_role, _ = Role.objects.get_or_create(nom=TypeRoleEnum.PROPRIETAIRE)
+		cls.proprietaire_user.roles.add(proprietaire_role)
+		cls.proprietaire = ProprietaireInfo.objects.create(utilisateur=cls.proprietaire_user)
 
 	def test_admin_can_create_categorie(self):
 		self.client.force_authenticate(user=self.admin_user)

@@ -21,6 +21,10 @@ enum STEPS {
   INFO = 2,
 }
 
+const Map = dynamic(() => import("../Map"), {
+  ssr: false,
+});
+
 const SearchModal = () => {
   const router = useRouter();
   const searchModal = useSearchModal();
@@ -37,15 +41,6 @@ const SearchModal = () => {
     endDate: new Date(),
     key: "selection",
   });
-
-  const Map = useMemo(
-    () =>
-      dynamic(() => import("../Map"), {
-        ssr: false,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [location]
-  );
 
   const onBack = useCallback(() => {
     setStep((value) => value - 1);
@@ -87,7 +82,7 @@ const SearchModal = () => {
         url: "/",
         query: updatedQuery,
       },
-      { skipNull: true }
+      { skipNull: true },
     );
 
     setStep(STEPS.LOCATION);

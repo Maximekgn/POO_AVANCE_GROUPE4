@@ -1,0 +1,26 @@
+{% extends "emails/base_email.html" %} {% block title %} Nouveau bien soumis -
+Validation admin requise {% endblock %} {% block body %}
+<p class="greeting">Nouveau bien en attente de validation</p>
+
+<div class="content">
+  <p>Bonjour,</p>
+  <p>
+    Un nouveau bien a ete soumis sur la plateforme et attend votre validation.
+  </p>
+</div>
+
+<div class="info-box">
+  <p>
+    Reference: <strong>{{ reference_bien }}</strong><br />
+    Adresse: <strong>{{ adresse_bien }}</strong><br />
+    Ville: <strong>{{ ville }}</strong><br />
+    Proprietaire: <strong>{{ proprietaire }}</strong>
+  </p>
+</div>
+
+<div class="cta-wrapper">
+  <a href="{{ url_dashboard_admin }}" class="cta-btn"
+    >Ouvrir le dashboard admin</a
+  >
+</div>
+{% endblock %}

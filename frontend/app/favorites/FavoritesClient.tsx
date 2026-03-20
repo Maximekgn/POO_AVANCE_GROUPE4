@@ -1,13 +1,23 @@
 "use client";
 
-import { Listing, User } from "@prisma/client";
+import type { CurrentUser } from "@/app/actions/getCurrentUser";
 import Container from "../components/Container";
 import Heading from "../components/Heading";
 import ListingCard from "../components/listings/ListingCard";
 
+type ListingItem = {
+  id: string;
+  imageSrc?: string;
+  locationValue?: string;
+  ville?: string;
+  category?: string;
+  price?: number;
+  priceMonthly?: number;
+};
+
 interface FavoritesClientProps {
-  currentUser?: User | null;
-  listings: Listing[];
+  currentUser?: CurrentUser | null;
+  listings: ListingItem[];
 }
 
 const FavoritesClient: React.FC<FavoritesClientProps> = ({

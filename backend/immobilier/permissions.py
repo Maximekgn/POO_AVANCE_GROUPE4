@@ -1,7 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from immobilier.models.enums import RoleEnum
-
 
 class IsAdminForWritePermission(BasePermission):
     """Autorise la lecture aux utilisateurs authentifiés, écriture réservée Admin."""
@@ -13,8 +11,7 @@ class IsAdminForWritePermission(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        user_role = getattr(request.user, 'role', None)
-        return bool(request.user.is_superuser or request.user.is_staff or user_role == RoleEnum.ADMIN)
+        return bool(request.user.is_staff or request.user.is_superuser)
 
 
 class IsBienOwnerOrAdminForWrite(BasePermission):
@@ -27,22 +24,18 @@ class IsBienOwnerOrAdminForWrite(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        user_role = getattr(request.user, 'role', None)
-        return bool(
-            request.user.is_superuser
-            or request.user.is_staff
-            or user_role in [RoleEnum.ADMIN, RoleEnum.PROPRIETAIRE]
-        )
+        return bool(request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
 
-        user_role = getattr(request.user, 'role', None)
-        if request.user.is_superuser or request.user.is_staff or user_role == RoleEnum.ADMIN:
+        if request.user.is_staff or request.user.is_superuser:
             return True
 
-        return obj.proprietaire_id == request.user.id
+        # Vérifier que l'utilisateur est propriétaire du bien
+        return (hasattr(request.user, 'proprietaire_info') and 
+                obj.proprietaire_info_id == request.user.proprietaire_info.id)
 
 
 class IsPhotoBienOwnerOrAdminForWrite(BasePermission):
@@ -55,19 +48,15 @@ class IsPhotoBienOwnerOrAdminForWrite(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        user_role = getattr(request.user, 'role', None)
-        return bool(
-            request.user.is_superuser
-            or request.user.is_staff
-            or user_role in [RoleEnum.ADMIN, RoleEnum.PROPRIETAIRE]
-        )
+        return bool(request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
 
-        user_role = getattr(request.user, 'role', None)
-        if request.user.is_superuser or request.user.is_staff or user_role == RoleEnum.ADMIN:
+        if request.user.is_staff or request.user.is_superuser:
             return True
 
-        return obj.bien.proprietaire_id == request.user.id
+        # Vérifier que l'utilisateur est propriétaire du bien
+        return (hasattr(request.user, 'proprietaire_info') and 
+                obj.bien.proprietaire_info_id == request.user.proprietaire_info.id)

@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from immobilier.models import Bien, Photo
-from immobilier.models.enums import RoleEnum
 from immobilier.permissions import IsPhotoBienOwnerOrAdminForWrite
 from immobilier.serializers import PhotoSerializer, BienPhotoReorderSerializer
 
@@ -22,10 +21,10 @@ class BienPhotoListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         bien = Bien.objects.get(pk=self.kwargs['bien_id'])
         user = self.request.user
-        user_role = getattr(user, 'role', None)
 
-        is_admin = user.is_superuser or user.is_staff or user_role == RoleEnum.ADMIN
-        is_owner = bien.proprietaire_id == user.id
+        is_admin = user.isAdmin()
+        is_owner = (hasattr(user, 'proprietaire_info') and 
+                    bien.proprietaire_info_id == user.proprietaire_info.id)
 
         if not (is_admin or is_owner):
             raise PermissionDenied('Vous ne pouvez pas ajouter des photos a ce bien.')
@@ -56,9 +55,8 @@ class BienPhotoReorderView(APIView):
         bien = Bien.objects.get(pk=bien_id)
 
         user = request.user
-        user_role = getattr(user, 'role', None)
-        is_admin = user.is_superuser or user.is_staff or user_role == RoleEnum.ADMIN
-        is_owner = bien.proprietaire_id == user.id
+        is_admin = user.is_superuser or user.is_staff
+        is_owner = (hasattr(user, 'proprietaire_info') and bien.proprietaire_info_id == user.proprietaire_info.id)
 
         if not (is_admin or is_owner):
             raise PermissionDenied('Vous ne pouvez pas reordonner les photos de ce bien.')

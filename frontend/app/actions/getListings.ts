@@ -1,4 +1,4 @@
-import prisma from "@/app/libs/prismadb";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export interface IListingParams {
   userId?: string;
@@ -14,69 +14,63 @@ export interface IListingParams {
 export default async function getListings(params: IListingParams) {
   try {
     const {
-      userId,
-      guestCount,
-      roomCount,
-      bathroomCount,
-      startDate,
-      endDate,
+      userId: _userId,
+      guestCount: _guestCount,
+      roomCount: _roomCount,
+      bathroomCount: _bathroomCount,
+      startDate: _startDate,
+      endDate: _endDate,
       locationValue,
       category,
     } = params;
 
-    let query: any = {};
-
-    if (userId) {
-      query.userId = userId;
-    }
-
+    const query = new URLSearchParams();
     if (category) {
-      query.category = category;
+      query.append("categorie", category);
     }
-
     if (locationValue) {
-      query.locationValue = locationValue;
+      query.append("ville", locationValue);
     }
 
-    if (guestCount) {
-      query.guestCount = { gte: +guestCount };
-    }
-
-    if (roomCount) {
-      query.roomCount = { gte: +roomCount };
-    }
-
-    if (bathroomCount) {
-      query.bathroomCount = { gte: +bathroomCount };
-    }
-
-    if (startDate && endDate) {
-      query.NOT = {
-        reservations: {
-          some: {
-            OR: [
-              {
-                endDate: { gte: startDate },
-                startDate: { lte: startDate },
-              },
-              {
-                startDate: { lte: endDate },
-                endDate: { gte: endDate },
-              },
-            ],
-          },
+    const response = await fetch(
+      `${API_URL}/public/biens?${query.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
         },
-      };
+        cache: "no-store",
+      },
+    );
+
+    if (!response.ok) {
+      return [];
     }
 
-    const listings = await prisma.listing.findMany({
-      where: query,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const biens = await response.json();
+    if (!Array.isArray(biens)) {
+      return [];
+    }
 
-    return listings;
+    return biens.map((bien: any) => {
+      const firstPhoto =
+        Array.isArray(bien.photos) && bien.photos.length > 0
+          ? bien.photos[0]
+          : null;
+      const photoUrl =
+        firstPhoto?.url || firstPhoto?.image || "/placeholder-image.jpg";
+
+      return {
+        id: String(bien.id),
+        title: bien.reference,
+        description: bien.description,
+        imageSrc: photoUrl,
+        locationValue: bien.ville,
+        category: bien.categorie_nom || bien.sous_type_nom || "Bien",
+        price: Number(bien.prix_jour || bien.loyer_hc || 0),
+        priceMonthly: Number(bien.prix_mois || bien.loyer_hc || 0),
+      };
+    });
   } catch (error: any) {
     throw new Error(error.message);
   }

@@ -1,7 +1,7 @@
 from django.db import models
 from .enums import StatutPaiementEnum
 from .location import Bail
-from .utilisateurs import Proprietaire
+from .utilisateurs import ProprietaireInfo
 from .patrimoine import Bien
 
 class Paiement(models.Model):
@@ -29,7 +29,7 @@ class Paiement(models.Model):
     def calculerPenaliteRetard(self, tauxJour: float) -> float: return 0.0
 
 class Depense(models.Model):
-    proprietaire = models.ForeignKey(Proprietaire, on_delete=models.CASCADE, related_name='depenses')
+    proprietaire_info = models.ForeignKey(ProprietaireInfo, on_delete=models.CASCADE, related_name='depenses', null=True, blank=True)
     bien = models.ForeignKey(Bien, on_delete=models.CASCADE, related_name='depenses', null=True, blank=True)
     categorie = models.CharField(max_length=100)
     libelle = models.CharField(max_length=255)

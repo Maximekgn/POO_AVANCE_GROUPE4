@@ -1,10 +1,10 @@
 from django.db import models
 from .enums import StatutDossierEnum, StatutBailEnum, TypeSignataireEnum
-from .utilisateurs import Client, Utilisateur
+from .utilisateurs import ClientInfo, Utilisateur
 from .patrimoine import Bien
 
 class Dossier(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='dossiers')
+    client_info = models.ForeignKey(ClientInfo, on_delete=models.CASCADE, related_name='dossiers', null=True, blank=True)
     bien = models.ForeignKey(Bien, on_delete=models.CASCADE, related_name='dossiers_candidats')
     date_demande = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(max_length=50, choices=StatutDossierEnum.choices, default=StatutDossierEnum.SOUMIS)
@@ -27,7 +27,7 @@ class Dossier(models.Model):
 
 class Bail(models.Model):
     bien = models.ForeignKey(Bien, on_delete=models.RESTRICT, related_name='baux')
-    client = models.ForeignKey(Client, on_delete=models.RESTRICT, related_name='baux')
+    client_info = models.ForeignKey(ClientInfo, on_delete=models.RESTRICT, related_name='baux', null=True, blank=True)
     dossier = models.OneToOneField(Dossier, on_delete=models.SET_NULL, null=True, blank=True, related_name='bail_resultant')
     numero_bail = models.CharField(max_length=100, unique=True)
     date_entree = models.DateField()

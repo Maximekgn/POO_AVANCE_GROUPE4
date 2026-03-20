@@ -12,7 +12,11 @@ from immobilier.serializers import CategorieBienSerializer, SousTypeBienSerializ
 class CategorieBienListCreateView(generics.ListCreateAPIView):
     queryset = CategorieBien.objects.all().order_by('ordre', 'nom')
     serializer_class = CategorieBienSerializer
-    permission_classes = [IsAuthenticated, IsAdminForWritePermission]
+    def get_permissions(self):
+        # Allow unauthenticated GET, require admin for POST
+        if self.request.method == 'GET':
+            return []
+        return [IsAuthenticated(), IsAdminForWritePermission()]
 
 
 class CategorieBienDetailView(generics.RetrieveUpdateDestroyAPIView):

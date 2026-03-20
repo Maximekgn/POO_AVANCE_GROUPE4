@@ -3,15 +3,33 @@
 import { useRouter } from "next/navigation";
 import Container from "../components/Container";
 import Heading from "../components/Heading";
-import { Listing, Reservation, User } from "@prisma/client";
+import type { CurrentUser } from "@/app/actions/getCurrentUser";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import ListingCard from "../components/listings/ListingCard";
 
+type ListingItem = {
+  id: string;
+  imageSrc?: string;
+  locationValue?: string;
+  ville?: string;
+  category?: string;
+  price?: number;
+  priceMonthly?: number;
+};
+
+type ReservationItem = {
+  id: string;
+  totalPrice?: number;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  listing: ListingItem;
+};
+
 interface ReservationsClientProps {
-  reservations: (Reservation & { listing: Listing })[];
-  currentUser: User | null;
+  reservations: ReservationItem[];
+  currentUser: CurrentUser | null;
 }
 
 const ReservationsClient: React.FC<ReservationsClientProps> = ({
@@ -38,7 +56,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
           setDeletingId("");
         });
     },
-    [router]
+    [router],
   );
 
   return (

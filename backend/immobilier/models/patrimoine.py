@@ -1,6 +1,6 @@
 from django.db import models
 from .enums import StatutBienEnum
-from .utilisateurs import Proprietaire
+from .utilisateurs import ProprietaireInfo
 
 
 class CategorieBien(models.Model):
@@ -40,7 +40,7 @@ class SousTypeBien(models.Model):
         return f"{self.categorie.nom} - {self.nom}"
 
 class Bien(models.Model):
-    proprietaire = models.ForeignKey(Proprietaire, on_delete=models.CASCADE, related_name='biens')
+    proprietaire_info = models.ForeignKey(ProprietaireInfo, on_delete=models.CASCADE, related_name='biens', null=True, blank=True)
     categorie = models.ForeignKey(
         CategorieBien,
         on_delete=models.RESTRICT,
@@ -57,17 +57,23 @@ class Bien(models.Model):
     )
     reference = models.CharField(max_length=100, unique=True)
     adresse = models.CharField(max_length=255)
+    quartier = models.CharField(max_length=120, blank=True, default='')
     ville = models.CharField(max_length=100)
     code_postal = models.CharField(max_length=20)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     superficie = models.DecimalField(max_digits=8, decimal_places=2)
     nb_pieces = models.IntegerField()
     etage = models.IntegerField(null=True, blank=True)
     meuble = models.BooleanField(default=False)
+    prix_jour = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    prix_mois = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     loyer_hc = models.DecimalField(max_digits=10, decimal_places=2)
     charges = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     depot_garantie = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     statut = models.CharField(max_length=50, choices=StatutBienEnum.choices, default=StatutBienEnum.EN_ATTENTE_VALIDATION)
+    is_active = models.BooleanField(default=True)
     date_creation = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

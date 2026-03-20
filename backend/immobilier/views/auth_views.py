@@ -12,21 +12,50 @@ import logging
 
 from django.conf import settings
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from immobilier.models import Utilisateur
 from immobilier.serializers import (
     RegisterSerializer,
     VerifyEmailSerializer,
     ResendVerificationSerializer,
+    UploadUserDocumentsSerializer,
 )
+from immobilier.serializers.auth_serializers import EmailTokenObtainPairSerializer
 from immobilier.services.email_service import EmailService
 from immobilier.utils.tokens import generer_token_verification, valider_token_verification
 
 logger = logging.getLogger(__name__)
+
+
+class LoginView(TokenObtainPairView):
+    """Connexion JWT avec email/password et métadonnées utilisateur."""
+
+    permission_classes = [AllowAny]
+    serializer_class = EmailTokenObtainPairSerializer
+
+
+class UploadDocumentsView(APIView):
+    """Permet à un utilisateur connecté de déposer ses documents de profil."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = UploadUserDocumentsSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.save()
+        return Response(
+            {
+                "message": "Documents enregistrés avec succès.",
+                **payload,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -35,15 +64,16 @@ logger = logging.getLogger(__name__)
 
 class RegisterView(APIView):
     """
-    Crée un nouveau compte utilisateur (CLIENT ou PROPRIETAIRE).
+    Crée un nouveau compte utilisateur.
 
     Flux (Phase 1 du diagramme d'inscription) :
     1. Validation des données (email unique, mdp ≥ 8 chars, rôle autorisé)
     2. Hashage PBKDF2 du mot de passe via Django
-    3. Création du compte avec is_active=False
+    3. Création du compte avec is_active=True mais email non vérifié
     4. Génération d'un token JWT de vérification (exp 24h)
     5. Envoi de l'email de confirmation avec le lien d'activation
-    6. Réponse HTTP 201
+    6. Demande de dépôt des documents utilisateur
+    7. Réponse HTTP 201
 
     Body JSON attendu :
     {
@@ -51,8 +81,7 @@ class RegisterView(APIView):
         "prenom":     "Jean",
         "email":      "jean.dupont@mail.com",
         "motDePasse": "MonMotDePasse123!",
-        "telephone":  "+336XXXXXXXX",   // optionnel
-        "role":       "CLIENT"          // CLIENT | PROPRIETAIRE
+        "telephone":  "+336XXXXXXXX"    // optionnel
     }
 
     Réponses :
@@ -71,7 +100,7 @@ class RegisterView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 1. Création du compte (is_active=False)
+        # 1. Création du compte (actif mais non vérifié)
         user: Utilisateur = serializer.save()
         logger.info(f"[Register] Nouveau compte créé : {user.email} (id={user.id})")
 
@@ -89,8 +118,15 @@ class RegisterView(APIView):
 
         return Response(
             {
-                "message": "Compte créé avec succès. Vérifiez vos emails pour activer votre compte.",
+                "message": "Compte créé avec succès. Connectez-vous puis complétez vos documents. Vérifiez aussi votre email pour finaliser la vérification.",
                 "email": user.email,
+                "is_active": user.is_active,
+                "email_verified": user.email_verifie,
+                "documents_completed": user.documents_complets,
+                "next_step": {
+                    "action": "upload_documents",
+                    "endpoint": "/api/auth/upload-documents",
+                },
             },
             status=status.HTTP_201_CREATED,
         )
@@ -102,13 +138,13 @@ class RegisterView(APIView):
 
 class VerifyEmailView(APIView):
     """
-    Active le compte utilisateur après clic sur le lien email.
+    Marque l'email utilisateur comme vérifié après clic sur le lien email.
 
     Flux (Phase 3 du diagramme d'inscription) :
     1. Décode et vérifie le token JWT (signature + expiration)
     2. Récupère l'utilisateur correspondant
-    3. Vérifie que le compte n'est pas déjà actif
-    4. Met is_active=True en base
+    3. Vérifie que l'email n'est pas déjà vérifié
+    4. Met email_verifie=True en base
     5. Réponse HTTP 200
 
     Body JSON attendu :
@@ -158,17 +194,23 @@ class VerifyEmailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 3. Vérifier s'il n'est pas déjà actif
-        if user.is_active:
+        # 3. Vérifier si l'email est déjà vérifié
+        if user.email_verifie:
+            # Cas de rétrocompatibilité: certains comptes anciens peuvent rester inactifs.
+            if not user.is_active:
+                user.is_active = True
+                user.save(update_fields=['is_active'])
+                logger.info(f"[VerifyEmail] Compte réactivé pour email déjà vérifié : {user.email} (id={user.id})")
             return Response(
-                {"message": "Ce compte est déjà activé. Vous pouvez vous connecter."},
+                {"message": "Cet email est déjà vérifié. Vous pouvez vous connecter."},
                 status=status.HTTP_200_OK,
             )
 
-        # 4. Activer le compte
+        # 4. Marquer l'email comme vérifié et garantir l'activation du compte
+        user.email_verifie = True
         user.is_active = True
-        user.save(update_fields=['is_active'])
-        logger.info(f"[VerifyEmail] Compte activé : {user.email} (id={user.id})")
+        user.save(update_fields=['email_verifie', 'is_active'])
+        logger.info(f"[VerifyEmail] Email vérifié : {user.email} (id={user.id})")
 
         return Response(
             {"message": "Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter."},
@@ -216,9 +258,9 @@ class ResendVerificationView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-        if user.is_active:
+        if user.email_verifie:
             return Response(
-                {"error": "Ce compte est déjà activé."},
+                {"error": "Cet email est déjà vérifié."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

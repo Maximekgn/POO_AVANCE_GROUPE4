@@ -36,18 +36,22 @@ export const authOptions: AuthOptions = {
           }
 
           // Django SimpleJWT returns { access, refresh }
-          // We need to fetch user info if not included in the token, 
+          // We need to fetch user info if not included in the token,
           // but for now let's assume we can decode it or get it from the response.
           // many setups return user info along with tokens.
-          
+
           if (data.access) {
+            const isAdmin = Boolean(data.is_admin);
             // Decode role and other info from token or if backend provides it
             // For now, let's return the tokens and user info
             return {
               id: data.user_id || credentials.email,
               email: credentials.email,
               name: data.name || credentials.email,
-              role: data.role || "CLIENT",
+              role: data.role || (isAdmin ? "ADMIN" : "USER"),
+              isAdmin,
+              emailVerified: Boolean(data.email_verified),
+              documentsCompleted: Boolean(data.documents_completed),
               accessToken: data.access,
               refreshToken: data.refresh,
             };
@@ -66,6 +70,9 @@ export const authOptions: AuthOptions = {
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
         token.role = (user as any).role;
+        token.isAdmin = Boolean((user as any).isAdmin);
+        token.emailVerified = Boolean((user as any).emailVerified);
+        token.documentsCompleted = Boolean((user as any).documentsCompleted);
       }
       return token;
     },
@@ -73,6 +80,11 @@ export const authOptions: AuthOptions = {
       if (token) {
         (session as any).accessToken = token.accessToken;
         (session as any).role = token.role;
+        (session as any).isAdmin = Boolean((token as any).isAdmin);
+        (session as any).emailVerified = Boolean((token as any).emailVerified);
+        (session as any).documentsCompleted = Boolean(
+          (token as any).documentsCompleted,
+        );
       }
       return session;
     },
@@ -88,4 +100,3 @@ export const authOptions: AuthOptions = {
 };
 
 export default NextAuth(authOptions);
-

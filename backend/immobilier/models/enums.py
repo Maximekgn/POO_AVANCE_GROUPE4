@@ -1,11 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-class RoleEnum(models.TextChoices):
-    ADMIN = 'ADMIN', _('Admin')
-    PROPRIETAIRE = 'PROPRIETAIRE', _('Propriétaire')
-    CLIENT = 'CLIENT', _('Client')
-
 class StatutBienEnum(models.TextChoices):
     EN_ATTENTE_VALIDATION = 'EN_ATTENTE_VALIDATION', _('En attente de validation')
     VACANT = 'VACANT', _('Vacant')

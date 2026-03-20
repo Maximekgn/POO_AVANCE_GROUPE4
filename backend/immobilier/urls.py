@@ -6,10 +6,12 @@ Préfixe global : /api/  (défini dans core/urls.py)
 
 from django.urls import path
 from django.http import JsonResponse
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from immobilier.views import (
     RegisterView,
+    LoginView,
+    UploadDocumentsView,
     VerifyEmailView,
     ResendVerificationView,
     CategorieBienListCreateView,
@@ -17,8 +19,12 @@ from immobilier.views import (
     SousTypeBienListCreateView,
     SousTypeBienDetailView,
     BienListCreateView,
+    PublicBienListView,
+    PublicBienDetailView,
     BienDetailView,
     BienStatutUpdateView,
+    BienActivationUpdateView,
+    BienRefusView,
     BienPhotoListCreateView,
     BienPhotoReorderView,
     PhotoDetailView,
@@ -35,6 +41,7 @@ def api_root(_request):
                 'register': '/api/auth/register',
                 'verify_email': '/api/auth/verify-email',
                 'resend_verification': '/api/auth/resend-verification',
+                'upload_documents': '/api/auth/upload-documents',
                 'login': '/api/auth/login',
                 'refresh_token': '/api/auth/token/refresh',
                 'categories': '/api/categories',
@@ -42,8 +49,12 @@ def api_root(_request):
                 'sous_types': '/api/sous-types',
                 'sous_type_detail': '/api/sous-types/{id}',
                 'biens': '/api/biens',
+                'public_biens': '/api/public/biens',
+                'public_bien_detail': '/api/public/biens/{id}',
                 'bien_detail': '/api/biens/{id}',
                 'bien_statut_update': '/api/biens/{id}/statut',
+                'bien_activation_update': '/api/biens/{id}/activation',
+                'bien_refus_update': '/api/biens/{id}/refus',
                 'bien_photos': '/api/biens/{id}/photos',
                 'bien_photos_reorder': '/api/biens/{id}/photos/reorder',
                 'photo_detail': '/api/photos/{id}',
@@ -60,7 +71,7 @@ urlpatterns = [
     #
     
     # POST /api/auth/register
-    #   Body: { nom, prenom, email, motDePasse, telephone?, role }
+    #   Body: { nom, prenom, email, motDePasse, telephone? }
     #   → Crée le compte (inactif) + envoie email de vérification
     #   → HTTP 201
     path('auth/register', RegisterView.as_view(), name='auth-register'),
@@ -77,11 +88,18 @@ urlpatterns = [
     #   → HTTP 200 | 400
     path('auth/resend-verification', ResendVerificationView.as_view(), name='auth-resend-verification'),
 
+    # POST /api/auth/upload-documents
+    #   Auth: Bearer JWT
+    #   Body (multipart/form-data): { numero_piece, profession?, revenus_mensuels?, piece_identite }
+    #   → Enregistre les documents de profil utilisateur
+    #   → HTTP 200 | 400 | 401
+    path('auth/upload-documents', UploadDocumentsView.as_view(), name='auth-upload-documents'),
+
     # POST /api/auth/login
     #   Body: { username (=email), password }
     #   → Retourne access + refresh JWT
     #   → HTTP 200 | 401
-    path('auth/login', TokenObtainPairView.as_view(), name='auth-login'),
+    path('auth/login', LoginView.as_view(), name='auth-login'),
 
     # POST /api/auth/token/refresh
     #   Body: { refresh }
@@ -101,12 +119,21 @@ urlpatterns = [
     path('sous-types/<int:pk>', SousTypeBienDetailView.as_view(), name='sous-types-detail'),
 
     # ── Biens immobiliers (Sprint 3) ────────────────────────────────────────
+    # GET /api/public/biens
+    path('public/biens', PublicBienListView.as_view(), name='public-biens-list'),
+    # GET /api/public/biens/{id}
+    path('public/biens/<int:pk>', PublicBienDetailView.as_view(), name='public-biens-detail'),
+
     # GET/POST /api/biens
     path('biens', BienListCreateView.as_view(), name='biens-list-create'),
     # GET/PATCH/DELETE /api/biens/{id}
     path('biens/<int:pk>', BienDetailView.as_view(), name='biens-detail'),
     # PATCH /api/biens/{id}/statut
     path('biens/<int:pk>/statut', BienStatutUpdateView.as_view(), name='biens-statut-update'),
+    # PATCH /api/biens/{id}/activation
+    path('biens/<int:pk>/activation', BienActivationUpdateView.as_view(), name='biens-activation-update'),
+    # PATCH /api/biens/{id}/refus
+    path('biens/<int:pk>/refus', BienRefusView.as_view(), name='biens-refus-update'),
 
     # ── Photos de biens (Sprint 3) ───────────────────────────────────────────
     # GET/POST /api/biens/{id}/photos

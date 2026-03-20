@@ -96,33 +96,41 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
               {currentUser ? (
                 <>
                   <MenuItem
-                    onClick={() => router.push("/trips")}
-                    label="Mes voyages"
-                  />
-                  <MenuItem
-                    onClick={() => router.push("/favorites")}
-                    label="Mes favoris"
-                  />
-                  <MenuItem
                     onClick={() => router.push("/reservations")}
                     label="Mes réservations"
                   />
-                  {currentUser.role === "PROPRIETAIRE" && (
-                    <>
-                      <MenuItem
-                        onClick={() => router.push("/properties")}
-                        label="Mes propriétés"
-                      />
-                      <MenuItem onClick={rentModal.onOpen} label="Publier mon bien" />
-                    </>
+                  <MenuItem
+                    onClick={() => router.push("/locations")}
+                    label="Mes locations"
+                  />
+                  <MenuItem
+                    onClick={() => router.push("/properties")}
+                    label="Mes propriétés"
+                  />
+                  <MenuItem
+                    onClick={() => router.push("/finances")}
+                    label="Mes finances"
+                  />
+                  {currentUser?.isAdmin && (
+                    <MenuItem
+                      onClick={() => router.push("/admin/dashboard")}
+                      label="Dashboard admin"
+                    />
                   )}
+                  <MenuItem
+                    onClick={rentModal.onOpen}
+                    label="Publier mon bien"
+                  />
                   <hr />
                   <MenuItem onClick={() => signOut()} label="Déconnexion" />
                 </>
               ) : (
                 <>
                   <MenuItem onClick={loginModal.onOpen} label="Connexion" />
-                  <MenuItem onClick={registerModal.onOpen} label="Inscription" />
+                  <MenuItem
+                    onClick={registerModal.onOpen}
+                    label="Inscription"
+                  />
                 </>
               )}
             </div>
@@ -134,4 +142,3 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
 };
 
 export default UserMenu;
-

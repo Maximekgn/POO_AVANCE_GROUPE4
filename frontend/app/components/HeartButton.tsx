@@ -3,11 +3,11 @@
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 
 import useFavorite from "@/app/hooks/useFavorite";
-import { User } from "@prisma/client";
+import type { CurrentUser } from "@/app/actions/getCurrentUser";
 
 interface HeartButtonProps {
   listingId: string;
-  currentUser?: User | null;
+  currentUser?: CurrentUser | null;
 }
 
 const HeartButton: React.FC<HeartButtonProps> = ({

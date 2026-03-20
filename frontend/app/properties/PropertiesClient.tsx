@@ -1,6 +1,6 @@
 "use client";
 
-import { Listing, User } from "@prisma/client";
+import type { CurrentUser } from "@/app/actions/getCurrentUser";
 import Container from "../components/Container";
 import Heading from "../components/Heading";
 import { useRouter } from "next/navigation";
@@ -9,9 +9,19 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import ListingCard from "../components/listings/ListingCard";
 
+type ListingItem = {
+  id: string;
+  imageSrc?: string;
+  locationValue?: string;
+  ville?: string;
+  category?: string;
+  price?: number;
+  priceMonthly?: number;
+};
+
 interface PropertiesClientProps {
-  currentUser?: User | null;
-  listings: Listing[];
+  currentUser?: CurrentUser | null;
+  listings: ListingItem[];
 }
 
 const PropertiesClient: React.FC<PropertiesClientProps> = ({
@@ -38,7 +48,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
           setDeletingId("");
         });
     },
-    [router]
+    [router],
   );
 
   return (

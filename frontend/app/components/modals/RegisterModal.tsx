@@ -8,7 +8,6 @@ import Heading from "../Heading";
 import Input from "../Inputs/Input";
 import toast from "react-hot-toast";
 import useLoginModal from "@/app/hooks/useLoginModal";
-import RoleSelect from "../Inputs/RoleSelect";
 import { registerUser } from "@/app/actions/authActions";
 
 const RegisterModal = () => {
@@ -27,7 +26,6 @@ const RegisterModal = () => {
       email: "",
       password: "",
       telephone: "",
-      role: "CLIENT",
     },
   });
 
@@ -39,8 +37,14 @@ const RegisterModal = () => {
     setIsLoading(false);
 
     if (result.success) {
-      toast.success(result.message || "Compte créé ! Veuillez vérifier vos emails.");
+      toast.success(
+        result.message || "Compte créé ! Veuillez vérifier vos emails.",
+      );
+      toast(
+        "Prochaine étape: connectez-vous puis déposez vos documents de profil.",
+      );
       registerModal.onClose();
+      loginModal.onOpen();
       // On n'ouvre pas forcément le login direct si le compte n'est pas activé
       // Mais le diagramme dit "Redirige vers la page de Connexion" après activation.
     } else {
@@ -55,9 +59,9 @@ const RegisterModal = () => {
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
-      <Heading 
-        title="Bienvenue chez Immobilier" 
-        subtitle="Créez votre compte en quelques secondes" 
+      <Heading
+        title="Bienvenue chez Immobilier"
+        subtitle="Créez votre compte en quelques secondes"
       />
       <div className="flex flex-row gap-4">
         <Input
@@ -97,14 +101,6 @@ const RegisterModal = () => {
         id="password"
         label="Mot de passe"
         type="password"
-        disabled={isLoading}
-        register={register}
-        errors={errors}
-        required
-      />
-      <RoleSelect
-        id="role"
-        label="Vous êtes ?"
         disabled={isLoading}
         register={register}
         errors={errors}
@@ -156,4 +152,3 @@ const RegisterModal = () => {
 };
 
 export default RegisterModal;
-

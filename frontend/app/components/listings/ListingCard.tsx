@@ -6,19 +6,64 @@ import { useCallback, useMemo } from "react";
 import { format } from "date-fns";
 
 import useCountries from "@/app/hooks/useCountries";
-import { Listing, Reservation, User } from "@prisma/client";
+
+type ListingLike = {
+  id: string;
+  imageSrc?: string;
+  locationValue?: string;
+  ville?: string;
+  category?: string;
+  price?: number;
+  priceMonthly?: number;
+};
+
+type ReservationLike = {
+  totalPrice?: number;
+  startDate?: string | Date;
+  endDate?: string | Date;
+};
 
 import HeartButton from "../HeartButton";
 import Button from "../Button";
 
+const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
+  "avatars.githubusercontent.com",
+  "lh3.googleusercontent.com",
+  "res.cloudinary.com",
+  "a0.muscache.com",
+]);
+
+function getSafeImageSrc(src?: string): string {
+  if (!src) {
+    return "/placeholder-image.jpg";
+  }
+
+  if (src.startsWith("/")) {
+    return src;
+  }
+
+  try {
+    const parsedUrl = new URL(src);
+    if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+      return ALLOWED_REMOTE_IMAGE_HOSTS.has(parsedUrl.hostname)
+        ? src
+        : "/placeholder-image.jpg";
+    }
+  } catch {
+    return "/placeholder-image.jpg";
+  }
+
+  return "/placeholder-image.jpg";
+}
+
 interface ListingCardProps {
-  data: Listing;
-  reservation?: Reservation;
+  data: ListingLike;
+  reservation?: ReservationLike;
   onAction?: (id: string) => void;
   disabled?: boolean;
   actionLabel?: string;
   actionId?: string;
-  currentUser?: User | null;
+  currentUser?: any | null;
 }
 
 const ListingCard: React.FC<ListingCardProps> = ({
@@ -33,7 +78,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
   const router = useRouter();
   const { getByValue } = useCountries();
 
-  const location = getByValue(data.locationValue);
+  const location = data.locationValue
+    ? getByValue(data.locationValue)
+    : undefined;
 
   const handleCancel = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -45,7 +92,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
       onAction?.(actionId);
     },
-    [disabled, onAction, actionId]
+    [disabled, onAction, actionId],
   );
 
   const price = useMemo(() => {
@@ -56,8 +103,17 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return data.price;
   }, [reservation, data.price]);
 
+  const monthlyPrice = useMemo(() => {
+    if (typeof data.priceMonthly === "number" && data.priceMonthly > 0) {
+      return data.priceMonthly;
+    }
+
+    const nightlyPrice = Number(data.price || 0);
+    return nightlyPrice * 30;
+  }, [data.price, data.priceMonthly]);
+
   const reservationDate = useMemo(() => {
-    if (!reservation) {
+    if (!reservation || !reservation.startDate || !reservation.endDate) {
       return null;
     }
 
@@ -66,6 +122,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
     return `${format(start, "PP")} - ${format(end, "PP")}`;
   }, [reservation]);
+
+  const safeImageSrc = useMemo(
+    () => getSafeImageSrc(data.imageSrc),
+    [data.imageSrc],
+  );
 
   return (
     <div
@@ -93,7 +154,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
               group-hover:scale-110 
               transition
             "
-            src={data.imageSrc || "/placeholder-image.jpg"}
+            src={safeImageSrc}
             alt="Listing"
           />
           <div
@@ -107,14 +168,23 @@ const ListingCard: React.FC<ListingCardProps> = ({
           </div>
         </div>
         <div className="font-semibold text-lg">
-          {location?.region}, {location?.label}
+          {location?.region && location?.label
+            ? `${location.region}, ${location.label}`
+            : data.ville || data.locationValue || "Localisation"}
         </div>
         <div className="font-light text-neutral-500">
           {reservationDate || data.category}
         </div>
-        <div className="flex flex-row items-center gap-1">
-          <div className="font-semibold">$ {price}</div>
-          {!reservation && <div className="font-light">night</div>}
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-row items-center gap-1">
+            <div className="font-semibold">FCFA{price}</div>
+            {!reservation && <div className="font-light">/ nuit</div>}
+          </div>
+          {!reservation && (
+            <div className="text-sm text-neutral-600">
+              FCFA{monthlyPrice} / mois
+            </div>
+          )}
         </div>
         {onAction && actionLabel && (
           <Button
