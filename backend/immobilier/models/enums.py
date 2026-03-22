@@ -20,6 +20,19 @@ class StatutDossierEnum(models.TextChoices):
     VALIDE = 'VALIDE', _('Validé')
     REFUSE = 'REFUSE', _('Refusé')
 
+
+class TypeDemandeEnum(models.TextChoices):
+    VISITE = 'VISITE', _('Demande de visite')
+    PRIVATISATION = 'PRIVATISATION', _('Demande de privatisation')
+    LOCATION_DIRECTE = 'LOCATION_DIRECTE', _('Demande de location directe')
+
+
+class StatutDemandeEnum(models.TextChoices):
+    EN_ATTENTE = 'EN_ATTENTE', _('En attente')
+    ACCEPTEE = 'ACCEPTEE', _('Acceptée')
+    REFUSEE = 'REFUSEE', _('Refusée')
+    ANNULEE = 'ANNULEE', _('Annulée')
+
 class StatutPaiementEnum(models.TextChoices):
     EN_ATTENTE = 'EN_ATTENTE', _('En attente')
     PAYE = 'PAYE', _('Payé')

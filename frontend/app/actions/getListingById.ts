@@ -1,4 +1,21 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const API_BASE_URL = API_URL.replace(/\/api\/?$/, "");
+
+function normalizePhotoSrc(src?: string): string {
+  if (!src) {
+    return "";
+  }
+
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    return src;
+  }
+
+  if (src.startsWith("/")) {
+    return `${API_BASE_URL}${src}`;
+  }
+
+  return `${API_BASE_URL}/${src}`;
+}
 
 interface IGetListingById {
   listingId?: string;
@@ -28,7 +45,7 @@ export default async function getListingById(params: IGetListingById) {
 
     const photoUrls = Array.isArray(bien.photos)
       ? bien.photos
-          .map((photo: any) => photo?.url || photo?.image)
+          .map((photo: any) => normalizePhotoSrc(photo?.url || photo?.image))
           .filter(
             (src: unknown): src is string =>
               typeof src === "string" && src.length > 0,

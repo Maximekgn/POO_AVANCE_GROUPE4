@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { verifyEmail } from "@/app/actions/authActions";
+import {
+  resendVerificationEmail,
+  verifyEmail,
+} from "@/app/actions/authActions";
 import Heading from "@/app/components/Heading";
 import Button from "@/app/components/Button";
 import useLoginModal from "@/app/hooks/useLoginModal";
@@ -19,6 +22,9 @@ const VerifyEmailPage = () => {
     "loading",
   );
   const [message, setMessage] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -48,6 +54,28 @@ const VerifyEmailPage = () => {
     setTimeout(() => {
       loginModal.onOpen();
     }, 500);
+  };
+
+  const handleResend = async () => {
+    const email = resendEmail.trim();
+    if (!email) {
+      setResendMessage("Saisissez votre email pour renvoyer le lien.");
+      return;
+    }
+
+    setResendLoading(true);
+    const result = await resendVerificationEmail(email);
+    setResendLoading(false);
+
+    if (result.success) {
+      setResendMessage(
+        result.message ||
+          "Si un compte existe, un nouveau lien de vérification a été envoyé.",
+      );
+      return;
+    }
+
+    setResendMessage(result.error || "Impossible de renvoyer le lien.");
   };
 
   return (
@@ -108,6 +136,23 @@ const VerifyEmailPage = () => {
               </svg>
             </div>
             <Heading title="Erreur de validation" subtitle={message} center />
+            <div className="w-full max-w-md space-y-3">
+              <input
+                type="email"
+                value={resendEmail}
+                onChange={(event) => setResendEmail(event.target.value)}
+                placeholder="Votre email"
+                className="w-full rounded-lg border border-neutral-300 px-4 py-3"
+              />
+              <Button
+                label={resendLoading ? "Envoi..." : "Renvoyer le lien"}
+                onClick={handleResend}
+                disabled={resendLoading}
+              />
+              {resendMessage ? (
+                <p className="text-sm text-neutral-600">{resendMessage}</p>
+              ) : null}
+            </div>
             <div className="w-48">
               <Button
                 outline

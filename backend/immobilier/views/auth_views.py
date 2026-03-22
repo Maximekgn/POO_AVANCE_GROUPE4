@@ -47,7 +47,9 @@ class UploadDocumentsView(APIView):
 
     def post(self, request: Request) -> Response:
         serializer = UploadUserDocumentsSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            logger.error(f"[UploadDocumentsView] Serializer errors: {serializer.errors}, Data: {request.data}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         payload = serializer.save()
         return Response(
             {

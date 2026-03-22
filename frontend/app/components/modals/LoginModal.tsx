@@ -11,16 +11,21 @@ import Heading from "../Heading";
 import Input from "../Inputs/Input";
 import toast from "react-hot-toast";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
+import { resendVerificationEmail } from "@/app/actions/authActions";
 
 const LoginModal = () => {
   const router = useRouter();
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [lastEmail, setLastEmail] = useState("");
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FieldValues>({
     defaultValues: {
@@ -31,6 +36,8 @@ const LoginModal = () => {
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
+    setNeedsVerification(false);
+    setLastEmail((data.email || "").toString());
 
     const response = await signIn("credentials", {
       ...data,
@@ -52,8 +59,30 @@ const LoginModal = () => {
     }
 
     if (response?.error) {
+      if (response.error.toLowerCase().includes("email non verifie")) {
+        setNeedsVerification(true);
+      }
       toast.error(response.error);
     }
+  };
+
+  const handleResend = async () => {
+    const email = (watch("email") || lastEmail || "").toString().trim();
+    if (!email) {
+      toast.error("Saisissez votre email pour renvoyer le lien.");
+      return;
+    }
+
+    setIsResending(true);
+    const result = await resendVerificationEmail(email);
+    setIsResending(false);
+
+    if (result.success) {
+      toast.success(result.message || "Email de vérification renvoyé.");
+      return;
+    }
+
+    toast.error(result.error || "Impossible de renvoyer l'email.");
   };
 
   const toggle = useCallback(() => {
@@ -81,6 +110,20 @@ const LoginModal = () => {
         errors={errors}
         required
       />
+      {needsVerification && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          Votre compte n'est pas encore vérifié. Ouvrez le lien reçu par email
+          ou renvoyez un nouveau lien.
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={isResending}
+            className="ml-2 font-semibold underline disabled:opacity-60"
+          >
+            {isResending ? "Envoi..." : "Renvoyer le lien"}
+          </button>
+        </div>
+      )}
     </div>
   );
 

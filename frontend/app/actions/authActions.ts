@@ -82,3 +82,87 @@ export async function verifyEmail(token: string) {
     return { error: "Erreur lors de la vérification de l'email." };
   }
 }
+
+export async function resendVerificationEmail(email: string) {
+  try {
+    const response = await fetch(`${API_URL}/auth/resend-verification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        error:
+          result.error ||
+          result.message ||
+          result.detail ||
+          "Impossible de renvoyer l'email de vérification.",
+      };
+    }
+
+    return {
+      success: true,
+      message:
+        result.message ||
+        "Si un compte existe, un nouvel email de vérification a été envoyé.",
+    };
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return { error: "Erreur lors du renvoi de l'email de vérification." };
+  }
+}
+
+export async function uploadUserDocuments(
+  token: string,
+  payload: {
+    numeroPiece: string;
+    profession?: string;
+    revenusMensuels?: string;
+    pieceIdentite: File;
+  },
+) {
+  try {
+    const formData = new FormData();
+    formData.append("numero_piece", payload.numeroPiece);
+    if (payload.profession) {
+      formData.append("profession", payload.profession);
+    }
+    if (payload.revenusMensuels) {
+      formData.append("revenus_mensuels", payload.revenusMensuels);
+    }
+    formData.append("piece_identite", payload.pieceIdentite);
+
+    const response = await fetch(`${API_URL}/auth/upload-documents`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        error:
+          result.error ||
+          result.message ||
+          result.detail ||
+          "Impossible d'enregistrer les documents.",
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message || "Documents enregistrés.",
+    };
+  } catch (error) {
+    console.error("Upload documents error:", error);
+    return { error: "Erreur lors de l'upload des documents." };
+  }
+}

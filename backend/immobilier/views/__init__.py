@@ -15,6 +15,35 @@ from .property_views import (
 	PublicBienDetailView,
 )
 from .photo_views import BienPhotoListCreateView, PhotoDetailView, BienPhotoReorderView
+from .message_views import (
+	ConversationListView,
+	ConversationMessagesView,
+	MarkConversationReadView,
+	ChatContactsView,
+)
+from .user_views import (
+	AdminUserListView,
+	AdminUserDetailView,
+	AdminUserBiensView,
+    AdminUserRentedBiensView,
+        AdminVerifyUserView,
+	CurrentUserProfileView,
+)
+from .finance_views import (
+	AdminFinanceStatsView,
+	AdminPaiementListView,
+	AdminPaiementDetailView,
+	AdminDepenseListView,
+	AdminDepenseDetailView,
+	AdminFinanceProfileView,
+	CurrentUserFinanceView,
+)
+from .request_views import (
+	DemandeActionListCreateView,
+	DemandeActionIncomingListView,
+	DemandeActionDetailView,
+	DemandeActionDecisionView,
+)
 
 __all__ = [
 	'RegisterView',
@@ -36,4 +65,25 @@ __all__ = [
 	'BienPhotoListCreateView',
 	'BienPhotoReorderView',
 	'PhotoDetailView',
+	'ConversationListView',
+	'ConversationMessagesView',
+	'MarkConversationReadView',
+	'ChatContactsView',
+	'AdminUserListView',
+	'AdminUserDetailView',
+	'AdminUserBiensView',
+    'AdminUserRentedBiensView',
+        'AdminVerifyUserView',
+	'CurrentUserProfileView',
+	'AdminFinanceStatsView',
+	'AdminPaiementListView',
+	'AdminPaiementDetailView',
+	'AdminDepenseListView',
+	'AdminDepenseDetailView',
+	'AdminFinanceProfileView',
+	'CurrentUserFinanceView',
+	'DemandeActionListCreateView',
+	'DemandeActionIncomingListView',
+	'DemandeActionDetailView',
+	'DemandeActionDecisionView',
 ]

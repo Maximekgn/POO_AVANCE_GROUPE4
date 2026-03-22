@@ -87,6 +87,30 @@ class EmailService:
             destinataire=utilisateur.email,
         )
 
+    @classmethod
+    def envoyer_statut_compte_admin(cls, utilisateur, statut: str, url_support: str = "/") -> bool:
+        """Notifie l'utilisateur lors d'un changement de statut de compte par un administrateur."""
+        statut = (statut or '').upper()
+        labels = {
+            'APPROUVE': ('✅ Compte approuvé', 'approuvé'),
+            'REJETE': ('❌ Compte rejeté', 'rejeté'),
+            'SUSPENDU': ('⛔ Compte suspendu', 'suspendu'),
+        }
+        sujet, statut_label = labels.get(statut, ('Mise à jour de votre compte', 'mis à jour'))
+
+        return cls._envoyer(
+            sujet=f"{sujet} — ImmobilierPro",
+            template="emails/statut_compte_admin.html",
+            contexte={
+                "prenom": utilisateur.first_name or utilisateur.username,
+                "email": utilisateur.email,
+                "statut": statut,
+                "statut_label": statut_label,
+                "url_support": url_support,
+            },
+            destinataire=utilisateur.email,
+        )
+
     # ─────────────────────────────────────────────
     #  2. Réinitialisation de mot de passe
     # ─────────────────────────────────────────────
@@ -180,6 +204,76 @@ class EmailService:
             sent_all = sent_all and sent
 
         return sent_all
+
+    @classmethod
+    def envoyer_nouvelle_demande_bien(cls, demande, url_dashboard: str = "/reservations") -> bool:
+        """Notifie le proprietaire lorsqu'une nouvelle demande est creee sur son bien."""
+        proprietaire = getattr(demande, 'proprietaire', None)
+        demandeur = getattr(demande, 'demandeur', None)
+        bien = getattr(demande, 'bien', None)
+
+        if not proprietaire or not proprietaire.email or not bien:
+            return False
+
+        demandeur_nom = ""
+        if demandeur:
+            demandeur_nom = f"{demandeur.first_name or ''} {demandeur.last_name or ''}".strip() or demandeur.email
+
+        return cls._envoyer(
+            sujet=f"Nouvelle demande {demande.type_demande} sur votre bien",
+            template="emails/nouvelle_demande_bien.html",
+            contexte={
+                "prenom": proprietaire.first_name or proprietaire.username,
+                "reference_bien": bien.reference,
+                "adresse_bien": bien.adresse,
+                "type_demande": demande.type_demande,
+                "date_debut": demande.date_debut.strftime("%d/%m/%Y"),
+                "date_fin": demande.date_fin.strftime("%d/%m/%Y"),
+                "duree_jours": demande.duree_jours,
+                "demandeur_nom": demandeur_nom,
+                "message": demande.message or "",
+                "url_dashboard": url_dashboard,
+            },
+            destinataire=proprietaire.email,
+        )
+
+    @classmethod
+    def envoyer_decision_demande_bien(cls, demande, url_dashboard: str = "/trips") -> bool:
+        """Notifie le demandeur lorsque le proprietaire accepte ou refuse sa demande."""
+        demandeur = getattr(demande, 'demandeur', None)
+        proprietaire = getattr(demande, 'proprietaire', None)
+        bien = getattr(demande, 'bien', None)
+
+        if not demandeur or not demandeur.email or not bien:
+            return False
+
+        proprietaire_nom = ""
+        if proprietaire:
+            proprietaire_nom = f"{proprietaire.first_name or ''} {proprietaire.last_name or ''}".strip() or proprietaire.email
+
+        est_acceptee = demande.statut == 'ACCEPTEE'
+
+        return cls._envoyer(
+            sujet=(
+                f"Votre demande {demande.type_demande} a ete {'acceptee' if est_acceptee else 'refusee'}"
+            ),
+            template="emails/decision_demande_bien.html",
+            contexte={
+                "prenom": demandeur.first_name or demandeur.username,
+                "reference_bien": bien.reference,
+                "adresse_bien": bien.adresse,
+                "type_demande": demande.type_demande,
+                "statut": demande.statut,
+                "est_acceptee": est_acceptee,
+                "motif_refus": demande.motif_refus or "",
+                "note_proprietaire": demande.note_proprietaire or "",
+                "proprietaire_nom": proprietaire_nom,
+                "date_debut": demande.date_debut.strftime("%d/%m/%Y"),
+                "date_fin": demande.date_fin.strftime("%d/%m/%Y"),
+                "url_dashboard": url_dashboard,
+            },
+            destinataire=demandeur.email,
+        )
 
     # ─────────────────────────────────────────────
     #  4. Mise à jour du statut d'un dossier

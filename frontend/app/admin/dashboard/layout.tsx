@@ -20,7 +20,7 @@ export default async function AdminDashboardLayout({
     <Container>
       <div className="mx-auto flex w-full flex-col gap-6  md:flex-row">
         <AdminSidebar />
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 space-y-6">{children}</main>
       </div>
     </Container>
   );

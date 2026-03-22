@@ -6,6 +6,8 @@ Toutes les routes API sont préfixées par /api/.
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # Redirige la racine vers l'index de l'API
@@ -19,3 +21,6 @@ urlpatterns = [
     # Ex: POST /api/auth/register, POST /api/auth/login, etc.
     path('api/', include('immobilier.urls', namespace='immobilier')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

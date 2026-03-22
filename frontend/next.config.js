@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const backendBaseUrl = apiUrl.replace(/\/api\/?$/, "");
+
 const nextConfig = {
+  distDir: ".next_cache",
   images: {
     remotePatterns: [
       {
@@ -22,7 +26,25 @@ const nextConfig = {
         protocol: "https",
         hostname: "example.com",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
+      },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/media/:path*",
+        destination: `${backendBaseUrl}/media/:path*`,
+      },
+    ];
   },
 };
 

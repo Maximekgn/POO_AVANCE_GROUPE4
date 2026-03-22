@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 interface IParams {
   reservationId?: string;
 }
@@ -12,21 +14,35 @@ export async function DELETE(
 ) {
   const currentUser = await getCurrentUser();
 
-  if (!currentUser) {
-    return NextResponse.error();
+  if (!currentUser?.accessToken) {
+    return NextResponse.json({ error: "Non authentifie." }, { status: 401 });
   }
 
   const { reservationId } = await params;
 
   if (!reservationId || typeof reservationId !== "string") {
-    throw new Error("Invalid ID");
+    return NextResponse.json({ error: "ID invalide." }, { status: 400 });
   }
 
-  return NextResponse.json(
-    {
-      error:
-        "La suppression des reservations n'est pas encore disponible via l'API backend.",
+  const response = await fetch(`${API_URL}/demandes-actions/${reservationId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${currentUser.accessToken}`,
     },
-    { status: 501 },
-  );
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    return NextResponse.json(
+      {
+        error:
+          payload?.detail || payload?.statut?.[0] || "Annulation impossible.",
+        backendErrors: payload,
+      },
+      { status: response.status },
+    );
+  }
+
+  return NextResponse.json(payload, { status: 200 });
 }

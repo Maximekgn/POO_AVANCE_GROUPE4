@@ -25,6 +25,8 @@ class BienSerializer(serializers.ModelSerializer):
     photos = PhotoSerializer(many=True, read_only=True)
     categorie_nom = serializers.CharField(source='categorie.nom', read_only=True)
     sous_type_nom = serializers.CharField(source='sous_type.nom', read_only=True)
+    proprietaire_nom = serializers.SerializerMethodField()
+    proprietaire_email = serializers.CharField(source='proprietaire_info.utilisateur.email', read_only=True)
 
     class Meta:
         model = Bien
@@ -36,6 +38,8 @@ class BienSerializer(serializers.ModelSerializer):
             'categorie_nom',
             'sous_type',
             'sous_type_nom',
+            'proprietaire_nom',
+            'proprietaire_email',
             'adresse',
             'quartier',
             'ville',
@@ -58,6 +62,13 @@ class BienSerializer(serializers.ModelSerializer):
             'photos',
         ]
         read_only_fields = ['id', 'date_creation', 'photos', 'categorie_nom', 'sous_type_nom', 'is_active']
+
+    def get_proprietaire_nom(self, obj):
+        owner = getattr(getattr(obj, 'proprietaire_info', None), 'utilisateur', None)
+        if not owner:
+            return None
+        full_name = f"{owner.first_name or ''} {owner.last_name or ''}".strip()
+        return full_name or owner.email
 
     def validate(self, attrs):
         categorie = attrs.get('categorie') or getattr(self.instance, 'categorie', None)

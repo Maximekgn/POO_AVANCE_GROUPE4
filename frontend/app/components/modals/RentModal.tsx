@@ -57,6 +57,16 @@ const RentModal = () => {
       pricePerMonth: 1,
       title: "",
       description: "",
+      adresse: "",
+      ville: "",
+      code_postal: "",
+      superficie: 0,
+      meuble: false,
+      etage: 0,
+      nb_pieces: 0,
+      loyer_hc: 0,
+      charges: 0,
+      depot_garantie: 0,
     },
   });
 
@@ -68,6 +78,16 @@ const RentModal = () => {
   const roomCount = watch("roomCount");
   const bathroomCount = watch("bathroomCount");
   const imageSrc = watch("imageSrc") as string[];
+  const adresse = watch("adresse");
+  const ville = watch("ville");
+  const code_postal = watch("code_postal");
+  const superficie = watch("superficie");
+  const meuble = watch("meuble");
+  const etage = watch("etage");
+  const nb_pieces = watch("nb_pieces");
+  const loyer_hc = watch("loyer_hc");
+  const charges = watch("charges");
+  const depot_garantie = watch("depot_garantie");
 
   const getNearestQuartier = (lat: number, lng: number): QuartierOption => {
     return TOGO_QUARTIERS.reduce((nearest, current) => {
@@ -181,8 +201,8 @@ const RentModal = () => {
   let bodyContent = (
     <div className="flex flex-col gap-4">
       <Heading
-        title="Which category best describes your place?"
-        subtitle="You can change this later"
+        title="Quelle est la catégorie de votre bien ?"
+        subtitle="Vous pourrez ajouter plus de détails ensuite, ne vous inquiétez pas."
       />
       <div
         className="
@@ -283,10 +303,77 @@ const RentModal = () => {
 
   if (step === STEPS.INFO) {
     bodyContent = (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-2">
         <Heading
-          title="Share some details about your place"
-          subtitle="You can always change this later"
+          title="Détails du bien"
+          subtitle="Partagez plus d'informations sur la propriété"
+        />
+        <Input
+          id="adresse"
+          label="Adresse (Numéro et Rue)"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="ville"
+            label="Ville"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+          <Input
+            id="code_postal"
+            label="Code Postal"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+        </div>
+        <hr />
+        <Counter
+          title="Superficie (m²)"
+          subtitle="Surface habitable (approximative)"
+          value={superficie}
+          onChange={(value) => setCustomValue("superficie", value)}
+        />
+        <hr />
+        <Counter
+          title="Nombre de pièces"
+          subtitle="Total des pièces principales"
+          value={nb_pieces}
+          onChange={(value) => setCustomValue("nb_pieces", value)}
+        />
+        <hr />
+        <Counter
+          title="Étage"
+          subtitle="Niveau de l'appartement (0 pour RDC)"
+          value={etage}
+          onChange={(value) => setCustomValue("etage", value)}
+        />
+        <hr />
+        <div className="flex flex-row items-center justify-between">
+          <div className="flex flex-col">
+            <div className="font-semibold">Meublé</div>
+            <div className="font-light text-neutral-500">
+              Le bien est-il loué avec des meubles ?
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={meuble}
+            onChange={(e) => setCustomValue("meuble", e.target.checked)}
+            className="w-5 h-5 cursor-pointer accent-rose-500"
+          />
+        </div>
+        <hr />
+        <Heading
+          title="Anciens champs Airbnb (temporaire)"
+          subtitle="Pour rétrocompatibilité"
         />
         <Counter
           title="Guests"
@@ -357,14 +444,37 @@ const RentModal = () => {
 
   if (step === STEPS.PRICE) {
     bodyContent = (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-2">
         <Heading
           title="Définissez vos tarifs"
-          subtitle="Indiquez le prix par jour et le prix par mois"
+          subtitle="Indiquez les loyers, charges et dépôts"
         />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="pricePerDay"
+            label="Prix par jour (FCFA)"
+            formatPrice
+            type="number"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+          <Input
+            id="pricePerMonth"
+            label="Prix par mois (FCFA)"
+            formatPrice
+            type="number"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+        </div>
+        <hr />
         <Input
-          id="pricePerDay"
-          label="Prix par jour (FCFA)"
+          id="loyer_hc"
+          label="Loyer Hors Charges (FCFA)"
           formatPrice
           type="number"
           disabled={isLoading}
@@ -372,16 +482,28 @@ const RentModal = () => {
           errors={errors}
           required
         />
-        <Input
-          id="pricePerMonth"
-          label="Prix par mois (FCFA)"
-          formatPrice
-          type="number"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="charges"
+            label="Charges mensuelles (FCFA)"
+            formatPrice
+            type="number"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+          <Input
+            id="depot_garantie"
+            label="Dépôt de garantie (FCFA)"
+            formatPrice
+            type="number"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+        </div>
       </div>
     );
   }

@@ -8,6 +8,7 @@ import LoginModal from "./components/modals/LoginModal";
 import RegisterModal from "./components/modals/RegisterModal";
 import RentModal from "./components/modals/RentModal";
 import SearchModal from "./components/modals/SearchModal";
+import ChatWidget from "./components/chat/ChatWidget";
 
 const font = Nunito({ subsets: ["latin"] });
 
@@ -15,7 +16,6 @@ export const metadata = {
   title: "Immobilier",
   description: "Plateforme de gestion et location immobilière",
 };
-
 
 export default async function RootLayout({
   children,
@@ -34,6 +34,7 @@ export default async function RootLayout({
           <RegisterModal />
           <LoginModal />
           <Navbar currentUser={currentUser} />
+          <ChatWidget currentUser={currentUser} />
           <div className="pb-20 pt-28">{children}</div>
         </ClientOnly>
       </body>

@@ -1,0 +1,47 @@
+{% extends "emails/base_email.html" %} {% block title %} Statut de compte {{
+statut_label|title }} - ImmobilierPro {% endblock %} {% block body %}
+<p class="greeting">
+  {% if statut == "APPROUVE" %} Votre compte a ete approuve {% elif statut ==
+  "REJETE" %} Votre compte a ete rejete {% elif statut == "SUSPENDU" %} Votre
+  compte a ete suspendu {% else %} Mise a jour de votre compte {% endif %}
+</p>
+
+<div class="content">
+  <p>Bonjour <strong>{{ prenom }}</strong>,</p>
+  <p>
+    Le statut de votre compte (<strong>{{ email }}</strong>) a été
+    <strong>{{ statut_label }}</strong> par notre équipe d'administration.
+  </p>
+
+  {% if statut == "APPROUVE" %}
+  <div class="info-box">
+    <p>
+      Votre accès est actif. Vous pouvez vous connecter et utiliser la
+      plateforme normalement.
+    </p>
+  </div>
+  {% elif statut == "REJETE" %}
+  <div class="info-box">
+    <p>
+      Votre dossier a été rejeté. Merci de mettre à jour vos informations et vos
+      documents avant une nouvelle soumission.
+    </p>
+  </div>
+  {% elif statut == "SUSPENDU" %}
+  <div class="info-box">
+    <p>
+      Votre compte est temporairement suspendu. Contactez le support pour
+      connaître la procédure de réactivation.
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+<div class="cta-wrapper">
+  <a href="{{ url_support }}" class="cta-btn">Contacter le support</a>
+</div>
+
+<div class="content">
+  <p>Cordialement,<br /><strong>L'équipe ImmobilierPro</strong></p>
+</div>
+{% endblock %}

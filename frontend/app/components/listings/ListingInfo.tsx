@@ -23,7 +23,7 @@ interface IListingInfoProps {
   category:
     | {
         label: string;
-        icon: IconType;
+        icon?: IconType | null;
         description: string;
       }
     | undefined;

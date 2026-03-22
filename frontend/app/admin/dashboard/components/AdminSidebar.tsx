@@ -8,6 +8,7 @@ const links = [
   { href: "/admin/dashboard/biens", label: "Biens" },
   { href: "/admin/dashboard/finances", label: "Finances" },
   { href: "/admin/dashboard/utilisateurs", label: "Utilisateurs" },
+  { href: "/admin/dashboard/messages", label: "Messagerie" },
 ];
 
 const AdminSidebar = () => {

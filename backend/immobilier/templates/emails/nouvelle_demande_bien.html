@@ -1,0 +1,32 @@
+{% extends "emails/base_email.html" %} {% block title %}Nouvelle demande sur
+votre bien{% endblock %} {% block body %}
+<p class="greeting">Nouvelle demande recue</p>
+
+<div class="content">
+  <p>Bonjour {{ prenom }},</p>
+  <p>Une nouvelle action a ete effectuee sur votre bien.</p>
+</div>
+
+<div class="info-box">
+  <p>
+    Type: <strong>{{ type_demande }}</strong><br />
+    Bien: <strong>{{ reference_bien }}</strong><br />
+    Adresse: <strong>{{ adresse_bien }}</strong><br />
+    Demandeur: <strong>{{ demandeur_nom }}</strong><br />
+    Debut: <strong>{{ date_debut }}</strong><br />
+    Fin: <strong>{{ date_fin }}</strong><br />
+    Duree: <strong>{{ duree_jours }} jour(s)</strong>
+  </p>
+</div>
+
+{% if message %}
+<div class="content">
+  <p>Message du demandeur:</p>
+  <p><em>{{ message }}</em></p>
+</div>
+{% endif %}
+
+<div class="cta-wrapper">
+  <a href="{{ url_dashboard }}" class="cta-btn">Voir mes demandes</a>
+</div>
+{% endblock %}

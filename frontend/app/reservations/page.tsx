@@ -24,17 +24,6 @@ const ReservationsPage = async () => {
     );
   }
 
-  if (reservations.length === 0) {
-    return (
-      <ClientOnly>
-        <EmptyState
-          title="No reservations found"
-          subtitle="You have no reservations scheduled"
-        />
-      </ClientOnly>
-    );
-  }
-
   return (
     <ClientOnly>
       <ReservationsClient

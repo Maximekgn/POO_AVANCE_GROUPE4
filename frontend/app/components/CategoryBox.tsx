@@ -8,12 +8,14 @@ import qs from "query-string";
 interface CategoryBoxProps {
   label: string;
   icon: IconType;
+  value?: string | number;
   selected?: boolean;
 }
 
 const CategoryBox: React.FC<CategoryBoxProps> = ({
   label,
   icon: Icon,
+  value,
   selected = false,
 }) => {
   const router = useRouter();
@@ -26,12 +28,14 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
       currentQuery = qs.parse(params.toString());
     }
 
+    const categoryValue = String(value ?? label);
+
     const updatedQuery: any = {
       ...currentQuery,
-      category: label,
+      category: categoryValue,
     };
 
-    if (params?.get("category") === label) {
+    if (params?.get("category") === categoryValue) {
       delete updatedQuery.category;
     }
 
@@ -40,11 +44,11 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
         url: "/",
         query: updatedQuery,
       },
-      { skipNull: true }
+      { skipNull: true },
     );
 
     router.push(url);
-  }, [label, params, router]);
+  }, [label, params, router, value]);
 
   return (
     <div

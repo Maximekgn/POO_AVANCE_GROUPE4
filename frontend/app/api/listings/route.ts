@@ -99,6 +99,16 @@ export async function POST(request: Request) {
     longitude,
     pricePerDay,
     pricePerMonth,
+    adresse,
+    ville,
+    code_postal,
+    superficie,
+    meuble,
+    etage,
+    nb_pieces,
+    loyer_hc,
+    charges,
+    depot_garantie,
   } = body;
 
   const parsedDaily = toPositiveNumber(pricePerDay, 1);
@@ -112,21 +122,22 @@ export async function POST(request: Request) {
   const backendPayload = {
     reference: buildReference(),
     categorie: Number(category) || null,
-    adresse: quartier?.label || title || "Adresse non precisee",
+    adresse: adresse || quartier?.label || title || "Adresse non precisee",
     quartier: quartier?.label || "Quartier non precise",
-    ville: quartier?.city || "Lome",
-    code_postal: "00000",
+    ville: ville || quartier?.city || "Lome",
+    code_postal: code_postal || "00000",
     latitude: normalizedLatitude,
     longitude: normalizedLongitude,
     description: description || "",
-    superficie: 1,
-    nb_pieces: toPositiveNumber(roomCount, 1),
-    meuble: false,
+    superficie: Number(superficie) || 1,
+    nb_pieces: Number(nb_pieces) || toPositiveNumber(roomCount, 1),
+    meuble: Boolean(meuble),
+    etage: Number(etage) || 0,
     prix_jour: parsedDaily,
     prix_mois: parsedMonthly,
-    loyer_hc: fallbackMonthly,
-    charges: 0,
-    depot_garantie: 0,
+    loyer_hc: Number(loyer_hc) || fallbackMonthly,
+    charges: Number(charges) || 0,
+    depot_garantie: Number(depot_garantie) || 0,
   };
 
   const createResponse = await fetch(`${API_URL}/biens`, {

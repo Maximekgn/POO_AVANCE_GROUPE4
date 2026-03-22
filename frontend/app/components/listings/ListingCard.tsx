@@ -31,6 +31,8 @@ const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
   "lh3.googleusercontent.com",
   "res.cloudinary.com",
   "a0.muscache.com",
+  "localhost",
+  "127.0.0.1",
 ]);
 
 function getSafeImageSrc(src?: string): string {
@@ -54,6 +56,20 @@ function getSafeImageSrc(src?: string): string {
   }
 
   return "/placeholder-image.jpg";
+}
+
+function isLocalDevImage(src: string): boolean {
+  try {
+    const parsedUrl = new URL(src);
+    return (
+      parsedUrl.hostname === "localhost" ||
+      parsedUrl.hostname === "127.0.0.1" ||
+      parsedUrl.hostname === "::1" ||
+      parsedUrl.hostname === "[::1]"
+    );
+  } catch {
+    return false;
+  }
 }
 
 interface ListingCardProps {
@@ -127,6 +143,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
     () => getSafeImageSrc(data.imageSrc),
     [data.imageSrc],
   );
+  const shouldDisableOptimization = useMemo(
+    () => isLocalDevImage(safeImageSrc),
+    [safeImageSrc],
+  );
 
   return (
     <div
@@ -147,6 +167,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             fill
             priority
             sizes="100%"
+            unoptimized={shouldDisableOptimization}
             className="
               object-cover 
               h-full 

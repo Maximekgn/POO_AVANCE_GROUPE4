@@ -9,6 +9,8 @@ class Utilisateur(AbstractUser):
     Les attributs métiers spécifiques sont gérés dans ProprietaireInfo et ClientInfo.
     """
     telephone = models.CharField(max_length=20, blank=True, null=True)
+    photo_profil = models.URLField(blank=True, null=True)
+    compte_verifie = models.BooleanField(default=False)
     email_verifie = models.BooleanField(default=False)
     documents_complets = models.BooleanField(default=False)
     date_creation = models.DateTimeField(auto_now_add=True, null=True)

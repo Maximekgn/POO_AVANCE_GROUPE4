@@ -81,6 +81,12 @@ export default async function AdminDashboardHomePage() {
           >
             Gestion utilisateurs
           </Link>
+          <Link
+            href="/admin/dashboard/messages"
+            className="rounded-xl border border-neutral-200 px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            Ouvrir la messagerie
+          </Link>
         </div>
       </section>
     </div>

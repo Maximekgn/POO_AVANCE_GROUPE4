@@ -2,6 +2,11 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "@/app/components/ClientOnly";
 import EmptyState from "@/app/components/EmptyState";
 
+import {
+  getAdminExpenses,
+  getAdminFinanceStats,
+  getAdminPayments,
+} from "../lib/adminApi";
 import FinancesDashboardClient from "./FinancesDashboardClient";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +36,19 @@ const AdminFinancesPage = async () => {
     );
   }
 
+  const [stats, payments, expenses] = await Promise.all([
+    getAdminFinanceStats(currentUser || {}),
+    getAdminPayments(currentUser || {}),
+    getAdminExpenses(currentUser || {}),
+  ]);
+
   return (
     <ClientOnly>
-      <FinancesDashboardClient />
+      <FinancesDashboardClient
+        initialStats={stats}
+        initialPayments={payments}
+        initialExpenses={expenses}
+      />
     </ClientOnly>
   );
 };

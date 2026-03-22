@@ -1,0 +1,36 @@
+{% extends "emails/base_email.html" %} {% block title %}Decision sur votre
+demande{% endblock %} {% block body %}
+<p class="greeting">Mise a jour de votre demande</p>
+
+<div class="content">
+  <p>Bonjour {{ prenom }},</p>
+  <p>Le proprietaire a traite votre demande.</p>
+</div>
+
+<div class="info-box">
+  <p>
+    Type: <strong>{{ type_demande }}</strong><br />
+    Statut: <strong>{{ statut }}</strong><br />
+    Bien: <strong>{{ reference_bien }}</strong><br />
+    Adresse: <strong>{{ adresse_bien }}</strong><br />
+    Periode: <strong>{{ date_debut }} - {{ date_fin }}</strong><br />
+    Proprietaire: <strong>{{ proprietaire_nom }}</strong>
+  </p>
+</div>
+
+{% if note_proprietaire %}
+<div class="content">
+  <p>Note du proprietaire:</p>
+  <p><em>{{ note_proprietaire }}</em></p>
+</div>
+{% endif %} {% if not est_acceptee and motif_refus %}
+<div class="content">
+  <p>Motif du refus:</p>
+  <p><strong>{{ motif_refus }}</strong></p>
+</div>
+{% endif %}
+
+<div class="cta-wrapper">
+  <a href="{{ url_dashboard }}" class="cta-btn">Voir mes demandes</a>
+</div>
+{% endblock %}

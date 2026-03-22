@@ -90,6 +90,9 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         if user is None or not user.is_active:
             raise AuthenticationFailed("No active account found with the given credentials")
 
+        if not user.email_verifie:
+            raise AuthenticationFailed("Email non verifie. Veuillez verifier votre compte avant de vous connecter.")
+
         self.user = user
 
         refresh = self.get_token(user)
@@ -111,8 +114,17 @@ class UploadUserDocumentsSerializer(serializers.Serializer):
 
     numero_piece = serializers.CharField(max_length=100)
     profession = serializers.CharField(required=False, allow_blank=True)
-    revenus_mensuels = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    revenus_mensuels = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        required=False, 
+        allow_null=True
+    )
     piece_identite = serializers.FileField()
+
+    def validate_revenus_mensuels(self, value):
+        """Allow empty/None values for optional numeric field."""
+        return value
 
     def create(self, validated_data):
         request = self.context['request']
@@ -130,9 +142,9 @@ class UploadUserDocumentsSerializer(serializers.Serializer):
         client_info, _ = ClientInfo.objects.get_or_create(utilisateur=user)
         client_info.numero_piece = validated_data['numero_piece']
         client_info.carte_identite = document
-        if 'profession' in validated_data:
+        if 'profession' in validated_data and validated_data['profession']:
             client_info.profession = validated_data['profession']
-        if 'revenus_mensuels' in validated_data:
+        if 'revenus_mensuels' in validated_data and validated_data['revenus_mensuels']:
             client_info.revenus_mensuels = validated_data['revenus_mensuels']
         client_info.save()
 

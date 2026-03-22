@@ -1,13 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const Logo = () => {
   const router = useRouter();
 
   return (
-    <p>LOGO</p>
+    <Link href="/">
+      <h1 className="text-2xl font-bold text-primary">LOGO</h1>
+    </Link>
   );
 };
 

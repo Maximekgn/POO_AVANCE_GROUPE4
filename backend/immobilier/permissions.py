@@ -60,3 +60,19 @@ class IsPhotoBienOwnerOrAdminForWrite(BasePermission):
         # Vérifier que l'utilisateur est propriétaire du bien
         return (hasattr(request.user, 'proprietaire_info') and 
                 obj.bien.proprietaire_info_id == request.user.proprietaire_info.id)
+
+
+class IsDemandeParticipantOrAdmin(BasePermission):
+    """Autorise l'acces aux admins et aux participants d'une demande."""
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+
+        return bool(
+            obj.demandeur_id == request.user.id
+            or obj.proprietaire_id == request.user.id
+        )

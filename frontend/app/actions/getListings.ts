@@ -1,4 +1,21 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const API_BASE_URL = API_URL.replace(/\/api\/?$/, "");
+
+function normalizePhotoSrc(src?: string): string {
+  if (!src) {
+    return "/placeholder-image.jpg";
+  }
+
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    return src;
+  }
+
+  if (src.startsWith("/")) {
+    return `${API_BASE_URL}${src}`;
+  }
+
+  return `${API_BASE_URL}/${src}`;
+}
 
 export interface IListingParams {
   userId?: string;
@@ -9,6 +26,7 @@ export interface IListingParams {
   endDate?: string;
   locationValue?: string;
   category?: string;
+  search?: string;
 }
 
 export default async function getListings(params: IListingParams) {
@@ -20,16 +38,17 @@ export default async function getListings(params: IListingParams) {
       bathroomCount: _bathroomCount,
       startDate: _startDate,
       endDate: _endDate,
-      locationValue,
+      locationValue: _locationValue,
       category,
+      search,
     } = params;
 
     const query = new URLSearchParams();
     if (category) {
       query.append("categorie", category);
     }
-    if (locationValue) {
-      query.append("ville", locationValue);
+    if (search) {
+      query.append("search", search);
     }
 
     const response = await fetch(
@@ -57,8 +76,7 @@ export default async function getListings(params: IListingParams) {
         Array.isArray(bien.photos) && bien.photos.length > 0
           ? bien.photos[0]
           : null;
-      const photoUrl =
-        firstPhoto?.url || firstPhoto?.image || "/placeholder-image.jpg";
+      const photoUrl = normalizePhotoSrc(firstPhoto?.url || firstPhoto?.image);
 
       return {
         id: String(bien.id),

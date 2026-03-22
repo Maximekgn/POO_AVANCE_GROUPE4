@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from django.db.models import Q
 
 from immobilier.models import Bien, ProprietaireInfo
 from immobilier.models.enums import StatutBienEnum
@@ -22,20 +23,41 @@ class BienListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Bien.objects.select_related('categorie', 'sous_type', 'proprietaire_info').prefetch_related('photos').all()
+        user = self.request.user
 
-        categorie_id = self.request.query_params.get('categorie')
+        if not (user.is_staff or user.is_superuser):
+            proprietaire_info = getattr(user, 'proprietaire_info', None)
+            if proprietaire_info is None:
+                return Bien.objects.none()
+            queryset = queryset.filter(proprietaire_info=proprietaire_info)
+
+        categorie_value = self.request.query_params.get('categorie') or self.request.query_params.get('category')
         statut = self.request.query_params.get('statut')
         ville = self.request.query_params.get('ville')
         quartier = self.request.query_params.get('quartier')
+        search = (
+            self.request.query_params.get('search')
+            or self.request.query_params.get('keyword')
+            or self.request.query_params.get('q')
+        )
 
-        if categorie_id:
-            queryset = queryset.filter(categorie_id=categorie_id)
+        if categorie_value:
+            if str(categorie_value).isdigit():
+                queryset = queryset.filter(categorie_id=categorie_value)
+            else:
+                queryset = queryset.filter(categorie__nom__iexact=categorie_value)
         if statut:
             queryset = queryset.filter(statut=statut)
         if ville:
             queryset = queryset.filter(ville__icontains=ville)
         if quartier:
             queryset = queryset.filter(quartier__icontains=quartier)
+        if search:
+            queryset = queryset.filter(
+                Q(reference__icontains=search)
+                | Q(ville__icontains=search)
+                | Q(description__icontains=search)
+            )
 
         return queryset.order_by('-date_creation')
 
@@ -72,16 +94,30 @@ class PublicBienListView(generics.ListAPIView):
             .all()
         )
 
-        categorie_id = self.request.query_params.get('categorie')
+        categorie_value = self.request.query_params.get('categorie') or self.request.query_params.get('category')
         ville = self.request.query_params.get('ville')
         quartier = self.request.query_params.get('quartier')
+        search = (
+            self.request.query_params.get('search')
+            or self.request.query_params.get('keyword')
+            or self.request.query_params.get('q')
+        )
 
-        if categorie_id:
-            queryset = queryset.filter(categorie_id=categorie_id)
+        if categorie_value:
+            if str(categorie_value).isdigit():
+                queryset = queryset.filter(categorie_id=categorie_value)
+            else:
+                queryset = queryset.filter(categorie__nom__iexact=categorie_value)
         if ville:
             queryset = queryset.filter(ville__icontains=ville)
         if quartier:
             queryset = queryset.filter(quartier__icontains=quartier)
+        if search:
+            queryset = queryset.filter(
+                Q(reference__icontains=search)
+                | Q(ville__icontains=search)
+                | Q(description__icontains=search)
+            )
 
         return queryset.order_by('-date_creation')
 

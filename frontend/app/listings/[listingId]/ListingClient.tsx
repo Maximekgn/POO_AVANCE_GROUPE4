@@ -99,6 +99,11 @@ const ListingClient: React.FC<IListingClientProps> = ({
         return;
       }
 
+      if (action === "DIRECT_RENT" && nightCount < 30) {
+        toast.error("La location directe exige au minimum 30 jours.");
+        return;
+      }
+
       const payload = {
         listingId: listing?.id,
         startDate: dateRange.startDate,
@@ -110,7 +115,7 @@ const ListingClient: React.FC<IListingClientProps> = ({
       setIsLoading(true);
 
       try {
-        await axios.post("/api/reservations", payload);
+        const response = await axios.post("/api/reservations", payload);
 
         setLocalReservations((prev) => [
           ...prev,
@@ -122,13 +127,22 @@ const ListingClient: React.FC<IListingClientProps> = ({
         ]);
 
         if (action === "VISIT") {
-          toast.success("Visite reservee pour la date selectionnee.");
+          toast.success("Demande de visite envoyee.");
         }
         if (action === "DIRECT_RENT") {
-          toast.success("Location confirmee pour la periode selectionnee.");
+          toast.success("Demande de location envoyee.");
         }
         if (action === "PRIVATIZE") {
-          toast.success("Periode privatisée dans le calendrier.");
+          toast.success("Demande de privatisation envoyee.");
+        }
+
+        const conversationId = response?.data?.conversation_id;
+        if (typeof conversationId === "string" && conversationId.length > 0) {
+          window.dispatchEvent(
+            new CustomEvent("chat:open", {
+              detail: { conversationId },
+            }),
+          );
         }
 
         setDateRange(initialDateRange);

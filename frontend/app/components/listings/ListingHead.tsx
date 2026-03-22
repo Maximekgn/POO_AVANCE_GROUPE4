@@ -11,6 +11,8 @@ const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
   "lh3.googleusercontent.com",
   "res.cloudinary.com",
   "a0.muscache.com",
+  "localhost",
+  "127.0.0.1",
 ]);
 
 function getSafeImageSrc(src?: string): string {
@@ -34,6 +36,20 @@ function getSafeImageSrc(src?: string): string {
   }
 
   return "/placeholder-image.jpg";
+}
+
+function isLocalDevImage(src: string): boolean {
+  try {
+    const parsedUrl = new URL(src);
+    return (
+      parsedUrl.hostname === "localhost" ||
+      parsedUrl.hostname === "127.0.0.1" ||
+      parsedUrl.hostname === "::1" ||
+      parsedUrl.hostname === "[::1]"
+    );
+  } catch {
+    return false;
+  }
 }
 
 interface IListingHeadProps {
@@ -73,6 +89,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
 
   const selectedImage =
     galleryImages[selectedIndex] || "/placeholder-image.jpg";
+  const selectedImageIsLocal = isLocalDevImage(selectedImage);
 
   const location = getByValue(locationValue);
 
@@ -105,6 +122,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
           src={selectedImage}
           fill
           sizes="100%"
+          unoptimized={selectedImageIsLocal}
           className="object-cover w-full"
         />
         {galleryImages.length > 1 && (
@@ -130,6 +148,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                     src={src}
                     fill
                     sizes="80px"
+                    unoptimized={isLocalDevImage(src)}
                     className="object-cover"
                   />
                 </button>
@@ -175,6 +194,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                 src={selectedImage}
                 fill
                 sizes="100vw"
+                unoptimized={selectedImageIsLocal}
                 className="object-contain"
               />
             </div>
@@ -198,6 +218,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                       src={src}
                       fill
                       sizes="160px"
+                      unoptimized={isLocalDevImage(src)}
                       className="object-cover"
                     />
                   </button>

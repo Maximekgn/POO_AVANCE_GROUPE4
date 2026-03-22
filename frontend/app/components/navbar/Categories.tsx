@@ -58,8 +58,9 @@ const Categories = () => {
           <CategoryBox
             key={item.id}
             label={item.nom}
+            value={item.id}
             icon={TbBeach}
-            selected={item.nom === category}
+            selected={String(item.id) === category || item.nom === category}
           />
         ))}
       </div>

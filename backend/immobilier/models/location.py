@@ -1,7 +1,45 @@
 from django.db import models
-from .enums import StatutDossierEnum, StatutBailEnum, TypeSignataireEnum
+from .enums import (
+    StatutDossierEnum,
+    StatutBailEnum,
+    TypeSignataireEnum,
+    TypeDemandeEnum,
+    StatutDemandeEnum,
+)
 from .utilisateurs import ClientInfo, Utilisateur
 from .patrimoine import Bien
+
+
+class DemandeAction(models.Model):
+    bien = models.ForeignKey(Bien, on_delete=models.CASCADE, related_name='demandes_actions')
+    demandeur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='demandes_effectuees')
+    proprietaire = models.ForeignKey(Utilisateur, on_delete=models.CASCADE, related_name='demandes_recues')
+    type_demande = models.CharField(max_length=30, choices=TypeDemandeEnum.choices)
+    statut = models.CharField(max_length=30, choices=StatutDemandeEnum.choices, default=StatutDemandeEnum.EN_ATTENTE)
+    date_debut = models.DateField()
+    date_fin = models.DateField()
+    duree_jours = models.PositiveIntegerField(default=1)
+    montant_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    message = models.TextField(blank=True, null=True)
+    note_proprietaire = models.TextField(blank=True, null=True)
+    motif_refus = models.TextField(blank=True, null=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_traitement = models.DateTimeField(null=True, blank=True)
+    traite_par = models.ForeignKey(
+        Utilisateur,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='demandes_traitees',
+    )
+
+    class Meta:
+        ordering = ['-date_creation']
+        verbose_name = 'Demande d action'
+        verbose_name_plural = 'Demandes d action'
+
+    def __str__(self):
+        return f"Demande {self.type_demande} #{self.id} - Bien {self.bien_id}"
 
 class Dossier(models.Model):
     client_info = models.ForeignKey(ClientInfo, on_delete=models.CASCADE, related_name='dossiers', null=True, blank=True)

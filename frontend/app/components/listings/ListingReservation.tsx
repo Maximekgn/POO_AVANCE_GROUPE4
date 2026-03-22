@@ -54,6 +54,9 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
         <div className="mt-1 text-sm text-neutral-600">
           FCFA{monthlyPriceValue} / mois
         </div>
+        <div className="mt-1 text-xs text-neutral-500">
+          Location directe: minimum 30 jours
+        </div>
       </div>
       <hr />
       <Calendar
