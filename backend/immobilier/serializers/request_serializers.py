@@ -10,6 +10,7 @@ from immobilier.models.enums import StatutBienEnum, StatutDemandeEnum, TypeDeman
 class DemandeActionSerializer(serializers.ModelSerializer):
     bien_reference = serializers.CharField(source='bien.reference', read_only=True)
     bien_adresse = serializers.CharField(source='bien.adresse', read_only=True)
+    bien_image = serializers.SerializerMethodField()
     demandeur_nom = serializers.SerializerMethodField()
     proprietaire_nom = serializers.SerializerMethodField()
     demandeur_email = serializers.EmailField(source='demandeur.email', read_only=True)
@@ -22,6 +23,7 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'bien',
             'bien_reference',
             'bien_adresse',
+            'bien_image',
             'demandeur',
             'demandeur_nom',
             'demandeur_email',
@@ -51,6 +53,20 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'motif_refus',
             'note_proprietaire',
         ]
+
+    def get_bien_image(self, obj):
+        request = self.context.get('request')
+        # On cherche la photo principale, sinon la première
+        photo = obj.bien.photos.filter(principale=True).first()
+        if not photo:
+            photo = obj.bien.photos.first()
+        
+        if photo:
+            url = photo.image.url if photo.image else photo.url
+            if url and request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
 
     def get_demandeur_nom(self, obj):
         full_name = f"{obj.demandeur.first_name or ''} {obj.demandeur.last_name or ''}".strip()

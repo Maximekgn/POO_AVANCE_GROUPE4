@@ -59,6 +59,7 @@ from immobilier.views import (
     BailListView,
     BailDetailView,
     BailSignView,
+    AdminDashboardStatsView,
 )
 
 app_name = 'immobilier'
@@ -228,6 +229,7 @@ urlpatterns = [
     path('admin/users/<int:pk>/verify', AdminVerifyUserView.as_view(), name='admin-users-verify'),
     path('admin/users/<int:pk>/anonymize', AdminUserAnonymizeView.as_view(), name='admin-users-anonymize'),
     path('admin/finances/stats', AdminFinanceStatsView.as_view(), name='admin-finances-stats'),
+    path('admin/dashboard/stats', AdminDashboardStatsView.as_view(), name='admin-dashboard-stats'),
     path('admin/finances/paiements', AdminPaiementListView.as_view(), name='admin-finances-paiements-list'),
     path('admin/finances/paiements/<int:pk>', AdminPaiementDetailView.as_view(), name='admin-finances-paiements-detail'),
     path('admin/finances/depenses', AdminDepenseListView.as_view(), name='admin-finances-depenses-list'),

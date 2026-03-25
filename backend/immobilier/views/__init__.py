@@ -56,6 +56,7 @@ from .lease_views import (
 	BailDetailView,
 	BailSignView,
 )
+from .dashboard_views import AdminDashboardStatsView
 
 __all__ = [
 	'RegisterView',
@@ -108,4 +109,5 @@ __all__ = [
 	'BailListView',
 	'BailDetailView',
 	'BailSignView',
+	'AdminDashboardStatsView',
 ]
