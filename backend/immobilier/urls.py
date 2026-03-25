@@ -37,7 +37,14 @@ from immobilier.views import (
     AdminUserBiensView,
     AdminUserRentedBiensView,
     AdminVerifyUserView,
+    AdminUserAnonymizeView,
     CurrentUserProfileView,
+    GarantListCreateView,
+    GarantDetailView,
+    LocataireListView,
+    LocataireDetailView,
+    LocataireHistoryView,
+    LocataireOnboardingView,
     AdminFinanceStatsView,
     AdminPaiementListView,
     AdminPaiementDetailView,
@@ -49,6 +56,9 @@ from immobilier.views import (
     DemandeActionIncomingListView,
     DemandeActionDetailView,
     DemandeActionDecisionView,
+    BailListView,
+    BailDetailView,
+    BailSignView,
 )
 
 app_name = 'immobilier'
@@ -87,6 +97,13 @@ def api_root(_request):
                 'admin_user_detail': '/api/admin/users/{id}',
                 'admin_user_biens': '/api/admin/users/{id}/biens',
                 'admin_user_biens_loues': '/api/admin/users/{id}/biens-loues',
+                'admin_user_anonymize': '/api/admin/users/{id}/anonymize',
+                'garants': '/api/garants',
+                'garant_detail': '/api/garants/{id}',
+                'locataires': '/api/locataires',
+                'locataire_onboarding': '/api/locataires/onboarding',
+                'locataire_detail': '/api/locataires/{id}',
+                'locataire_historique': '/api/locataires/{id}/historique',
                 'admin_finance_stats': '/api/admin/finances/stats',
                 'admin_finance_payments': '/api/admin/finances/paiements',
                 'admin_finance_payment_detail': '/api/admin/finances/paiements/{id}',
@@ -97,6 +114,9 @@ def api_root(_request):
                 'demandes_actions_recues': '/api/demandes-actions/recues',
                 'demandes_actions_detail': '/api/demandes-actions/{id}',
                 'demandes_actions_decision': '/api/demandes-actions/{id}/decision',
+                'baux': '/api/baux',
+                'baux_detail': '/api/baux/{id}',
+                'baux_signer': '/api/baux/{id}/signer',
                 'profile_me': '/api/profile/me',
                 'chat_socket': '/ws/chat/?token={access_token}',
             },
@@ -189,12 +209,24 @@ urlpatterns = [
     path('chat/conversations/<str:conversation_id>/messages', ConversationMessagesView.as_view(), name='chat-conversation-messages'),
     path('chat/conversations/<str:conversation_id>/read', MarkConversationReadView.as_view(), name='chat-conversation-read'),
     path('chat/contacts', ChatContactsView.as_view(), name='chat-contacts'),
+
+    # ── Garants (Sprint 4 backend) ─────────────────────────────────────────
+    path('garants', GarantListCreateView.as_view(), name='garants-list-create'),
+    path('garants/<int:pk>', GarantDetailView.as_view(), name='garants-detail'),
+
+    # ── Locataires (Sprint 4 backend) ──────────────────────────────────────
+    path('locataires', LocataireListView.as_view(), name='locataires-list'),
+    path('locataires/onboarding', LocataireOnboardingView.as_view(), name='locataires-onboarding'),
+    path('locataires/<int:pk>', LocataireDetailView.as_view(), name='locataires-detail'),
+    path('locataires/<int:pk>/historique', LocataireHistoryView.as_view(), name='locataires-historique'),
+
     path('profile/me', CurrentUserProfileView.as_view(), name='profile-me'),
     path('admin/users', AdminUserListView.as_view(), name='admin-users-list'),
     path('admin/users/<int:pk>', AdminUserDetailView.as_view(), name='admin-users-detail'),
     path('admin/users/<int:pk>/biens', AdminUserBiensView.as_view(), name='admin-users-biens'),
     path('admin/users/<int:pk>/biens-loues', AdminUserRentedBiensView.as_view(), name='admin-users-biens-loues'),
     path('admin/users/<int:pk>/verify', AdminVerifyUserView.as_view(), name='admin-users-verify'),
+    path('admin/users/<int:pk>/anonymize', AdminUserAnonymizeView.as_view(), name='admin-users-anonymize'),
     path('admin/finances/stats', AdminFinanceStatsView.as_view(), name='admin-finances-stats'),
     path('admin/finances/paiements', AdminPaiementListView.as_view(), name='admin-finances-paiements-list'),
     path('admin/finances/paiements/<int:pk>', AdminPaiementDetailView.as_view(), name='admin-finances-paiements-detail'),
@@ -206,4 +238,9 @@ urlpatterns = [
     path('demandes-actions/recues', DemandeActionIncomingListView.as_view(), name='demandes-actions-incoming-list'),
     path('demandes-actions/<int:pk>', DemandeActionDetailView.as_view(), name='demandes-actions-detail'),
     path('demandes-actions/<int:pk>/decision', DemandeActionDecisionView.as_view(), name='demandes-actions-decision'),
+
+    # ── Baux & signatures (Sprint 7 backend) ───────────────────────────────
+    path('baux', BailListView.as_view(), name='baux-list'),
+    path('baux/<int:pk>', BailDetailView.as_view(), name='baux-detail'),
+    path('baux/<int:pk>/signer', BailSignView.as_view(), name='baux-signer'),
 ]

@@ -14,8 +14,14 @@ from .user_serializers import (
     AdminUserDetailsSerializer,
     CurrentUserProfileSerializer,
     CurrentUserProfileUpdateSerializer,
+    GarantSerializer,
+    LocataireListSerializer,
+    LocataireDetailSerializer,
+    LocataireOnboardingSerializer,
+    AdminUserAnonymizeSerializer,
 )
 from .finance_serializers import AdminPaiementSerializer, AdminDepenseSerializer
+from .location_serializers import BailSerializer, BailSignSerializer, SignatureBailSerializer
 from .request_serializers import (
     DemandeActionSerializer,
     DemandeActionDecisionSerializer,
@@ -40,8 +46,16 @@ __all__ = [
     'AdminUserDetailsSerializer',
     'CurrentUserProfileSerializer',
     'CurrentUserProfileUpdateSerializer',
+    'GarantSerializer',
+    'LocataireListSerializer',
+    'LocataireDetailSerializer',
+    'LocataireOnboardingSerializer',
+    'AdminUserAnonymizeSerializer',
     'AdminPaiementSerializer',
     'AdminDepenseSerializer',
+    'BailSerializer',
+    'BailSignSerializer',
+    'SignatureBailSerializer',
     'DemandeActionSerializer',
     'DemandeActionDecisionSerializer',
     'DemandeActionListFilterSerializer',

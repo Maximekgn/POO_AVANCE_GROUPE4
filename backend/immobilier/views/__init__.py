@@ -27,7 +27,14 @@ from .user_views import (
 	AdminUserBiensView,
     AdminUserRentedBiensView,
         AdminVerifyUserView,
+	AdminUserAnonymizeView,
 	CurrentUserProfileView,
+	GarantListCreateView,
+	GarantDetailView,
+	LocataireListView,
+	LocataireDetailView,
+	LocataireHistoryView,
+	LocataireOnboardingView,
 )
 from .finance_views import (
 	AdminFinanceStatsView,
@@ -43,6 +50,11 @@ from .request_views import (
 	DemandeActionIncomingListView,
 	DemandeActionDetailView,
 	DemandeActionDecisionView,
+)
+from .lease_views import (
+	BailListView,
+	BailDetailView,
+	BailSignView,
 )
 
 __all__ = [
@@ -74,7 +86,14 @@ __all__ = [
 	'AdminUserBiensView',
     'AdminUserRentedBiensView',
         'AdminVerifyUserView',
+	'AdminUserAnonymizeView',
 	'CurrentUserProfileView',
+	'GarantListCreateView',
+	'GarantDetailView',
+	'LocataireListView',
+	'LocataireDetailView',
+	'LocataireHistoryView',
+	'LocataireOnboardingView',
 	'AdminFinanceStatsView',
 	'AdminPaiementListView',
 	'AdminPaiementDetailView',
@@ -86,4 +105,7 @@ __all__ = [
 	'DemandeActionIncomingListView',
 	'DemandeActionDetailView',
 	'DemandeActionDecisionView',
+	'BailListView',
+	'BailDetailView',
+	'BailSignView',
 ]

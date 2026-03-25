@@ -156,3 +156,35 @@ class Garant(models.Model):
     def uploaderCarteIdentite(self, doc) -> None: pass
     def getCarteIdentite(self): pass
     def mettreAJour(self) -> None: pass
+
+
+class RGPDAnonymizationLog(models.Model):
+    """Journal de traçabilité des anonymisations RGPD."""
+
+    cible_utilisateur = models.ForeignKey(
+        Utilisateur,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='logs_anonymisation_rgpd',
+    )
+    anonymise_par = models.ForeignKey(
+        Utilisateur,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='anonymisations_rgpd_effectuees',
+    )
+    cible_utilisateur_id_original = models.IntegerField()
+    email_original = models.EmailField(blank=True, null=True)
+    motif = models.TextField(blank=True, null=True)
+    resume = models.JSONField(default=dict, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_creation']
+        verbose_name = 'Journal anonymisation RGPD'
+        verbose_name_plural = 'Journaux anonymisation RGPD'
+
+    def __str__(self):
+        return f"RGPD log user#{self.cible_utilisateur_id_original} le {self.date_creation}"

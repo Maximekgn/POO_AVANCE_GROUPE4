@@ -1,6 +1,8 @@
+from django.db import transaction
 from rest_framework import serializers
 
-from immobilier.models import ClientInfo, Document, ProprietaireInfo, Utilisateur
+from immobilier.models import Bail, ClientInfo, Document, Garant, ProprietaireInfo, Utilisateur
+from immobilier.models.enums import StatutBailEnum, StatutPaiementEnum
 
 
 class AdminDocumentSerializer(serializers.ModelSerializer):
@@ -176,3 +178,298 @@ class CurrentUserProfileUpdateSerializer(serializers.Serializer):
             proprietaire_info.save()
 
         return instance
+
+
+class GarantSerializer(serializers.ModelSerializer):
+    carte_identite_file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Garant
+        fields = [
+            'id',
+            'client_info',
+            'nom',
+            'prenom',
+            'telephone',
+            'email',
+            'profession',
+            'revenus_mensuels',
+            'numero_piece',
+            'carte_identite',
+            'carte_identite_file_url',
+        ]
+        read_only_fields = ['id', 'client_info', 'carte_identite_file_url']
+
+    def get_carte_identite_file_url(self, obj: Garant):
+        doc = getattr(obj, 'carte_identite', None)
+        if not doc:
+            return None
+        if getattr(doc, 'url', None):
+            return doc.url
+        if getattr(doc, 'file', None):
+            try:
+                return doc.file.url
+            except ValueError:
+                return None
+        return None
+
+    def validate_revenus_mensuels(self, value):
+        if value is None:
+            return value
+        if value < 0:
+            raise serializers.ValidationError('Les revenus mensuels doivent etre superieurs ou egaux a 0.')
+        return value
+
+    def validate(self, attrs):
+        client_info = self.context.get('client_info') or getattr(self.instance, 'client_info', None)
+        email = attrs.get('email')
+
+        if client_info and email:
+            queryset = Garant.objects.filter(client_info=client_info, email__iexact=email)
+            if self.instance:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            if queryset.exists():
+                raise serializers.ValidationError({'email': 'Un garant avec cet email existe deja pour ce locataire.'})
+
+        return attrs
+
+
+class LocataireBailSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    numero_bail = serializers.CharField()
+    statut = serializers.CharField()
+    date_entree = serializers.DateField(allow_null=True)
+    date_sortie = serializers.DateField(allow_null=True)
+    loyer_actuel = serializers.DecimalField(max_digits=10, decimal_places=2)
+    bien = serializers.DictField()
+
+
+class LocataireListSerializer(serializers.ModelSerializer):
+    utilisateur_id = serializers.IntegerField(source='utilisateur.id', read_only=True)
+    nom_complet = serializers.SerializerMethodField()
+    email = serializers.EmailField(source='utilisateur.email', read_only=True)
+    telephone = serializers.CharField(source='utilisateur.telephone', read_only=True)
+    nombre_garants = serializers.SerializerMethodField()
+    nombre_baux = serializers.SerializerMethodField()
+    baux_actifs = serializers.SerializerMethodField()
+    impayes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClientInfo
+        fields = [
+            'id',
+            'utilisateur_id',
+            'nom_complet',
+            'email',
+            'telephone',
+            'profession',
+            'revenus_mensuels',
+            'numero_piece',
+            'date_creation',
+            'nombre_garants',
+            'nombre_baux',
+            'baux_actifs',
+            'impayes_count',
+        ]
+
+    def get_nom_complet(self, obj: ClientInfo) -> str:
+        first = getattr(obj.utilisateur, 'first_name', '') or ''
+        last = getattr(obj.utilisateur, 'last_name', '') or ''
+        full = f"{first} {last}".strip()
+        return full or obj.utilisateur.email
+
+    def get_nombre_garants(self, obj: ClientInfo) -> int:
+        return len(getattr(obj, 'garants').all())
+
+    def get_nombre_baux(self, obj: ClientInfo) -> int:
+        return len(getattr(obj, 'baux').all())
+
+    def get_baux_actifs(self, obj: ClientInfo) -> int:
+        return sum(1 for bail in getattr(obj, 'baux').all() if bail.statut == StatutBailEnum.EN_COURS)
+
+    def get_impayes_count(self, obj: ClientInfo) -> int:
+        count = 0
+        for bail in getattr(obj, 'baux').all():
+            count += sum(1 for paiement in bail.paiements.all() if paiement.statut == StatutPaiementEnum.IMPAYE)
+        return count
+
+
+class LocataireDetailSerializer(serializers.ModelSerializer):
+    utilisateur = serializers.SerializerMethodField()
+    garants = GarantSerializer(many=True, read_only=True)
+    baux = serializers.SerializerMethodField()
+    total_loyers_payes = serializers.SerializerMethodField()
+    total_loyers_impayes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClientInfo
+        fields = [
+            'id',
+            'utilisateur',
+            'profession',
+            'revenus_mensuels',
+            'numero_piece',
+            'date_creation',
+            'garants',
+            'baux',
+            'total_loyers_payes',
+            'total_loyers_impayes',
+        ]
+
+    def get_utilisateur(self, obj: ClientInfo):
+        user = obj.utilisateur
+        return {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'telephone': user.telephone,
+            'photo_profil': user.photo_profil,
+            'is_active': user.is_active,
+        }
+
+    def get_baux(self, obj: ClientInfo):
+        payload = []
+        for bail in obj.baux.all():
+            payload.append(
+                {
+                    'id': bail.id,
+                    'numero_bail': bail.numero_bail,
+                    'statut': bail.statut,
+                    'date_entree': bail.date_entree,
+                    'date_sortie': bail.date_sortie,
+                    'loyer_actuel': bail.loyer_actuel,
+                    'bien': {
+                        'id': bail.bien_id,
+                        'reference': getattr(bail.bien, 'reference', None),
+                        'ville': getattr(bail.bien, 'ville', None),
+                        'quartier': getattr(bail.bien, 'quartier', None),
+                        'adresse': getattr(bail.bien, 'adresse', None),
+                        'statut': getattr(bail.bien, 'statut', None),
+                    },
+                }
+            )
+        return payload
+
+    def get_total_loyers_payes(self, obj: ClientInfo):
+        total = 0
+        for bail in obj.baux.all():
+            total += sum(p.montant for p in bail.paiements.all() if p.statut == StatutPaiementEnum.PAYE)
+        return total
+
+    def get_total_loyers_impayes(self, obj: ClientInfo):
+        total = 0
+        for bail in obj.baux.all():
+            total += sum(p.montant for p in bail.paiements.all() if p.statut == StatutPaiementEnum.IMPAYE)
+        return total
+
+
+class LocataireOnboardingSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    telephone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    profession = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    numero_piece = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    revenus_mensuels = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    bail_id = serializers.IntegerField(required=False)
+
+    def validate_email(self, value: str) -> str:
+        return value.strip().lower()
+
+    def validate_revenus_mensuels(self, value):
+        if value is None:
+            return value
+        if value < 0:
+            raise serializers.ValidationError('Les revenus mensuels doivent etre superieurs ou egaux a 0.')
+        return value
+
+    def validate(self, attrs):
+        bail_id = attrs.get('bail_id')
+        if not bail_id:
+            return attrs
+
+        try:
+            bail = Bail.objects.select_related('bien__proprietaire_info').get(pk=bail_id)
+        except Bail.DoesNotExist:
+            raise serializers.ValidationError({'bail_id': 'Bail introuvable.'})
+
+        request = self.context.get('request')
+        if request and not (request.user.is_staff or request.user.is_superuser):
+            proprietaire_info = getattr(request.user, 'proprietaire_info', None)
+            if proprietaire_info is None:
+                raise serializers.ValidationError({'bail_id': 'Seuls les proprietaires peuvent rattacher un bail.'})
+            if bail.bien.proprietaire_info_id != proprietaire_info.id:
+                raise serializers.ValidationError({'bail_id': 'Vous ne pouvez rattacher que vos propres baux.'})
+
+        attrs['bail_obj'] = bail
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        bail = validated_data.pop('bail_obj', None)
+        email = validated_data['email']
+
+        defaults = {
+            'username': email,
+            'first_name': validated_data['first_name'],
+            'last_name': validated_data['last_name'],
+            'telephone': validated_data.get('telephone') or '',
+            'is_active': True,
+        }
+
+        user, user_created = Utilisateur.objects.get_or_create(email=email, defaults=defaults)
+        user_changed = False
+
+        if not user_created:
+            for field in ['first_name', 'last_name']:
+                new_value = validated_data.get(field)
+                if new_value and getattr(user, field) != new_value:
+                    setattr(user, field, new_value)
+                    user_changed = True
+            if 'telephone' in validated_data:
+                tel = validated_data.get('telephone') or ''
+                if user.telephone != tel:
+                    user.telephone = tel
+                    user_changed = True
+            if user.username != user.email:
+                user.username = user.email
+                user_changed = True
+            if user_changed:
+                user.save()
+
+        client_info, client_created = ClientInfo.objects.get_or_create(utilisateur=user)
+        client_changed = False
+        for model_field in ['profession', 'numero_piece', 'revenus_mensuels']:
+            if model_field in validated_data:
+                new_value = validated_data.get(model_field)
+                if getattr(client_info, model_field) != new_value:
+                    setattr(client_info, model_field, new_value)
+                    client_changed = True
+        if client_changed:
+            client_info.save()
+
+        bail_rattache = None
+        if bail is not None:
+            if bail.client_info_id and bail.client_info_id != client_info.id:
+                raise serializers.ValidationError({'bail_id': 'Ce bail est deja rattache a un autre locataire.'})
+            bail.client_info = client_info
+            if bail.statut == StatutBailEnum.BROUILLON:
+                bail.statut = StatutBailEnum.EN_ATTENTE_SIGNATURE
+            bail.save(update_fields=['client_info', 'statut'])
+            bail_rattache = bail
+
+        return {
+            'utilisateur': user,
+            'client_info': client_info,
+            'user_created': user_created,
+            'client_created': client_created,
+            'bail': bail_rattache,
+        }
+
+
+class AdminUserAnonymizeSerializer(serializers.Serializer):
+    motif = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_motif(self, value: str) -> str:
+        return (value or '').strip()
