@@ -67,6 +67,13 @@ const RentModal = () => {
       loyer_hc: 0,
       charges: 0,
       depot_garantie: 0,
+      avance: 0,
+      nb_salons: 0,
+      nb_chambres: 0,
+      nb_douches: 0,
+      caution_mois: 0,
+      avance_mois: 0,
+      frais_assistance: 0,
     },
   });
 
@@ -88,6 +95,13 @@ const RentModal = () => {
   const loyer_hc = watch("loyer_hc");
   const charges = watch("charges");
   const depot_garantie = watch("depot_garantie");
+  const avance = watch("avance");
+  const nb_salons = watch("nb_salons");
+  const nb_chambres = watch("nb_chambres");
+  const nb_douches = watch("nb_douches");
+  const caution_mois = watch("caution_mois");
+  const avance_mois = watch("avance_mois");
+  const frais_assistance = watch("frais_assistance");
 
   const getNearestQuartier = (lat: number, lng: number): QuartierOption => {
     return TOGO_QUARTIERS.reduce((nearest, current) => {
@@ -126,9 +140,18 @@ const RentModal = () => {
   };
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+    // Collect all data including potentially hidden fields
+    const formData = {
+      ...data,
+      // Ensure specific fields are included if they were previously calculated or tracked
+      guestCount: data.guestCount || 1,
+      roomCount: data.roomCount || 1,
+      bathroomCount: data.bathroomCount || 1,
+    };
+
     if (
       step === STEPS.IMAGES &&
-      (!Array.isArray(data.imageSrc) || data.imageSrc.length === 0)
+      (!Array.isArray(formData.imageSrc) || formData.imageSrc.length === 0)
     ) {
       toast.error("Ajoutez au moins une photo pour continuer.");
       return;
@@ -140,7 +163,7 @@ const RentModal = () => {
 
     setIsLoading(true);
 
-    if (!data.latitude || !data.longitude) {
+    if (!formData.latitude || !formData.longitude) {
       toast.error(
         "Choisissez une position sur la carte ou utilisez votre position actuelle.",
       );
@@ -149,7 +172,7 @@ const RentModal = () => {
     }
 
     axios
-      .post("/api/listings", data)
+      .post("/api/listings", formData)
       .then(() => {
         toast.success("Listing created successfully");
         router.refresh();
@@ -179,10 +202,10 @@ const RentModal = () => {
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.PRICE) {
-      return "Publish";
+      return "Soumettre";
     }
 
-    return "Next";
+    return "Suivant";
   }, [step]);
 
   const secondaryActionLabel = useMemo(() => {
@@ -190,7 +213,7 @@ const RentModal = () => {
       return undefined;
     }
 
-    return "Back";
+    return "Retour";
   }, [step]);
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -221,7 +244,7 @@ const RentModal = () => {
               onClick={() => setCustomValue("category", item.id)}
               selected={Number(category) === item.id}
               label={item.nom}
-              icon={TbBeach} // TODO: map icon dynamically if needed
+              imageSrc={item.image}
             />
           </div>
         ))}
@@ -356,6 +379,27 @@ const RentModal = () => {
           onChange={(value) => setCustomValue("etage", value)}
         />
         <hr />
+        <Counter
+          title="Salons"
+          subtitle="Combien de salons comporte le bien ?"
+          value={nb_salons}
+          onChange={(value) => setCustomValue("nb_salons", value)}
+        />
+        <hr />
+        <Counter
+          title="Chambres"
+          subtitle="Nombre de chambres à coucher"
+          value={nb_chambres}
+          onChange={(value) => setCustomValue("nb_chambres", value)}
+        />
+        <hr />
+        <Counter
+          title="Douches / Salles de bain"
+          subtitle="Nombre de points d'eau et douches"
+          value={nb_douches}
+          onChange={(value) => setCustomValue("nb_douches", value)}
+        />
+        <hr />
         <div className="flex flex-row items-center justify-between">
           <div className="flex flex-col">
             <div className="font-semibold">Meublé</div>
@@ -367,11 +411,11 @@ const RentModal = () => {
             type="checkbox"
             checked={meuble}
             onChange={(e) => setCustomValue("meuble", e.target.checked)}
-            className="w-5 h-5 cursor-pointer accent-rose-500"
+            className="w-5 h-5 cursor-pointer accent-blue-500"
           />
         </div>
         <hr />
-        <Heading
+        {/* <Heading
           title="Anciens champs Airbnb (temporaire)"
           subtitle="Pour rétrocompatibilité"
         />
@@ -394,7 +438,7 @@ const RentModal = () => {
           subtitle="How many bathrooms can guests use?"
           value={bathroomCount}
           onChange={(value) => setCustomValue("bathroomCount", value)}
-        />
+        /> */}
       </div>
     );
   }
@@ -403,8 +447,8 @@ const RentModal = () => {
     bodyContent = (
       <div className="flex flex-col gap-8">
         <Heading
-          title="Upload some photos of your place"
-          subtitle="You can always add more later"
+          title="Ajoutez des photos de votre bien"
+          subtitle="Vous pouvez toujours ajouter d'autres photos plus tard"
         />
         <ImageUpload
           value={imageSrc}
@@ -418,12 +462,12 @@ const RentModal = () => {
     bodyContent = (
       <div className="flex flex-col gap-8">
         <Heading
-          title="Describe your place to guests"
-          subtitle="You can always edit this later"
+          title="Decrivez votre bien"
+          subtitle="Vous pouvez toujours modifier cette description plus tard"
         />
         <Input
           id="title"
-          label="Title"
+          label="Titre"
           disabled={isLoading}
           register={register}
           errors={errors}
@@ -504,6 +548,47 @@ const RentModal = () => {
             required
           />
         </div>
+        <Input
+          id="avance"
+          label="Avance totale (FCFA)"
+          formatPrice
+          type="number"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+        />
+        <hr />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="caution_mois"
+            label="Mois de caution"
+            type="number"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+          <Input
+            id="avance_mois"
+            label="Mois d'avance"
+            type="number"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+          />
+        </div>
+        <Input
+          id="frais_assistance"
+          label="Frais d'assistance (Assurance/Agence)"
+          formatPrice
+          type="number"
+          disabled={isLoading}
+          register={register}
+          errors={errors}
+          required
+        />
       </div>
     );
   }
@@ -516,7 +601,7 @@ const RentModal = () => {
       actionLabel={actionLabel}
       secondaryActionLabel={secondaryActionLabel}
       secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
-      title="Airbnb your home"
+      title="Miabe - Immo"
       body={bodyContent}
     />
   );

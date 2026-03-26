@@ -38,6 +38,11 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10000mb",
+    },
+  },
   async rewrites() {
     return [
       {

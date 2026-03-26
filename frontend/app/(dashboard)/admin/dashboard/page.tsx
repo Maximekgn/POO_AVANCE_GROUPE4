@@ -29,11 +29,11 @@ export default async function AdminDashboardHomePage() {
   }
 
   const kpis = [
-    { label: "Total Biens", value: stats.kpis.total_biens, icon: FiHome, color: "text-red-500", bg: "bg-blue-50" },
+    { label: "Total Biens", value: stats.kpis.total_biens, icon: FiHome, color: "text-blue-500", bg: "bg-blue-50" },
     { label: "Utilisateurs", value: stats.kpis.total_users, icon: FiUsers, color: "text-purple-600", bg: "bg-purple-50" },
     { label: "Contrats Actifs", value: stats.kpis.total_baux, icon: FiFileText, color: "text-green-600", bg: "bg-green-50" },
     { label: "Dossiers en attente", value: stats.kpis.pending_demands, icon: FiClock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Revenus Totaux", value: `${stats.kpis.total_revenue.toLocaleString()} €`, icon: FiTrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Revenus Totaux", value: `${stats.kpis.total_revenue.toLocaleString()} FCFA`, icon: FiTrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
   return (
@@ -50,7 +50,7 @@ export default async function AdminDashboardHomePage() {
           >
             Gérer les biens
           </Link>
-          <button className="hidden rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 md:block">
+          <button className="hidden rounded-xl bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 md:block">
             Exporter PDF
           </button>
         </div>
@@ -98,14 +98,14 @@ export default async function AdminDashboardHomePage() {
         <article className="lg:col-span-2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Récentes signatures de baux</h2>
-            <Link href="/admin/dashboard/baux" className="text-sm font-medium text-red-500 hover:underline">
+            <Link href="/admin/dashboard/baux" className="text-sm font-medium text-blue-500 hover:underline">
               Tout voir
             </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-neutral-100 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                <tr className="border-b border-neutral-100 text-xs font-semibold text-black uppercase tracking-wider">
                   <th className="pb-3 pr-4">Référence</th>
                   <th className="pb-3 pr-4">Client</th>
                   <th className="pb-3 pr-4">Bien</th>
@@ -135,7 +135,7 @@ export default async function AdminDashboardHomePage() {
               </tbody>
             </table>
             {stats.recent_activity.length === 0 && (
-              <p className="py-10 text-center text-sm text-neutral-400">Aucune activité récente.</p>
+              <p className="py-10 text-center text-sm text-black">Aucune activité récente.</p>
             )}
           </div>
         </article>
@@ -154,7 +154,7 @@ export default async function AdminDashboardHomePage() {
               <Link
                 key={i}
                 href={action.href}
-                className="flex items-center justify-between rounded-xl border border-neutral-100 bg-white p-4 text-sm font-medium text-neutral-700 transition-all hover:border-blue-200 hover:bg-blue-50/30 hover:text-red-500"
+                className="flex items-center justify-between rounded-xl border border-neutral-100 bg-white p-4 text-sm font-medium text-neutral-700 transition-all hover:border-blue-200 hover:bg-blue-50/30 hover:text-blue-500"
               >
                 <span>{action.label}</span>
                 {action.count !== undefined ? (

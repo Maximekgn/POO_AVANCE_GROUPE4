@@ -23,9 +23,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING("Démarrage du seeding..."))
 
         admin, admin_created = Utilisateur.objects.get_or_create(
-            email="admin@immobilierpro.local",
+            email="kogonmaxime+100@gmail.com",
             defaults={
-                "username": "admin@immobilierpro.local",
+                "username": "admin",
                 "first_name": "Super",
                 "last_name": "Admin",
                 "is_active": True,
@@ -36,7 +36,7 @@ class Command(BaseCommand):
             },
         )
         if admin_created:
-            admin.set_password("Admin12345!")
+            admin.set_password("maxime@2006")
             admin.save()
 
         users_seed = [

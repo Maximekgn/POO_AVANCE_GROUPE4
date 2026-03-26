@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
-import Heading from "@/app/components/Heading";
+import Heading from "@/components/Heading";
 
 import { getAdminPaymentById } from "../../../lib/adminApi";
 

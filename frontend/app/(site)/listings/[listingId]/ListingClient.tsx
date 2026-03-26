@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Range } from "react-date-range";
 import toast from "react-hot-toast";
+import BackButton from "@/components/BackButton";
 
 type ReservationAction = "VISIT" | "DIRECT_RENT" | "PRIVATIZE";
 
@@ -42,8 +43,17 @@ interface IListingClientProps {
     roomCount: number;
     guestCount: number;
     bathroomCount: number;
+    nb_salons: number;
+    nb_chambres: number;
+    nb_douches: number;
+    caution_mois: number;
+    avance_mois: number;
+    frais_assistance: number;
+    superficie: number;
     price: number;
     priceMonthly?: number;
+    avance: number;
+    ownerId: number;
     user: { name?: string | null; image?: string | null };
   };
   currentUser?: any | null;
@@ -89,28 +99,35 @@ const ListingClient: React.FC<IListingClientProps> = ({
         return loginModal.onOpen();
       }
 
-      if (!dateRange.startDate || !dateRange.endDate) {
-        toast.error("Selectionnez une date avant de continuer.");
-        return;
-      }
-
-      if (action !== "VISIT" && nightCount <= 0) {
-        toast.error("Selectionnez une periode valide.");
-        return;
-      }
-
-      if (action === "DIRECT_RENT" && nightCount < 30) {
-        toast.error("La location directe exige au minimum 30 jours.");
-        return;
-      }
-
-      const payload = {
+      const payload: any = {
         listingId: listing?.id,
-        startDate: dateRange.startDate,
-        endDate: action === "VISIT" ? dateRange.startDate : dateRange.endDate,
-        totalPrice: action === "VISIT" ? 0 : totalPrice,
         action,
       };
+
+      if (action === "DIRECT_RENT" && (!dateRange.startDate || !dateRange.endDate || nightCount < 30)) {
+        // Default to today + 30 days if no dates or too short
+        const start = new Date();
+        const end = new Date();
+        end.setDate(start.getDate() + 30);
+        
+        payload.startDate = start;
+        payload.endDate = end;
+        payload.totalPrice = listing.priceMonthly || (listing.price * 30);
+      } else {
+        if (!dateRange.startDate || !dateRange.endDate) {
+          toast.error("Selectionnez une date avant de continuer.");
+          return;
+        }
+
+        if (action !== "VISIT" && nightCount <= 0) {
+          toast.error("Selectionnez une periode valide.");
+          return;
+        }
+
+        payload.startDate = dateRange.startDate;
+        payload.endDate = action === "VISIT" ? dateRange.startDate : dateRange.endDate;
+        payload.totalPrice = action === "VISIT" ? 0 : totalPrice;
+      }
 
       setIsLoading(true);
 
@@ -164,6 +181,9 @@ const ListingClient: React.FC<IListingClientProps> = ({
       nightCount,
       router,
       totalPrice,
+      listing.price,
+      listing.priceMonthly,
+      listing.id,
     ],
   );
 
@@ -194,9 +214,12 @@ const ListingClient: React.FC<IListingClientProps> = ({
       };
   }, [categories, listing.category]);
 
+  const isOwner = currentUser?.id && listing.ownerId ? String(currentUser.id) === String(listing.ownerId) : false;
+
   return (
     <Container>
-      <div className="max-w-screen-lg mx-auto">
+      <div className="max-w-7xl mx-auto">
+        <BackButton />
         <div className="flex flex-col gap-6">
           <ListingHead
             title={listing.title}
@@ -212,9 +235,9 @@ const ListingClient: React.FC<IListingClientProps> = ({
             grid
             grid-cols-1
             md:grid-cols-7
-            md:gap-10
-            gap-6
-            align-center
+            md:gap-12
+            gap-8
+            mt-8
           "
           >
             <ListingInfo
@@ -224,6 +247,14 @@ const ListingClient: React.FC<IListingClientProps> = ({
               roomCount={listing.roomCount}
               guestCount={listing.guestCount}
               bathroomCount={listing.bathroomCount}
+              nb_salons={listing.nb_salons}
+              nb_chambres={listing.nb_chambres}
+              nb_douches={listing.nb_douches}
+              caution_mois={listing.caution_mois}
+              avance_mois={listing.avance_mois}
+              frais_assistance={listing.frais_assistance}
+              superficie={listing.superficie}
+              avance={listing.avance}
               locationValue={listing.locationValue}
               locationLabel={listing.locationLabel}
               latitude={listing.latitude}
@@ -231,11 +262,11 @@ const ListingClient: React.FC<IListingClientProps> = ({
             />
             <div
               className=" 
-                col-span-4               
-                order-first
-                mb-10
-                md:order-last
+                col-span-1
                 md:col-span-3
+                order-first
+                md:order-last
+                mb-10
               "
             >
               <ListingReservation
@@ -248,8 +279,9 @@ const ListingClient: React.FC<IListingClientProps> = ({
                 onBookVisit={() => onCreateReservation("VISIT")}
                 onDirectRent={() => onCreateReservation("DIRECT_RENT")}
                 onPrivatize={() => onCreateReservation("PRIVATIZE")}
-                disabled={isLoading}
+                disabled={isLoading || isOwner}
                 disabledDates={disableDates}
+                isOwner={isOwner}
               />
             </div>
           </div>

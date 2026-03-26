@@ -9,7 +9,7 @@ class CategorieBienSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CategorieBien
-        fields = ['id', 'nom', 'slug', 'ordre', 'actif', 'date_creation']
+        fields = ['id', 'nom', 'slug', 'image', 'ordre', 'actif', 'date_creation']
         read_only_fields = ['id', 'date_creation']
 
     def validate(self, attrs):

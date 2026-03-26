@@ -25,6 +25,7 @@ type ReservationLike = {
 
 import HeartButton from "../HeartButton";
 import Button from "../Button";
+import { AiFillStar } from "react-icons/ai";
 
 const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
   "avatars.githubusercontent.com",
@@ -160,7 +161,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             w-full 
             relative 
             overflow-hidden 
-            rounded-xl
+            rounded-3xl
           "
         >
           <Image
@@ -172,8 +173,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
               object-cover 
               h-full 
               w-full 
-              group-hover:scale-110 
+              group-hover:scale-105 
               transition
+              duration-300
             "
             src={safeImageSrc}
             alt="Listing"
@@ -188,32 +190,40 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <HeartButton listingId={data.id} currentUser={currentUser} />
           </div>
         </div>
-        <div className="font-semibold text-lg">
-          {location?.region && location?.label
-            ? `${location.region}, ${location.label}`
-            : data.ville || data.locationValue || "Localisation"}
-        </div>
-        <div className="font-light text-neutral-500">
-          {reservationDate || data.category}
-        </div>
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-row items-center gap-1">
-            <div className="font-semibold">FCFA{price}</div>
-            {!reservation && <div className="font-light">/ nuit</div>}
+        
+        <div className="px-1">
+          <div className="font-bold text-[17px] text-neutral-900 line-clamp-1">
+            {location?.region && location?.label
+              ? `${location.region}, ${location.label}`
+              : data.ville || data.locationValue || "Localisation"}
           </div>
-          {!reservation && (
-            <div className="text-sm text-neutral-600">
-              FCFA{monthlyPrice} / mois
-            </div>
-          )}
+          
+          <div className="font-medium text-neutral-500 text-[15px]">
+            {reservationDate ? (
+              reservationDate
+            ) : (
+              <span className="flex items-center gap-1">
+                À partir de <span className="font-semibold text-neutral-800">FCFA {price?.toLocaleString()}</span> 
+                {!reservation && <span className="font-normal text-neutral-500"> / nuit</span>}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 text-sm text-neutral-600 mt-0.5">
+            <AiFillStar className="text-neutral-900" size={14} />
+            <span className="font-medium text-neutral-900">4,5</span>
+          </div>
         </div>
+
         {onAction && actionLabel && (
-          <Button
-            disabled={disabled}
-            small
-            label={actionLabel}
-            onClick={handleCancel}
-          />
+          <div className="mt-2">
+            <Button
+              disabled={disabled}
+              small
+              label={actionLabel}
+              onClick={handleCancel}
+            />
+          </div>
         )}
       </div>
     </div>

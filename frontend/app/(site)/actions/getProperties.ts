@@ -60,6 +60,7 @@ export default async function getProperties() {
         category: bien.categorie_nom || bien.sous_type_nom || "Bien",
         price: Number(bien.prix_jour || bien.loyer_hc || 0),
         priceMonthly: Number(bien.prix_mois || bien.loyer_hc || 0),
+        statut: bien.statut,
       };
     });
   } catch (error: any) {

@@ -50,6 +50,8 @@ from .request_views import (
 	DemandeActionIncomingListView,
 	DemandeActionDetailView,
 	DemandeActionDecisionView,
+	DemandeActionFinaliserLocationView,
+	DemandeActionActionableListView,
 )
 from .lease_views import (
 	BailListView,
@@ -106,6 +108,8 @@ __all__ = [
 	'DemandeActionIncomingListView',
 	'DemandeActionDetailView',
 	'DemandeActionDecisionView',
+	'DemandeActionFinaliserLocationView',
+	'DemandeActionActionableListView',
 	'BailListView',
 	'BailDetailView',
 	'BailSignView',

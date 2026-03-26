@@ -27,12 +27,14 @@ export default async function getCurrentUser(): Promise<CurrentUser | null> {
       return null;
     }
 
-    // Return user info from session since we don't use Prisma anymore
-    // and Django is the source of truth.
-    const userId =
-      typeof (session.user as any).id === "string" && (session.user as any).id
-        ? (session.user as any).id
-        : session.user.email;
+    const sessionUser = session.user as any;
+    // Prefer numeric ID from session if available (from our NextAuth fix)
+    let userId = sessionUser.id;
+
+    // If ID is missing or is the email, fallback carefully
+    if (!userId || userId === session.user.email) {
+      userId = sessionUser.user_id || sessionUser.id || session.user.email;
+    }
 
     return {
       ...session.user,

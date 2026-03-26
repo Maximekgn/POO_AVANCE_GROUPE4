@@ -1,5 +1,5 @@
 from django.db.models import Count, Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, TruncDay, TruncYear
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
@@ -37,9 +37,23 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
         # 3. Category Distribution (Biens)
         category_distribution = Bien.objects.values('categorie__nom').annotate(count=Count('id'))
 
-        # 4. Monthly Revenue (Last 12 months)
+        # 4. Revenue Aggregation (Daily, Monthly, Yearly)
         one_year_ago = timezone.now() - timedelta(days=365)
-        revenue_over_time = (
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        ten_years_ago = timezone.now() - timedelta(days=365*10)
+
+        daily_revenue = (
+            Paiement.objects.filter(
+                statut=StatutPaiementEnum.PAYE,
+                date_paiement__gte=thirty_days_ago
+            )
+            .annotate(day=TruncDay('date_paiement'))
+            .values('day')
+            .annotate(total=Sum('montant'))
+            .order_by('day')
+        )
+
+        monthly_revenue = (
             Paiement.objects.filter(
                 statut=StatutPaiementEnum.PAYE,
                 date_paiement__gte=one_year_ago
@@ -48,6 +62,17 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
             .values('month')
             .annotate(total=Sum('montant'))
             .order_by('month')
+        )
+
+        yearly_revenue = (
+            Paiement.objects.filter(
+                statut=StatutPaiementEnum.PAYE,
+                date_paiement__gte=ten_years_ago
+            )
+            .annotate(year=TruncYear('date_paiement'))
+            .values('year')
+            .annotate(total=Sum('montant'))
+            .order_by('year')
         )
 
         # 5. Recent Activity (Latest 5 Bails)
@@ -73,11 +98,25 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
             },
             'status_stats': {s['statut']: s['count'] for s in status_distribution},
             'category_stats': [{'name': c['categorie__nom'] or 'Inconnu', 'value': c['count']} for c in category_distribution],
-            'revenue_history': [
-                {
-                    'month': r['month'].strftime('%b %Y'),
-                    'amount': float(r['total'])
-                } for r in revenue_over_time
-            ],
+            'revenue_history': {
+                'daily': [
+                    {
+                        'label': r['day'].strftime('%d %b'),
+                        'amount': float(r['total'])
+                    } for r in daily_revenue
+                ],
+                'monthly': [
+                    {
+                        'label': r['month'].strftime('%b %Y'),
+                        'amount': float(r['total'])
+                    } for r in monthly_revenue
+                ],
+                'yearly': [
+                    {
+                        'label': r['year'].strftime('%Y'),
+                        'amount': float(r['total'])
+                    } for r in yearly_revenue
+                ],
+            },
             'recent_activity': recent_bails_data
         }, status=status.HTTP_200_OK)

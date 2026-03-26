@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
-import Container from "@/app/components/Container";
-import Heading from "@/app/components/Heading";
-import Button from "@/app/components/Button";
+import Container from "@/components/Container";
+import Heading from "@/components/Heading";
+import Button from "@/components/Button";
 import type { CurrentUser } from "@/app/(site)/actions/getCurrentUser";
 
 type Props = {
@@ -286,7 +286,7 @@ const DemandeDetailClient: React.FC<Props> = ({ demandeId, currentUser }) => {
           </div>
 
           {demande.motif_refus ? (
-            <p className="mt-3 text-sm text-red-600">
+            <p className="mt-3 text-sm text-blue-600">
               Motif de refus enregistre: {demande.motif_refus}
             </p>
           ) : null}

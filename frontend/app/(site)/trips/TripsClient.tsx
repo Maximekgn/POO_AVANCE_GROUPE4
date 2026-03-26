@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import ListingCard from "../../../../components/listings/ListingCard";
+import ListingCard from "@/components/listings/ListingCard";
 
 type ListingItem = {
   id: string;

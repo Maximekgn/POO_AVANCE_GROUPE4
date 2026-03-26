@@ -67,6 +67,7 @@ class Bail(models.Model):
     bien = models.ForeignKey(Bien, on_delete=models.RESTRICT, related_name='baux')
     client_info = models.ForeignKey(ClientInfo, on_delete=models.RESTRICT, related_name='baux', null=True, blank=True)
     dossier = models.OneToOneField(Dossier, on_delete=models.SET_NULL, null=True, blank=True, related_name='bail_resultant')
+    demande = models.OneToOneField('DemandeAction', on_delete=models.SET_NULL, null=True, blank=True, related_name='bail_genere')
     numero_bail = models.CharField(max_length=100, unique=True)
     date_entree = models.DateField()
     date_sortie = models.DateField(null=True, blank=True)

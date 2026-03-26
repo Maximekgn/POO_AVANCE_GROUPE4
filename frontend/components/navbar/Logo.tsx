@@ -9,7 +9,12 @@ const Logo = () => {
 
   return (
     <Link href="/">
-      <h1 className="text-2xl font-bold text-primary">MIABE-Immo</h1>
+      <Image
+        src="/logo.png"
+        alt="Logo"
+        width={100}
+        height={70}
+      />
     </Link>
   );
 };

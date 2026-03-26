@@ -56,6 +56,8 @@ from immobilier.views import (
     DemandeActionIncomingListView,
     DemandeActionDetailView,
     DemandeActionDecisionView,
+    DemandeActionFinaliserLocationView,
+    DemandeActionActionableListView,
     BailListView,
     BailDetailView,
     BailSignView,
@@ -115,6 +117,8 @@ def api_root(_request):
                 'demandes_actions_recues': '/api/demandes-actions/recues',
                 'demandes_actions_detail': '/api/demandes-actions/{id}',
                 'demandes_actions_decision': '/api/demandes-actions/{id}/decision',
+                'demandes_actions_finaliser': '/api/demandes-actions/{id}/finaliser',
+                'demandes_actions_actionable': '/api/demandes-actions/actionable?other_user_id={id}',
                 'baux': '/api/baux',
                 'baux_detail': '/api/baux/{id}',
                 'baux_signer': '/api/baux/{id}/signer',
@@ -240,6 +244,8 @@ urlpatterns = [
     path('demandes-actions/recues', DemandeActionIncomingListView.as_view(), name='demandes-actions-incoming-list'),
     path('demandes-actions/<int:pk>', DemandeActionDetailView.as_view(), name='demandes-actions-detail'),
     path('demandes-actions/<int:pk>/decision', DemandeActionDecisionView.as_view(), name='demandes-actions-decision'),
+    path('demandes-actions/<int:pk>/finaliser', DemandeActionFinaliserLocationView.as_view(), name='demandes-actions-finaliser'),
+    path('demandes-actions/actionable', DemandeActionActionableListView.as_view(), name='demandes-actions-actionable'),
 
     # ── Baux & signatures (Sprint 7 backend) ───────────────────────────────
     path('baux', BailListView.as_view(), name='baux-list'),

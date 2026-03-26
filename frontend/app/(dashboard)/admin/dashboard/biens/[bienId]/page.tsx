@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
-import Heading from "@/app/components/Heading";
+import Heading from "@/components/Heading";
 
 import { getAdminBienById } from "../../lib/adminApi";
 import AdminBienSidebar from "./AdminBienSidebar";
-import ListingHead from "@/app/components/listings/ListingHead";
-import ListingInfo from "@/app/components/listings/ListingInfo";
+import ListingHead from "@/components/listings/ListingHead";
+import ListingInfo from "@/components/listings/ListingInfo";
+import BackButton from "@/components/BackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -111,12 +112,7 @@ export default async function AdminBienDetailPage(props: PageProps) {
   return (
     <div className="flex-col">
       <div className="mb-6">
-        <Link
-          href="/admin/dashboard/biens"
-          className="text-blue-500 hover:underline flex items-center"
-        >
-          ← Retour à la liste des biens
-        </Link>
+        <BackButton />
       </div>
 
       <div className="max-w-screen-xl mx-auto">

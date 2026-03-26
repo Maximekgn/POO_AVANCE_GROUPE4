@@ -109,6 +109,13 @@ export async function POST(request: Request) {
     loyer_hc,
     charges,
     depot_garantie,
+    avance,
+    nb_salons,
+    nb_chambres,
+    nb_douches,
+    caution_mois,
+    avance_mois,
+    frais_assistance,
   } = body;
 
   const parsedDaily = toPositiveNumber(pricePerDay, 1);
@@ -138,6 +145,13 @@ export async function POST(request: Request) {
     loyer_hc: Number(loyer_hc) || fallbackMonthly,
     charges: Number(charges) || 0,
     depot_garantie: Number(depot_garantie) || 0,
+    avance: Number(avance) || 0,
+    nb_salons: Number(nb_salons) || 0,
+    nb_chambres: Number(nb_chambres) || 0,
+    nb_douches: Number(nb_douches) || 0,
+    caution_mois: Number(caution_mois) || 0,
+    avance_mois: Number(avance_mois) || 0,
+    frais_assistance: Number(frais_assistance) || 0,
   };
 
   const createResponse = await fetch(`${API_URL}/biens`, {

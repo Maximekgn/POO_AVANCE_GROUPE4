@@ -9,7 +9,7 @@ import {
   FiDollarSign,
 } from "react-icons/fi";
 
-import Heading from "@/app/components/Heading";
+import Heading from "@/components/Heading";
 
 import { AdminExpense, AdminFinanceStats, AdminPayment } from "../lib/adminApi";
 
@@ -71,7 +71,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-neutral-500">Loyers attendus</p>
-            <FiDollarSign className="text-neutral-400" />
+            <FiDollarSign className="text-black" />
           </div>
           <p className="mt-3 text-2xl font-bold text-neutral-800">
             {formatFcfa(stats.loyers_attendus)}

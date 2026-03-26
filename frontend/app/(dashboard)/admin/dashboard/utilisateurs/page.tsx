@@ -1,4 +1,4 @@
-import Heading from "@/app/components/Heading";
+import Heading from "@/components/Heading";
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 
 import { getAdminUsers } from "../lib/adminApi";

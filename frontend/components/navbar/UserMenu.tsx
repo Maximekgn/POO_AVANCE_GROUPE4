@@ -90,6 +90,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
             right-0
             top-12
             text-sm
+            z-50
           "
           >
             <div className="flex flex-col cursor-pointer">
@@ -100,8 +101,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
                     label="Mon profil"
                   />
                   <MenuItem
+                    onClick={() => router.push("/trips")}
+                    label="Demandes faites"
+                  />
+                  <MenuItem
                     onClick={() => router.push("/reservations")}
-                    label="Mes réservations"
+                    label="Demandes reçues"
                   />
                   <MenuItem
                     onClick={() => router.push("/locations")}

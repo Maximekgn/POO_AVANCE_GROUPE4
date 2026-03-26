@@ -38,8 +38,8 @@ const RoleSelect: React.FC<RoleSelectProps> = ({
           transition
           disabled:opacity-70
           disabled:cursor-not-allowed
-          ${errors[id] ? "border-red-500" : "border-neutral-300"}
-          ${errors[id] ? "focus:border-red-500" : "focus:border-neutral-400"}
+          ${errors[id] ? "border-blue-500" : "border-neutral-300"}
+          ${errors[id] ? "focus:border-blue-500" : "focus:border-black"}
         `}
       >
         <option value="CLIENT">Client</option>
@@ -57,7 +57,7 @@ const RoleSelect: React.FC<RoleSelectProps> = ({
         origin-[0]
         left-4
         scale-75
-        ${errors[id] ? "text-rose-500" : "text-zinc-400"}
+        ${errors[id] ? "text-blue-500" : "text-zinc-400"}
         `}
       >
         {label}

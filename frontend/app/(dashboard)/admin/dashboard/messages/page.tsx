@@ -1,10 +1,14 @@
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
-import ChatWindow from "@/app/components/chat/ChatWindow";
-import Heading from "@/app/components/Heading";
+import ChatWindow from "@/components/chat/ChatWindow";
+import Heading from "@/components/Heading";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminMessagesPage() {
+export default async function AdminMessagesPage({
+  searchParams,
+}: {
+  searchParams: { conversation?: string };
+}) {
   const currentUser = await getCurrentUser();
 
   if (!currentUser?.accessToken || !currentUser.isAdmin) {
@@ -41,6 +45,7 @@ export default async function AdminMessagesPage() {
             currentUser={{ id: currentUser.id, isAdmin: currentUser.isAdmin }}
             accessToken={currentUser.accessToken}
             showConversationList
+            initialConversationId={searchParams.conversation}
           />
         </div>
       </section>

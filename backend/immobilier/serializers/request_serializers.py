@@ -16,6 +16,8 @@ class DemandeActionSerializer(serializers.ModelSerializer):
     demandeur_email = serializers.EmailField(source='demandeur.email', read_only=True)
     demandeur_telephone = serializers.CharField(source='demandeur.telephone', read_only=True)
 
+    has_lease = serializers.SerializerMethodField()
+ 
     class Meta:
         model = DemandeAction
         fields = [
@@ -39,6 +41,7 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'message',
             'note_proprietaire',
             'motif_refus',
+            'has_lease',
             'date_creation',
             'date_traitement',
         ]
@@ -71,6 +74,9 @@ class DemandeActionSerializer(serializers.ModelSerializer):
     def get_demandeur_nom(self, obj):
         full_name = f"{obj.demandeur.first_name or ''} {obj.demandeur.last_name or ''}".strip()
         return full_name or obj.demandeur.email
+
+    def get_has_lease(self, obj):
+        return hasattr(obj, 'bail_genere') and obj.bail_genere is not None
 
     def get_proprietaire_nom(self, obj):
         full_name = f"{obj.proprietaire.first_name or ''} {obj.proprietaire.last_name or ''}".strip()

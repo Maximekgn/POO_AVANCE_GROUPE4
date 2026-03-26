@@ -42,10 +42,12 @@ export const authOptions: AuthOptions = {
 
           if (data.access) {
             const isAdmin = Boolean(data.is_admin);
-            // Decode role and other info from token or if backend provides it
-            // For now, let's return the tokens and user info
+            // Django returns user_id (numeric). We must use it as 'id' for consistency.
+            // Next-auth expects a string for the id field often, but if it's a number it works too.
+            const userId = data.user_id ? String(data.user_id) : credentials.email;
+
             return {
-              id: data.user_id || credentials.email,
+              id: userId,
               email: credentials.email,
               name: data.name || credentials.email,
               role: data.role || (isAdmin ? "ADMIN" : "USER"),
@@ -67,6 +69,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
+        token.id = (user as any).id;
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
         token.role = (user as any).role;
@@ -77,7 +80,8 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
+        (session.user as any).id = token.id;
         (session as any).accessToken = token.accessToken;
         (session as any).role = token.role;
         (session as any).isAdmin = Boolean((token as any).isAdmin);

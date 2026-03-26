@@ -87,6 +87,16 @@ export default async function getListings(params: IListingParams) {
         category: bien.categorie_nom || bien.sous_type_nom || "Bien",
         price: Number(bien.prix_jour || bien.loyer_hc || 0),
         priceMonthly: Number(bien.prix_mois || bien.loyer_hc || 0),
+        roomCount: Number(bien.nb_pieces || 0),
+        guestCount: Number(bien.nb_pieces || 1), // Fallback
+        bathroomCount: Number(bien.nb_douches || 0),
+        nb_salons: Number(bien.nb_salons || 0),
+        nb_chambres: Number(bien.nb_chambres || 0),
+        nb_douches: Number(bien.nb_douches || 0),
+        caution_mois: Number(bien.caution_mois || 0),
+        avance_mois: Number(bien.avance_mois || 0),
+        frais_assistance: Number(bien.frais_assistance || 0),
+        avance: Number(bien.avance || 0),
       };
     });
   } catch (error: any) {

@@ -16,6 +16,7 @@ interface IListingReservationProps {
   onPrivatize: () => void;
   disabled?: boolean;
   disabledDates?: Date[];
+  isOwner?: boolean;
 }
 
 const ListingReservation: React.FC<IListingReservationProps> = ({
@@ -30,6 +31,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
   onPrivatize,
   disabled,
   disabledDates = [],
+  isOwner,
 }) => {
   const monthlyPriceValue =
     typeof monthlyPrice === "number" && monthlyPrice > 0
@@ -52,12 +54,20 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
     >
       {/* ── Price header ── */}
       <div className="px-6 pt-6 pb-4">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-2xl font-bold text-neutral-900 tracking-tight">
-            {formatPrice(price)}{" "}
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold text-neutral-900 tracking-tight">
+              {formatPrice(price)}
+            </span>
             <span className="text-base font-normal text-neutral-500">FCFA</span>
-          </span>
-          <span className="text-neutral-500 text-sm font-normal">/ nuit</span>
+            <span className="text-neutral-500 text-sm font-normal">/ nuit</span>
+          </div>
+          <div className="flex items-center gap-1 text-sm font-semibold text-neutral-900">
+            <svg viewBox="0 0 32 32" className="w-3 h-3 fill-current">
+              <path d="M15.094 1.579l-4.174 8.458-9.333 1.356a1.055 1.055 0 0 0-.585 1.8l6.753 6.583-1.595 9.295a1.055 1.055 0 0 0 1.531 1.112L16 25.794l8.309 4.369a1.055 1.055 0 0 0 1.531-1.112l-1.595-9.295 6.753-6.583a1.055 1.055 0 0 0-.585-1.8l-9.333-1.356-4.174-8.458a1.055 1.055 0 0 0-1.812 0z" />
+            </svg>
+            <span>4,92</span>
+          </div>
         </div>
 
         <div className="mt-2 flex items-center gap-3">
@@ -68,7 +78,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth={1.8}
-              className="w-3.5 h-3.5 text-neutral-400"
+              className="w-3.5 h-3.5 text-black"
             >
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
@@ -77,7 +87,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
               {formatPrice(monthlyPriceValue)} FCFA / mois
             </span>
           </div>
-          <span className="text-xs text-neutral-400">min. 30 jours</span>
+          <span className="text-xs text-black">min. 30 jours</span>
         </div>
       </div>
 
@@ -125,17 +135,23 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
           onClick={onDirectRent}
           className="
             w-full rounded-xl py-3.5 px-4
-            bg-gradient-to-r from-rose-500 to-rose-600
-            text-white font-semibold text-sm tracking-wide
-            shadow-md shadow-rose-200
-            hover:from-rose-600 hover:to-rose-700
+            bg-blue-500
+            text-white font-bold text-base tracking-tight
+            shadow-lg shadow-blue-200
+            hover:bg-blue-600
             active:scale-[0.98]
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-all duration-150
+            transition-all duration-200
           "
         >
-          Louer directement
+          {isOwner ? "Votre annonce" : "Réserver maintenant"}
         </button>
+
+        {isOwner && (
+          <p className="text-center text-xs text-blue-500 font-medium">
+            Vous ne pouvez pas louer votre propre annonce.
+          </p>
+        )}
 
         {/* Secondary CTAs */}
         <div className="grid grid-cols-2 gap-2">
@@ -146,7 +162,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
               rounded-xl py-3 px-3
               border border-neutral-300
               text-neutral-700 font-medium text-sm
-              hover:border-neutral-400 hover:bg-neutral-50
+              hover:border-black hover:bg-neutral-50
               active:scale-[0.98]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-150
@@ -173,7 +189,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
               rounded-xl py-3 px-3
               border border-neutral-300
               text-neutral-700 font-medium text-sm
-              hover:border-neutral-400 hover:bg-neutral-50
+              hover:border-black hover:bg-neutral-50
               active:scale-[0.98]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-150
@@ -195,7 +211,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
           </button>
         </div>
 
-        <p className="text-center text-xs text-neutral-400 mt-1">
+        <p className="text-center text-xs text-black mt-1">
           Aucun paiement débité pour l'instant
         </p>
       </div>

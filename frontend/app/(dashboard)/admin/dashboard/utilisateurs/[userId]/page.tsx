@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
-import Heading from "@/app/components/Heading";
+import Heading from "@/components/Heading";
 import AdminUserDetailClient from "./AdminUserDetailClient";
 
 import {
@@ -148,6 +148,18 @@ export default async function AdminUserDetailPage({
           subtitle="Vue admin avec sections general, finances, papiers et biens"
         />
         <div className="flex gap-2">
+          <Link
+            href={`/admin/dashboard/messages?conversation=${Math.min(
+              Number(currentUser?.id || 0) || 0,
+              Number(user.id) || 0,
+            )}_${Math.max(
+              Number(currentUser?.id || 0) || 0,
+              Number(user.id) || 0,
+            )}`}
+            className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 transition"
+          >
+            Envoyer un message
+          </Link>
           <Link
             href="/admin/dashboard/utilisateurs"
             className="rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"

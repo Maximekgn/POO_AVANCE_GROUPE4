@@ -116,7 +116,7 @@ export default function AdminBienSidebar({
             <button
               onClick={() => handleValidation("REJETE")}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
             >
               Rejeter
             </button>
@@ -138,7 +138,7 @@ export default function AdminBienSidebar({
           disabled={loading}
           className={`flex items-center justify-center gap-2 py-2 w-full rounded-lg text-sm font-semibold transition mt-2 ${bien.is_active
             ? "bg-neutral-100 text-neutral-800 hover:bg-neutral-200"
-            : "bg-red-500 text-white hover:bg-blue-700"
+            : "bg-blue-500 text-white hover:bg-blue-700"
             } disabled:opacity-50`}
         >
           {bien.is_active ? "Désactiver l'annonce" : "Activer l'annonce"}

@@ -40,11 +40,11 @@ const Counter: React.FC<CounterProps> = ({
             h-10
             rounded-full
             border-[1px]
-            border-neutral-400
+            border-black
             flex
             items-center
             justify-center
-            text-neutral-400
+            text-black
             cursor-pointer
             hover:opacity-80
             transition
@@ -60,11 +60,11 @@ const Counter: React.FC<CounterProps> = ({
             h-10
             rounded-full
             border-[1px]
-            border-neutral-400
+            border-black
             flex
             items-center
             justify-center
-            text-neutral-400
+            text-black
             cursor-pointer
             hover:opacity-80
             transition

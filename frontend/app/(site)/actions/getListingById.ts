@@ -82,8 +82,21 @@ export default async function getListingById(params: IGetListingById) {
       roomCount,
       guestCount: Math.max(1, roomCount * 2),
       bathroomCount: Math.max(1, Math.ceil(roomCount / 2)),
+      avance: bien.avance || 0,
+      
+      // Nouveaux champs exposés
+      superficie: bien.superficie,
+      nb_salons: bien.nb_salons,
+      nb_chambres: bien.nb_chambres,
+      nb_douches: bien.nb_douches,
+      caution_mois: bien.caution_mois,
+      avance_mois: bien.avance_mois,
+      frais_assistance: bien.frais_assistance,
+      statut: bien.statut,
+
+      ownerId: bien.owner_user_id, // This is the ID of the owner's utilisateur
       user: {
-        name: "Proprietaire",
+        name: bien.proprietaire_nom || "Propriétaire",
         image: null,
       },
     };

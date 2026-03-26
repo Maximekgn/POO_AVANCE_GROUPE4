@@ -15,16 +15,16 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col md:flex-row gap-0">
+    <div className="min-h-screen flex flex-col md:flex-row gap-0">
       <ClientOnly>
         {/* Sidebar */}
-        <div className="w-full md:w-80 md:h-screen md:sticky md:top-0 p-6 flex items-center justify-center">
+        <div className="w-full md:w-80 md:h-screen md:sticky md:top-0  flex items-center justify-center">
           <AdminSidebar />
         </div>
         
         {/* Main Content Area */}
         <div className="flex-1 min-h-screen">
-          <main className="w-full h-full">
+          <main className="w-full h-full py-20 container mx-auto pr-10">
             {children}
           </main>
         </div>

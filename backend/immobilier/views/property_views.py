@@ -267,17 +267,23 @@ class BienRefusView(APIView):
 
         owner = getattr(getattr(bien, 'proprietaire_info', None), 'utilisateur', None)
         if owner and owner.email:
-            EmailService.envoyer_validation_bien(
-                proprietaire=owner,
-                bien=bien,
-                valide=False,
-                motif_refus=motif_refus,
-                url_mon_espace='/',
-            )
+            try:
+                EmailService.envoyer_validation_bien(
+                    proprietaire=owner,
+                    bien=bien,
+                    valide=False,
+                    motif_refus=motif_refus,
+                    url_mon_espace='/',
+                )
+            except Exception as e:
+                pass
+
+        bien_id = bien.id
+        bien.delete()
 
         return Response(
             {
-                'id': bien.id,
+                'id': bien_id,
                 'refuse': True,
                 'motif_refus': motif_refus,
             },

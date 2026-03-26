@@ -56,7 +56,7 @@ const SearchModal = () => {
         value={searchText}
         onChange={(event) => setSearchText(event.target.value)}
         placeholder="Ex: studio, Abidjan, vue lagune..."
-        className="w-full rounded-md border-2 border-neutral-300 p-4 outline-none transition focus:border-neutral-400"
+        className="w-full rounded-md border-2 border-neutral-300 p-4 outline-none transition focus:border-black"
       />
     </div>
   );

@@ -2,13 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
-import Heading from "@/app/components/Heading";
-import Container from "@/app/components/Container";
+import Heading from "@/components/Heading";
+import Container from "@/components/Container";
 import {
   getMyProfile,
   updateMyProfile,
   uploadMyIdentityDocument,
-} from "@/app/actions/profileActions";
+} from "@/app/(site)/actions/profileActions";
 
 export const dynamic = "force-dynamic";
 
@@ -279,7 +279,7 @@ export default async function ProfilePage({
 
               <button
                 type="submit"
-                className="mt-2 rounded-lg bg-rose-500 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-600"
+                className="mt-2 rounded-lg bg-blue-500 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-600"
               >
                 Enregistrer les modifications
               </button>
@@ -336,7 +336,7 @@ export default async function ProfilePage({
 
               <button
                 type="submit"
-                className="rounded-lg bg-rose-500 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-600"
+                className="rounded-lg bg-blue-500 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-600"
               >
                 Enregistrer le document
               </button>

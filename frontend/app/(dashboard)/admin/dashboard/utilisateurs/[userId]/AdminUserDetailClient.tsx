@@ -82,7 +82,7 @@ export default function AdminUserDetailClient({
           onClick={handleVerifyUser}
           disabled={loading || user.compte_verifie}
           className={`rounded-lg px-4 py-2 font-medium text-white transition ${user.compte_verifie
-            ? "bg-neutral-400 cursor-not-allowed"
+            ? "bg-black cursor-not-allowed"
             : "bg-green-600 hover:bg-green-700"
             } disabled:opacity-50`}
         >
@@ -98,8 +98,8 @@ export default function AdminUserDetailClient({
             loading || (!user.documents_complets && !user.compte_verifie)
           }
           className={`rounded-lg px-4 py-2 font-medium text-white transition ${!user.documents_complets && !user.compte_verifie
-            ? "bg-neutral-400 cursor-not-allowed"
-            : "bg-red-600 hover:bg-red-700"
+            ? "bg-black cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
             } disabled:opacity-50`}
         >
           {loading ? "Chargement..." : "Refuser les documents"}
@@ -108,7 +108,7 @@ export default function AdminUserDetailClient({
           onClick={handleSuspendUser}
           disabled={loading || !user.is_active}
           className={`rounded-lg px-4 py-2 font-medium text-white transition ${!user.is_active
-            ? "bg-neutral-400 cursor-not-allowed"
+            ? "bg-black cursor-not-allowed"
             : "bg-neutral-800 hover:bg-neutral-900"
             } disabled:opacity-50`}
         >
@@ -123,7 +123,7 @@ export default function AdminUserDetailClient({
           </dt>
           <dd className="mt-1 text-sm font-semibold text-neutral-900 flex items-center gap-2">
             <span
-              className={`inline-block h-2 w-2 rounded-full ${user.compte_verifie ? "bg-red-500" : "bg-amber-500"}`}
+              className={`inline-block h-2 w-2 rounded-full ${user.compte_verifie ? "bg-blue-500" : "bg-amber-500"}`}
             ></span>
             {user.compte_verifie
               ? "Compte approuvé"
@@ -136,7 +136,7 @@ export default function AdminUserDetailClient({
           </dt>
           <dd className="mt-1 text-sm font-semibold text-neutral-900 flex items-center gap-2">
             <span
-              className={`inline-block h-2 w-2 rounded-full ${user.documents_complets ? "bg-red-500" : "bg-red-500"}`}
+              className={`inline-block h-2 w-2 rounded-full ${user.documents_complets ? "bg-blue-500" : "bg-blue-500"}`}
             ></span>
             {user.documents_complets ? "Complets" : "Incomplets / Rejetés"}
           </dd>

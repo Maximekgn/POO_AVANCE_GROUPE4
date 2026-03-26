@@ -5,12 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   resendVerificationEmail,
   verifyEmail,
-} from "@/app/actions/authActions";
-import Heading from "@/app/components/Heading";
-import Button from "@/app/components/Button";
+} from "@/app/(site)/actions/authActions";
+import Heading from "@/components/Heading";
+import Button from "@/components/Button";
 import useLoginModal from "@/app/(site)/hooks/useLoginModal";
-import Loader from "@/app/components/Loader";
-import Container from "@/app/components/Container";
+import Loader from "@/components/Loader";
+import Container from "@/components/Container";
 
 const VerifyEmailPage = () => {
   const searchParams = useSearchParams();
@@ -96,7 +96,7 @@ const VerifyEmailPage = () => {
           <>
             <div className="bg-green-100 p-6 rounded-full">
               <svg
-                className="w-16 h-16 text-red-500"
+                className="w-16 h-16 text-blue-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -121,7 +121,7 @@ const VerifyEmailPage = () => {
           <>
             <div className="bg-red-100 p-6 rounded-full">
               <svg
-                className="w-16 h-16 text-red-500"
+                className="w-16 h-16 text-blue-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

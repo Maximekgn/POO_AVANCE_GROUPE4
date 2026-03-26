@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 import ChatWindow from "@/app/components/chat/ChatWindow";
-import Heading from "@/app/components/Heading";
+import Heading from "@/components/Heading";
 
 export const dynamic = "force-dynamic";
 

@@ -114,19 +114,20 @@ const ListingHead: React.FC<IListingHeadProps> = ({
               sizes="100vw"
               priority
               unoptimized={isLocalDevImage(mainImage)}
-              className="object-cover transition-transform duration-500 hover:scale-[1.02]"
+              className="object-cover transition-transform duration-700 hover:scale-105"
             />
+            <div className="absolute inset-0 bg-black/5 opacity-0 hover:opacity-100 transition-opacity duration-300" />
           </div>
         ) : (
           /* Airbnb 2-column grid */
           <div
-            className={`grid gap-2 h-[55vh] ${
+            className={`grid gap-2 h-[55vh] transition-all duration-300 ${
               sideImages.length >= 2 ? "grid-cols-2" : "grid-cols-1"
             }`}
           >
             {/* Main (left) */}
             <div
-              className={`relative overflow-hidden cursor-pointer ${
+              className={`relative overflow-hidden cursor-pointer group ${
                 sideImages.length >= 2 ? "" : "col-span-1"
               }`}
               onClick={() => { setSelectedIndex(0); setIsGalleryOpen(true); }}
@@ -138,8 +139,9 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                 sizes="50vw"
                 priority
                 unoptimized={isLocalDevImage(mainImage)}
-                className="object-cover transition-transform duration-500 hover:scale-[1.02]"
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
+              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
 
             {/* Right grid */}
@@ -159,7 +161,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                   return (
                     <div
                       key={`${src}-${idx}`}
-                      className="relative overflow-hidden cursor-pointer"
+                      className="relative overflow-hidden cursor-pointer group"
                       onClick={() => { setSelectedIndex(realIndex); setIsGalleryOpen(true); }}
                     >
                       <Image
@@ -168,12 +170,13 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                         fill
                         sizes="25vw"
                         unoptimized={isLocalDevImage(src)}
-                        className="object-cover transition-transform duration-500 hover:scale-[1.02]"
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                       />
+                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       {isLast && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white font-semibold text-sm">
-                            +{galleryImages.length - 4} photos
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+                          <span className="text-white font-bold text-lg drop-shadow-md">
+                            +{galleryImages.length - 4}
                           </span>
                         </div>
                       )}
@@ -191,22 +194,20 @@ const ListingHead: React.FC<IListingHeadProps> = ({
             type="button"
             onClick={() => setIsGalleryOpen(true)}
             className="
-              absolute bottom-4 right-4 z-20
+              absolute bottom-4 right-6 z-20
               flex items-center gap-2
-              rounded-lg border border-neutral-800 bg-white
-              px-4 py-2 text-sm font-semibold text-neutral-800
-              shadow-md
-              hover:bg-neutral-50
-              transition-colors duration-150
+              rounded-xl border border-neutral-900 bg-white
+              px-5 py-2.5 text-sm font-bold text-neutral-900
+              shadow-lg
+              hover:bg-neutral-50 hover:shadow-xl
+              active:scale-95
+              transition-all duration-200
             "
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
+            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor">
+              <path d="M5 2a1 1 0 100-2 1 1 0 000 2zM2 5a1 1 0 110-2 1 1 0 010 2zm1 3a1 1 0 100-2 1 1 0 000 2zm-1 3a1 1 0 110-2 1 1 0 010 2zm1 3a1 1 0 100-2 1 1 0 000 2zm9-12a1 1 0 100-2 1 1 0 000 2zm2 3a1 1 0 110-2 1 1 0 010 2zm-1 3a1 1 0 100-2 1 1 0 000 2zm1 3a1 1 0 110-2 1 1 0 010 2zm-1 3a1 1 0 100-2 1 1 0 000 2z" />
             </svg>
-            Afficher toutes les photos
+            Toutes les photos
           </button>
         )}
 

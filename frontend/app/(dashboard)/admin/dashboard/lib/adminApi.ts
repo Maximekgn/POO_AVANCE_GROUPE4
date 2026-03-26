@@ -197,7 +197,11 @@ export type AdminDashboardStats = {
   };
   status_stats: Record<string, number>;
   category_stats: { name: string; value: number }[];
-  revenue_history: { month: string; amount: number }[];
+  revenue_history: {
+    daily: { label: string; amount: number }[];
+    monthly: { label: string; amount: number }[];
+    yearly: { label: string; amount: number }[];
+  };
   recent_activity: {
     id: number;
     numero: string;
@@ -207,6 +211,104 @@ export type AdminDashboardStats = {
     statut: string;
   }[];
 };
+
+export type AdminCategory = {
+  id: number;
+  nom: string;
+  slug: string;
+  image?: string | null;
+  ordre: number;
+  actif: boolean;
+  date_creation: string;
+};
+
+export async function getAdminCategories(
+  currentUser: AdminUser,
+): Promise<AdminCategory[]> {
+  const token = currentUser?.accessToken;
+  if (!token) return [];
+
+  try {
+    const response = await fetch(`${API_URL}/categories`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data) ? (data as AdminCategory[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function createAdminCategory(
+  data: FormData,
+  token: string,
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_URL}/categories`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: data,
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return { ok: false, message: payload?.nom?.[0] || "Erreur lors de la création." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Erreur réseau." };
+  }
+}
+
+export async function updateAdminCategory(
+  id: number,
+  data: FormData,
+  token: string,
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_URL}/categories/${id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: data,
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return { ok: false, message: payload?.nom?.[0] || "Erreur lors de la mise à jour." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Erreur réseau." };
+  }
+}
+
+export async function deleteAdminCategory(
+  id: number,
+  token: string,
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_URL}/categories/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return { ok: false, message: payload?.error || "Erreur lors de la suppression." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Erreur réseau." };
+  }
+}
 
 export async function getAdminDashboardStats(
   currentUser: AdminUser,

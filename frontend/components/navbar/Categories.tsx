@@ -59,7 +59,8 @@ const Categories = () => {
             key={item.id}
             label={item.nom}
             value={item.id}
-            icon={TbBeach}
+            icon={MdOutlineVilla}
+            imageSrc={item.image}
             selected={String(item.id) === category || item.nom === category}
           />
         ))}

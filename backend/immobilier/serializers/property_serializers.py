@@ -22,6 +22,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
 class BienSerializer(serializers.ModelSerializer):
     proprietaire_info = serializers.PrimaryKeyRelatedField(queryset=ProprietaireInfo.objects.all(), required=False)
+    owner_user_id = serializers.IntegerField(source='proprietaire_info.utilisateur.id', read_only=True)
     photos = PhotoSerializer(many=True, read_only=True)
     categorie_nom = serializers.CharField(source='categorie.nom', read_only=True)
     sous_type_nom = serializers.CharField(source='sous_type.nom', read_only=True)
@@ -33,6 +34,7 @@ class BienSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'proprietaire_info',
+            'owner_user_id',
             'reference',
             'categorie',
             'categorie_nom',
@@ -49,6 +51,9 @@ class BienSerializer(serializers.ModelSerializer):
             'description',
             'superficie',
             'nb_pieces',
+            'nb_salons',
+            'nb_chambres',
+            'nb_douches',
             'etage',
             'meuble',
             'prix_jour',
@@ -56,12 +61,16 @@ class BienSerializer(serializers.ModelSerializer):
             'loyer_hc',
             'charges',
             'depot_garantie',
+            'caution_mois',
+            'avance_mois',
+            'avance',
+            'frais_assistance',
             'statut',
             'is_active',
             'date_creation',
             'photos',
         ]
-        read_only_fields = ['id', 'date_creation', 'photos', 'categorie_nom', 'sous_type_nom', 'is_active']
+        read_only_fields = ['id', 'date_creation', 'photos', 'categorie_nom', 'sous_type_nom', 'is_active', 'owner_user_id']
 
     def get_proprietaire_nom(self, obj):
         owner = getattr(getattr(obj, 'proprietaire_info', None), 'utilisateur', None)

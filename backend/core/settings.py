@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -189,7 +190,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'votre.email@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'votre_mot_de_passe_app')
-DEFAULT_FROM_EMAIL = 'ImmobilierPro <' + EMAIL_HOST_USER + '>'
+DEFAULT_FROM_EMAIL = 'Miabe-Immo <' + EMAIL_HOST_USER + '>'
 
 # URL du frontend (pour les liens dans les emails)
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')

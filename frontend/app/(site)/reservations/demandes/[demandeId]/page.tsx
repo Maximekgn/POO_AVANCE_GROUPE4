@@ -1,4 +1,4 @@
-import ClientOnly from "@/app/components/ClientOnly";
+import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 import DemandeDetailClient from "./DemandeDetailClient";
 

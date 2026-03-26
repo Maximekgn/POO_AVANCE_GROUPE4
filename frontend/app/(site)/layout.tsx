@@ -19,7 +19,7 @@ export default async function SiteLayout({
       <SearchModal />
       <Navbar currentUser={currentUser} />
       <ChatWidget currentUser={currentUser} />
-      <div className="py-32">{children}</div>
+      <div className="py-36">{children}</div>
     </ClientOnly>
   );
 }

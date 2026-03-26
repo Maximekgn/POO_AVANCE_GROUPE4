@@ -1,6 +1,6 @@
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
-import ClientOnly from "@/app/components/ClientOnly";
-import EmptyState from "@/app/components/EmptyState";
+import ClientOnly from "@/components/ClientOnly";
+import EmptyState from "@/components/EmptyState";
 
 import {
   getAdminExpenses,
