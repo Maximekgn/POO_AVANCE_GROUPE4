@@ -64,6 +64,13 @@ from immobilier.views import (
     AdminDashboardStatsView,
 )
 
+from immobilier.views.billing_views import (
+    SimulationPaiementMobileMoneyView,
+    DownloadFactureView,
+    LocatairePaiementsListView,
+    AdminPaiementReversementView
+)
+
 app_name = 'immobilier'
 
 
@@ -236,6 +243,7 @@ urlpatterns = [
     path('admin/dashboard/stats', AdminDashboardStatsView.as_view(), name='admin-dashboard-stats'),
     path('admin/finances/paiements', AdminPaiementListView.as_view(), name='admin-finances-paiements-list'),
     path('admin/finances/paiements/<int:pk>', AdminPaiementDetailView.as_view(), name='admin-finances-paiements-detail'),
+    path('admin/finances/paiements/<int:pk>/reverser', AdminPaiementReversementView.as_view(), name='admin-finances-paiements-reverser'),
     path('admin/finances/depenses', AdminDepenseListView.as_view(), name='admin-finances-depenses-list'),
     path('admin/finances/depenses/<int:pk>', AdminDepenseDetailView.as_view(), name='admin-finances-depenses-detail'),
     path('admin/finances/profils/<int:user_id>', AdminFinanceProfileView.as_view(), name='admin-finances-profile'),
@@ -251,4 +259,9 @@ urlpatterns = [
     path('baux', BailListView.as_view(), name='baux-list'),
     path('baux/<int:pk>', BailDetailView.as_view(), name='baux-detail'),
     path('baux/<int:pk>/signer', BailSignView.as_view(), name='baux-signer'),
+
+    # ── Facturation & Paiements Mobile Money (Sprint 8) ────────────────────
+    path('paiements/mes-loyers', LocatairePaiementsListView.as_view(), name='paiements-mes-loyers'),
+    path('paiements/<int:pk>/simulate-mobile-money', SimulationPaiementMobileMoneyView.as_view(), name='paiements-simulate-mobile-money'),
+    path('paiements/<int:pk>/facture/download', DownloadFactureView.as_view(), name='paiements-facture-download'),
 ]

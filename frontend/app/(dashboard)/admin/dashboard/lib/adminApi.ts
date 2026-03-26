@@ -810,3 +810,34 @@ export async function refuseBien(
     return { ok: false, message: "Erreur reseau pendant le refus." };
   }
 }
+export async function reverserPaiement(
+  paymentId: number,
+  token: string,
+  data: { mode_reversement: string; preuve_reversement: string },
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch(
+      `${API_URL}/admin/finances/paiements/${paymentId}/reverser`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      },
+    );
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return {
+        ok: false,
+        message: payload?.detail || payload?.error || "Action impossible.",
+      };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Erreur réseau." };
+  }
+}

@@ -197,7 +197,7 @@ export default function ChatWindow({
           );
 
           if (!existing) {
-            const otherUser = contactsRef.current.find(
+            let otherUser = contactsRef.current.find(
               (item) =>
                 item.id ===
                 (newMessage.expediteur_id === currentUserId
@@ -205,7 +205,17 @@ export default function ChatWindow({
                   : newMessage.expediteur_id),
             );
             if (!otherUser) {
-              return prev;
+              const targetId =
+                newMessage.expediteur_id === currentUserId
+                  ? newMessage.destinataire_id
+                  : newMessage.expediteur_id;
+              otherUser = {
+                id: targetId,
+                full_name: `Utilisateur #${targetId}`,
+                email: "Inconnu",
+                is_admin: false,
+                is_online: false,
+              };
             }
 
             const created: ChatConversation = {
@@ -248,7 +258,10 @@ export default function ChatWindow({
         });
 
         if (newMessage.conversation_id === activeConversationRef.current) {
-          setMessages((prev) => [...prev, newMessage]);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
         }
       }
 
@@ -260,14 +273,26 @@ export default function ChatWindow({
           const existing = prev.find((item) => item.conversation_id === convId);
 
           if (!existing) {
-            const otherUser = contactsRef.current.find(
+            let otherUser = contactsRef.current.find(
               (item) =>
                 item.id ===
                 (newMessage.expediteur_id === currentUserId
                   ? newMessage.destinataire_id
                   : newMessage.expediteur_id),
             );
-            if (!otherUser) return prev;
+            if (!otherUser) {
+              const targetId =
+                newMessage.expediteur_id === currentUserId
+                  ? newMessage.destinataire_id
+                  : newMessage.expediteur_id;
+              otherUser = {
+                id: targetId,
+                full_name: `Utilisateur #${targetId}`,
+                email: "Inconnu",
+                is_admin: false,
+                is_online: false,
+              };
+            }
 
             const created: ChatConversation = {
               conversation_id: convId,
@@ -376,7 +401,7 @@ export default function ChatWindow({
       };
     }
 
-    if (activeConversationId && contacts.length > 0) {
+    if (activeConversationId) {
       const parts = activeConversationId.split("_");
 
       // Identification strategy: 
@@ -402,6 +427,16 @@ export default function ChatWindow({
             email: contact.email,
             is_admin: contact.is_admin,
             is_online: contact.is_online,
+            conversation_id: activeConversationId,
+          };
+        } else {
+          // Fallback if contact does not exist yet (start new conversation)
+          return {
+            id: targetId,
+            full_name: `Nouvelle conversation`,
+            email: "En attente du premier message...",
+            is_admin: false,
+            is_online: false,
             conversation_id: activeConversationId,
           };
         }

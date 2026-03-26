@@ -11,7 +11,8 @@ export default async function AdminConversationDetailPage({
 }: {
   params: Promise<{ conversationId: string }>;
 }) {
-  const { conversationId } = await params;
+  const resolvedParams = await params;
+  const conversationId = resolvedParams.conversationId;
   const currentUser = await getCurrentUser();
 
   if (!currentUser?.accessToken || !currentUser.isAdmin) {

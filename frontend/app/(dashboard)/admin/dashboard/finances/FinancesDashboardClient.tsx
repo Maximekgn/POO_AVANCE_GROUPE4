@@ -7,11 +7,14 @@ import {
   FiCheckCircle,
   FiClock,
   FiDollarSign,
+  FiSend,
 } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 import Heading from "@/components/Heading";
 
-import { AdminExpense, AdminFinanceStats, AdminPayment } from "../lib/adminApi";
+import { AdminExpense, AdminFinanceStats, AdminPayment, reverserPaiement } from "../lib/adminApi";
 
 type Props = {
   initialStats: AdminFinanceStats | null;
@@ -23,8 +26,16 @@ const formatFcfa = (value: number) => `${value.toLocaleString("fr-FR")} FCFA`;
 
 const statusClass = (status: string) => {
   if (status === "PAYE") return "bg-emerald-100 text-emerald-700";
+  if (status === "PAYE_A_L_ADMIN") return "bg-blue-100 text-blue-700";
+  if (status === "REVERSE_AU_PROPRIETAIRE") return "bg-indigo-100 text-indigo-700";
   if (status === "EN_ATTENTE") return "bg-amber-100 text-amber-700";
   return "bg-rose-100 text-rose-700";
+};
+
+const statusLabel = (status: string) => {
+  if (status === "PAYE_A_L_ADMIN") return "Payé à l'Admin";
+  if (status === "REVERSE_AU_PROPRIETAIRE") return "Reversé Propriétaire";
+  return status.replace("_", " ");
 };
 
 export default function FinancesDashboardClient({
@@ -32,9 +43,46 @@ export default function FinancesDashboardClient({
   initialPayments,
   initialExpenses,
 }: Props) {
+  const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<
-    "TOUS" | "PAYE" | "EN_ATTENTE" | "IMPAYE"
+    "TOUS" | "PAYE" | "PAYE_A_L_ADMIN" | "REVERSE_AU_PROPRIETAIRE" | "EN_ATTENTE" | "IMPAYE"
   >("TOUS");
+
+  const [reversionPayment, setReversionPayment] = useState<AdminPayment | null>(null);
+  const [reversionData, setReversionData] = useState({
+    mode: "Virement Bancaire",
+    preuve: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleReversion = async () => {
+    if (!reversionPayment) return;
+    if (!reversionData.preuve) {
+      toast.error("Veuillez saisir une référence de preuve.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem("accessToken") || "";
+      const res = await reverserPaiement(reversionPayment.id, token, {
+        mode_reversement: reversionData.mode,
+        preuve_reversement: reversionData.preuve,
+      });
+
+      if (res.ok) {
+        toast.success("Fonds reversés avec succès !");
+        setReversionPayment(null);
+        router.refresh();
+      } else {
+        toast.error(res.message || "Erreur.");
+      }
+    } catch {
+      toast.error("Erreur réseau.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const stats =
     initialStats ||
@@ -131,7 +179,7 @@ export default function FinancesDashboardClient({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          {(["TOUS", "PAYE", "EN_ATTENTE", "IMPAYE"] as const).map((status) => (
+          {(["TOUS", "PAYE", "PAYE_A_L_ADMIN", "REVERSE_AU_PROPRIETAIRE", "EN_ATTENTE", "IMPAYE"] as const).map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
@@ -140,7 +188,7 @@ export default function FinancesDashboardClient({
                 : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                 }`}
             >
-              {status === "TOUS" ? "Tous" : status.replace("_", " ")}
+              {status === "TOUS" ? "Tous" : statusLabel(status)}
             </button>
           ))}
         </div>
@@ -187,7 +235,7 @@ export default function FinancesDashboardClient({
                       <span
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(payment.statut)}`}
                       >
-                        {payment.statut.replace("_", " ")}
+                        {statusLabel(payment.statut)}
                       </span>
                     </td>
                     <td className="px-3 py-3">
@@ -205,6 +253,15 @@ export default function FinancesDashboardClient({
                           >
                             Profil financier
                           </Link>
+                        ) : null}
+                        {payment.statut === "PAYE_A_L_ADMIN" ? (
+                          <button
+                            onClick={() => setReversionPayment(payment)}
+                            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                          >
+                            <FiSend size={12} />
+                            Reverser au Proprio
+                          </button>
                         ) : null}
                       </div>
                     </td>
@@ -282,6 +339,79 @@ export default function FinancesDashboardClient({
           </table>
         </div>
       </section>
+
+      {/* Modal Reversement */}
+      {reversionPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-xl font-bold text-neutral-800">
+              Confirmer le Reversement
+            </h3>
+            <p className="mt-2 text-sm text-neutral-500">
+              Vous allez marquer le paiement <b>{reversionPayment.reference}</b> (
+              {formatFcfa(reversionPayment.montant)}) comme reversé au propriétaire.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Mode de reversement
+                </label>
+                <select
+                  value={reversionData.mode}
+                  onChange={(e) =>
+                    setReversionData({ ...reversionData, mode: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-indigo-500"
+                >
+                  <option value="Virement Bancaire">Virement Bancaire</option>
+                  <option value="Mobile Money (Orange)">
+                    Mobile Money (Orange)
+                  </option>
+                  <option value="Mobile Money (MTN)">Mobile Money (MTN)</option>
+                  <option value="Chèque">Chèque</option>
+                  <option value="Espèces">Espèces</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Référence de la preuve
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Ref Virement, Transaction ID..."
+                  value={reversionData.preuve}
+                  onChange={(e) =>
+                    setReversionData({
+                      ...reversionData,
+                      preuve: e.target.value,
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-3">
+              <button
+                disabled={submitting}
+                onClick={() => setReversionPayment(null)}
+                className="flex-1 rounded-xl border border-neutral-200 py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={submitting}
+                onClick={handleReversion}
+                className="flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {submitting ? "Traitement..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

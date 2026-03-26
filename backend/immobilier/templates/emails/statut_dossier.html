@@ -1,47 +1,43 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Mise à jour de votre dossier — ImmobilierPro{% endblock %}
+{% block title %} Mise à jour de votre dossier - ImmoPlus {% endblock %}
 
 {% block body %}
-  <p class="greeting">
-    {% if statut == 'VALIDE' %}✅ Dossier accepté
-    {% elif statut == 'REFUSE' %}❌ Dossier refusé
-    {% elif statut == 'EN_ETUDE' %}🔍 Dossier en cours d'étude
-    {% else %}📄 Mise à jour de votre dossier
-    {% endif %}
+<div class="greeting">
+  {% if statut == 'VALIDE' %} ✅ Votre dossier est accepté {% elif statut == 'REFUSE' %} ✖️ Information sur votre dossier {% elif statut == 'EN_ETUDE' %} 🔍 Dossier en cours d'examen {% else %} 📄 Mise à jour de votre dossier {% endif %}
+</div>
+
+<p>Bonjour {{ prenom }},</p>
+<p>
+  Nous vous informons que votre dossier de candidature (<strong>#{{ id_dossier }}</strong>) pour le bien <strong>{{ reference_bien }}</strong> a été mis à jour.
+</p>
+
+<div style="background-color: {% if statut == 'VALIDE' %} #f0fdf4 {% elif statut == 'REFUSE' %} #fef2f2 {% else %} #f8fafc {% endif %}; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid {% if statut == 'VALIDE' %} #dcfce7 {% elif statut == 'REFUSE' %} #fee2e2 {% else %} #e2e8f0 {% endif %};">
+  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">État actuel du dossier</p>
+  <p style="margin: 12px 0 0; font-size: 20px; font-weight: 800; color: {% if statut == 'VALIDE' %} #166534 {% elif statut == 'REFUSE' %} #991b1b {% else %} #0f172a {% endif %};">
+    {{ statut|upper }}
   </p>
-  <div class="content">
-    <p>Bonjour <strong>{{ prenom }}</strong>,</p>
-    <p>Votre dossier de candidature pour le bien <strong>{{ reference_bien }}</strong> situé à <strong>{{ adresse_bien }}</strong> vient d'être mis à jour.</p>
+</div>
 
-    <div class="info-box">
-      <p>📁 Numéro de dossier : <strong>#{{ id_dossier }}</strong><br/>
-      📌 Nouveau statut :
-        <strong>
-          {% if statut == 'VALIDE' %}Validé ✅
-          {% elif statut == 'REFUSE' %}Refusé ❌
-          {% elif statut == 'EN_ETUDE' %}En cours d'étude 🔍
-          {% else %}{{ statut }}
-          {% endif %}
-        </strong>
-      </p>
-    </div>
+<p>
+  {% if statut == 'VALIDE' %}
+    Félicitations ! Votre dossier a été validé. Le propriétaire reviendra vers vous très prochainement pour l'étape de signature du bail.
+  {% elif statut == 'REFUSE' %}
+    Malheureusement, votre candidature n'a pas pu être retenue pour ce bien. 
+    {% if motif_refus %}<br/><strong>Motif indiqué :</strong> {{ motif_refus }}{% endif %}
+  {% elif statut == 'EN_ETUDE' %}
+    Votre dossier est actuellement entre les mains du propriétaire. Nous vous notifierons dès qu'une décision sera prise.
+  {% endif %}
+</p>
 
-    {% if statut == 'VALIDE' %}
-      <p>Félicitations ! Votre dossier a été accepté. Le propriétaire va prochainement vous contacter pour la signature du bail.</p>
-    {% elif statut == 'REFUSE' %}
-      <p>Malheureusement, votre dossier n'a pas pu être retenu. Motif : <strong>{{ motif_refus }}</strong>.</p>
-      <p>Vous pouvez consulter d'autres biens disponibles sur la plateforme.</p>
-    {% elif statut == 'EN_ETUDE' %}
-      <p>Votre dossier est en cours d'examen par le propriétaire. Nous vous tiendrons informé de la suite.</p>
-    {% endif %}
-  </div>
+<div class="divider"></div>
 
-  <div class="cta-wrapper">
-    <a href="{{ url_mes_dossiers }}" class="cta-btn">Voir mes dossiers</a>
-  </div>
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ url_mes_dossiers }}" class="cta-button">Suivre mon dossier</a>
+</div>
 
-  <div class="content">
-    <p>Cordialement,<br/><strong>L'équipe ImmobilierPro</strong></p>
-  </div>
+<p style="font-size: 14px; color: #64748b; text-align: center;">
+  Merci de votre patience,<br/>L'équipe <strong>ImmoPlus</strong>
+</p>
 {% endblock %}
+

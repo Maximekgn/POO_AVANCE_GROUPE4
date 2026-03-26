@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row gap-0">
+    <div className="min-h-screen flex flex-col md:flex-row gap-0 bg-blue-50/30">
       <ClientOnly>
         {/* Sidebar */}
         <div className="w-full md:w-80 md:h-screen md:sticky md:top-0  flex items-center justify-center">
@@ -24,7 +24,7 @@ export default async function DashboardLayout({
         
         {/* Main Content Area */}
         <div className="flex-1 min-h-screen">
-          <main className="w-full h-full py-20 container mx-auto pr-10">
+          <main className="w-full h-full py-20 container mx-auto pr-10 ">
             {children}
           </main>
         </div>

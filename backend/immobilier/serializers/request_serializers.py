@@ -36,6 +36,7 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'statut',
             'date_debut',
             'date_fin',
+            'date_visite',
             'duree_jours',
             'montant_total',
             'message',
@@ -51,6 +52,7 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'proprietaire',
             'statut',
             'duree_jours',
+            'date_visite',
             'date_creation',
             'date_traitement',
             'motif_refus',
@@ -154,6 +156,7 @@ class DemandeActionDecisionSerializer(serializers.Serializer):
     )
     note_proprietaire = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     motif_refus = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    date_visite = serializers.DateTimeField(required=False, allow_null=True)
 
     def validate(self, attrs):
         statut = attrs.get('statut') or attrs.get('decision')

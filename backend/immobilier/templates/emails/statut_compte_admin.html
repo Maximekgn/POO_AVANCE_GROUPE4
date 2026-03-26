@@ -1,47 +1,46 @@
-{% extends "emails/base_email.html" %} {% block title %} Statut de compte {{
-statut_label|title }} - ImmobilierPro {% endblock %} {% block body %}
-<p class="greeting">
-  {% if statut == "APPROUVE" %} Votre compte a ete approuve {% elif statut ==
-  "REJETE" %} Votre compte a ete rejete {% elif statut == "SUSPENDU" %} Votre
-  compte a ete suspendu {% else %} Mise a jour de votre compte {% endif %}
+{% extends "emails/base_email.html" %}
+
+{% block title %} Mise à jour de votre compte - ImmoPlus {% endblock %}
+
+{% block body %}
+<div class="greeting">
+  {% if statut == "APPROUVE" %} Votre compte est actif {% elif statut == "REJETE" %} Information sur votre dossier {% elif statut == "SUSPENDU" %} Compte suspendu {% else %} Mise à jour de votre compte {% endif %}
+</div>
+
+<p>Bonjour {{ prenom }},</p>
+<p>
+  L'administration a examiné votre profil (<strong>{{ email }}</strong>) et a mis à jour votre statut.
 </p>
 
-<div class="content">
-  <p>Bonjour <strong>{{ prenom }}</strong>,</p>
-  <p>
-    Le statut de votre compte (<strong>{{ email }}</strong>) a été
-    <strong>{{ statut_label }}</strong> par notre équipe d'administration.
+<div style="background-color: {% if statut == 'APPROUVE' %} #f0fdf4 {% elif statut == 'REJETE' or statut == 'SUSPENDU' %} #fef2f2 {% else %} #f8fafc {% endif %}; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid {% if statut == 'APPROUVE' %} #dcfce7 {% elif statut == 'REJETE' or statut == 'SUSPENDU' %} #fee2e2 {% else %} #e2e8f0 {% endif %};">
+  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Statut actuel</p>
+  <p style="margin: 12px 0 0; font-size: 20px; font-weight: 800; color: {% if statut == 'APPROUVE' %} #166534 {% elif statut == 'REJETE' or statut == 'SUSPENDU' %} #991b1b {% else %} #0f172a {% endif %};">
+    {{ statut_label|upper }}
   </p>
+</div>
 
+<p>
   {% if statut == "APPROUVE" %}
-  <div class="info-box">
-    <p>
-      Votre accès est actif. Vous pouvez vous connecter et utiliser la
-      plateforme normalement.
-    </p>
-  </div>
+    Félicitations ! Vous disposez désormais d'un accès complet à toutes les fonctionnalités de la plateforme ImmoPlus.
   {% elif statut == "REJETE" %}
-  <div class="info-box">
-    <p>
-      Votre dossier a été rejeté. Merci de mettre à jour vos informations et vos
-      documents avant une nouvelle soumission.
-    </p>
-  </div>
+    Malheureusement, votre dossier n'a pas pu être validé en l'état. Nous vous invitons à vérifier vos documents et informations personnelles depuis votre espace.
   {% elif statut == "SUSPENDU" %}
-  <div class="info-box">
-    <p>
-      Votre compte est temporairement suspendu. Contactez le support pour
-      connaître la procédure de réactivation.
-    </p>
-  </div>
+    Votre accès a été temporairement restreint. Pour toute demande de réactivation, merci de contacter notre équipe dédiée.
+  {% endif %}
+</p>
+
+<div class="divider"></div>
+
+<div style="text-align: center; margin: 32px 0;">
+  {% if statut == "APPROUVE" %}
+    <a href="{{ url_dashboard }}" class="cta-button">Accéder à mon espace</a>
+  {% else %}
+    <a href="{{ url_support }}" class="cta-button">Contacter le support</a>
   {% endif %}
 </div>
 
-<div class="cta-wrapper">
-  <a href="{{ url_support }}" class="cta-btn">Contacter le support</a>
-</div>
-
-<div class="content">
-  <p>Cordialement,<br /><strong>L'équipe ImmobilierPro</strong></p>
-</div>
+<p style="font-size: 14px; color: #64748b; text-align: center;">
+  Merci de votre compréhension,<br/>L'équipe <strong>ImmoPlus</strong>
+</p>
 {% endblock %}
+

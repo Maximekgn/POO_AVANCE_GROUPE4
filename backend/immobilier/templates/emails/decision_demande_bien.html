@@ -1,36 +1,58 @@
-{% extends "emails/base_email.html" %} {% block title %}Decision sur votre
-demande{% endblock %} {% block body %}
-<p class="greeting">Mise a jour de votre demande</p>
+{% extends "emails/base_email.html" %}
 
-<div class="content">
-  <p>Bonjour {{ prenom }},</p>
-  <p>Le proprietaire a traite votre demande.</p>
+{% block title %}Mise à jour de votre demande{% endblock %}
+
+{% block body %}
+<div class="greeting">
+  {% if est_acceptee %} Félicitations ! {% else %} Information sur votre demande {% endif %}
 </div>
 
-<div class="info-box">
-  <p>
-    Type: <strong>{{ type_demande }}</strong><br />
-    Statut: <strong>{{ statut }}</strong><br />
-    Bien: <strong>{{ reference_bien }}</strong><br />
-    Adresse: <strong>{{ adresse_bien }}</strong><br />
-    Periode: <strong>{{ date_debut }} - {{ date_fin }}</strong><br />
-    Proprietaire: <strong>{{ proprietaire_nom }}</strong>
-  </p>
+<p>Bonjour {{ prenom }},</p>
+<p>
+  Nous vous informons que le traitement de votre demande concernant le bien <strong>{{ reference_bien }}</strong> est terminé.
+</p>
+
+<div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
+  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Récapitulatif</p>
+  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Bien</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ reference_bien }}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Type</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ type_demande }}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Statut</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: {% if est_acceptee %} #10b981 {% else %} #ef4444 {% endif %};">
+        {{ statut|upper }}
+      </td>
+    </tr>
+  </table>
 </div>
 
 {% if note_proprietaire %}
-<div class="content">
-  <p>Note du proprietaire:</p>
-  <p><em>{{ note_proprietaire }}</em></p>
-</div>
-{% endif %} {% if not est_acceptee and motif_refus %}
-<div class="content">
-  <p>Motif du refus:</p>
-  <p><strong>{{ motif_refus }}</strong></p>
+<div style="border-left: 4px solid #6366f1; padding-left: 16px; margin: 24px 0;">
+  <p style="font-size: 14px; color: #64748b; margin-bottom: 4px;">Note du propriétaire :</p>
+  <p style="font-style: italic; color: #1e293b;">"{{ note_proprietaire }}"</p>
 </div>
 {% endif %}
 
-<div class="cta-wrapper">
-  <a href="{{ url_dashboard }}" class="cta-btn">Voir mes demandes</a>
+{% if not est_acceptee and motif_refus %}
+<div style="background-color: #fef2f2; border-radius: 8px; padding: 16px; margin-top: 24px;">
+  <p style="color: #991b1b; font-size: 14px; margin: 0;"><strong>Motif du refus :</strong> {{ motif_refus }}</p>
 </div>
+{% endif %}
+
+<div class="divider"></div>
+
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ url_dashboard }}" class="cta-button">Consulter mon tableau de bord</a>
+</div>
+
+<p style="font-size: 14px; color: #64748b; text-align: center;">
+  Besoin d'aide ? <a href="#" style="color: #6366f1;">Contactez-nous</a>
+</p>
 {% endblock %}
+

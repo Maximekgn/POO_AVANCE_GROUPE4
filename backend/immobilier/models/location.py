@@ -18,6 +18,7 @@ class DemandeAction(models.Model):
     statut = models.CharField(max_length=30, choices=StatutDemandeEnum.choices, default=StatutDemandeEnum.EN_ATTENTE)
     date_debut = models.DateField()
     date_fin = models.DateField()
+    date_visite = models.DateTimeField(null=True, blank=True)
     duree_jours = models.PositiveIntegerField(default=1)
     montant_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     message = models.TextField(blank=True, null=True)

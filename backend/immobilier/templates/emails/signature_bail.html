@@ -1,43 +1,51 @@
 {% extends "emails/base_email.html" %}
 
 {% block title %}
-  {% if signe_par_tous %}🎉 Bail signé{% else %}✍️ Signature de bail requise{% endif %} — ImmobilierPro
+  {% if signe_par_tous %} 🎉 Votre bail est prêt {% else %} ✍️ Signature de bail requise {% endif %}
 {% endblock %}
 
 {% block body %}
-  <p class="greeting">
-    {% if signe_par_tous %}🎉 Votre bail est officiellement signé !{% else %}✍️ Votre signature est requise{% endif %}
-  </p>
-  <div class="content">
-    <p>Bonjour <strong>{{ prenom }}</strong>,</p>
+<div class="greeting">
+  {% if signe_par_tous %} 🎉 Félicitations, votre bail est signé ! {% else %} ✍️ Votre signature est requise {% endif %}
+</div>
 
-    {% if signe_par_tous %}
-      <p>Les deux parties ont signé le bail. Votre bail est maintenant actif et pleinement valide.</p>
-    {% else %}
-      <p>Le bail pour le bien <strong>{{ reference_bien }}</strong> est en attente de votre signature. Veuillez vous connecter pour finaliser cette étape.</p>
-    {% endif %}
+<p>Bonjour {{ prenom }},</p>
+<p>
+  {% if signe_par_tous %}
+    Nous avons le plaisir de vous informer que toutes les parties ont signé le contrat de bail pour le bien <strong>{{ reference_bien }}</strong>. Votre document est désormais officiel.
+  {% else %}
+    Le contrat de bail pour le bien <strong>{{ reference_bien }}</strong> a été généré et attend votre signature pour devenir effectif.
+  {% endif %}
+</p>
 
-    <div class="info-box">
-      <p>🏠 Bien : <strong>{{ adresse_bien }}</strong><br/>
-      📋 Numéro de bail : <strong>{{ numero_bail }}</strong><br/>
-      📅 Date d'entrée : <strong>{{ date_entree }}</strong><br/>
-      💶 Loyer mensuel : <strong>{{ loyer }} FCFA/mois</strong></p>
-    </div>
+<div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
+  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Détails du contrat</p>
+  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Référence</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ numero_bail }}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Loyer mensuel</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #1e293b;">{{ loyer }} FCFA</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date d'effet</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ date_entree }}</td>
+    </tr>
+  </table>
+</div>
 
-    {% if not signe_par_tous %}
-      <p>Cette action est requise pour que votre bail puisse prendre effet.</p>
-    {% else %}
-      <p>Vous pouvez télécharger votre exemplaire du bail signé depuis votre espace personnel.</p>
-    {% endif %}
-  </div>
+<div class="divider"></div>
 
-  <div class="cta-wrapper">
-    <a href="{{ url_bail }}" class="cta-btn">
-      {% if signe_par_tous %}Télécharger mon bail{% else %}Signer mon bail{% endif %}
-    </a>
-  </div>
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ url_bail }}" class="cta-button">
+    {% if signe_par_tous %} Télécharger mon exemplaire {% else %} Signer le contrat en ligne {% endif %}
+  </a>
+</div>
 
-  <div class="content">
-    <p>Cordialement,<br/><strong>L'équipe ImmobilierPro</strong></p>
-  </div>
+<p style="font-size: 14px; color: #64748b; text-align: center;">
+  Merci de votre confiance,<br/>L'équipe <strong>ImmoPlus</strong>
+</p>
 {% endblock %}
+

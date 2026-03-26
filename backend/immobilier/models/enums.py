@@ -10,6 +10,7 @@ class StatutBienEnum(models.TextChoices):
 class StatutBailEnum(models.TextChoices):
     BROUILLON = 'BROUILLON', _('Brouillon')
     EN_ATTENTE_SIGNATURE = 'EN_ATTENTE_SIGNATURE', _('En attente de signature')
+    EN_ATTENTE_PAIEMENT = 'EN_ATTENTE_PAIEMENT', _('En attente de paiement initial')
     EN_COURS = 'EN_COURS', _('En cours')
     EXPIRE = 'EXPIRE', _('Expiré')
     RESILIE = 'RESILIE', _('Résilié')
@@ -32,10 +33,13 @@ class StatutDemandeEnum(models.TextChoices):
     ACCEPTEE = 'ACCEPTEE', _('Acceptée')
     REFUSEE = 'REFUSEE', _('Refusée')
     ANNULEE = 'ANNULEE', _('Annulée')
+    EXPIREE = 'EXPIREE', _('Expirée')
 
 class StatutPaiementEnum(models.TextChoices):
     EN_ATTENTE = 'EN_ATTENTE', _('En attente')
-    PAYE = 'PAYE', _('Payé')
+    PAYE = 'PAYE', _('Payé (directement)')
+    PAYE_A_L_ADMIN = 'PAYE_A_L_ADMIN', _('Payé à l\'administrateur')
+    REVERSE_AU_PROPRIETAIRE = 'REVERSE_AU_PROPRIETAIRE', _('Reversé au propriétaire')
     IMPAYE = 'IMPAYE', _('Impayé')
 
 class TypeDocumentEnum(models.TextChoices):

@@ -18,12 +18,27 @@ from immobilier.serializers import (
 from immobilier.services.email_service import EmailService
 from immobilier.services.contract_service import ContractService
 
+def check_expired_privatisations_for_user(user):
+    # Find all accepted privatisations for this user (as demandeur or proprietaire) that are expired
+    now_date = timezone.now().date()
+    expired_demandes = DemandeAction.objects.filter(
+        Q(demandeur=user) | Q(proprietaire=user),
+        type_demande=TypeDemandeEnum.PRIVATISATION,
+        statut=StatutDemandeEnum.ACCEPTEE,
+        date_fin__lt=now_date
+    ).select_related('demandeur', 'bien', 'proprietaire')
+
+    for demande in expired_demandes:
+        demande.statut = StatutDemandeEnum.EXPIREE
+        demande.save(update_fields=['statut'])
+        EmailService.envoyer_notification_privatisation_expiree(demande)
 
 class DemandeActionListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = DemandeActionSerializer
 
     def get_queryset(self):
+        check_expired_privatisations_for_user(self.request.user)
         queryset = (
             DemandeAction.objects.select_related('bien', 'demandeur', 'proprietaire')
             .filter(demandeur=self.request.user)
@@ -60,6 +75,7 @@ class DemandeActionIncomingListView(generics.ListAPIView):
     serializer_class = DemandeActionSerializer
 
     def get_queryset(self):
+        check_expired_privatisations_for_user(self.request.user)
         queryset = (
             DemandeAction.objects.select_related('bien', 'demandeur', 'proprietaire')
             .filter(proprietaire=self.request.user)
@@ -122,21 +138,40 @@ class DemandeActionDecisionView(APIView):
 
         demande.statut = serializer.validated_data['statut']
         demande.note_proprietaire = serializer.validated_data.get('note_proprietaire')
+        
         if demande.statut == StatutDemandeEnum.REFUSEE:
             demande.motif_refus = serializer.validated_data.get('motif_refus')
+            
+        if demande.statut == StatutDemandeEnum.ACCEPTEE and demande.type_demande == 'VISITE':
+            date_visite = serializer.validated_data.get('date_visite')
+            if not date_visite:
+                raise ValidationError({'date_visite': 'La date de la visite est obligatoire.'})
+            demande.date_visite = date_visite
+
         demande.date_traitement = timezone.now()
         demande.traite_par = request.user
-        demande.save(
-            update_fields=[
-                'statut',
-                'note_proprietaire',
-                'motif_refus',
-                'date_traitement',
-                'traite_par',
-            ]
-        )
+        
+        update_fields = [
+            'statut',
+            'note_proprietaire',
+            'motif_refus',
+            'date_traitement',
+            'traite_par',
+        ]
+        if demande.type_demande == 'VISITE':
+            update_fields.append('date_visite')
+            
+        demande.save(update_fields=update_fields)
 
-        EmailService.envoyer_decision_demande_bien(demande)
+        if demande.statut == StatutDemandeEnum.ACCEPTEE:
+            if demande.type_demande == 'VISITE':
+                EmailService.envoyer_notification_visite_programmee(demande)
+            elif demande.type_demande == 'PRIVATISATION':
+                EmailService.envoyer_notification_privatisation_acceptee(demande)
+            else:
+                EmailService.envoyer_decision_demande_bien(demande)
+        else:
+            EmailService.envoyer_decision_demande_bien(demande)
 
         # Injecter un message automatique dans le chat si accepté
         if demande.statut == StatutDemandeEnum.ACCEPTEE:

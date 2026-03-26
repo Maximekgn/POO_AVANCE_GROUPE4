@@ -1,29 +1,24 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Bienvenue sur ImmobilierPro{% endblock %}
+{% block title %}Bienvenue chez ImmoPlus{% endblock %}
 
 {% block body %}
-  <p class="greeting">Bienvenue, {{ prenom }} ! 🎉</p>
-  <div class="content">
-    <p>Votre compte <strong>ImmobilierPro</strong> a été créé avec succès. Nous sommes ravis de vous compter parmi nos utilisateurs.</p>
-    <p>Vous pouvez dès à présent vous connecter et profiter de toutes les fonctionnalités de notre plateforme selon votre profil :</p>
+<div class="greeting">Bienvenue, {{ prenom }} !</div>
+<p>
+  Nous sommes ravis de vous compter parmi nos membres. Votre compte est désormais actif et vous pouvez commencer à explorer nos opportunités immobilières d'exception.
+</p>
+<p>
+  Chez <strong>ImmoPlus</strong>, nous nous engageons à vous offrir une expérience de gestion et d'investissement fluide, sécurisée et transparente.
+</p>
 
-    <div class="info-box">
-      <p>
-        📧 Email : <strong>{{ email }}</strong><br/>
-        👤 Rôle : <strong>{{ role }}</strong>
-      </p>
-    </div>
+<div class="divider"></div>
 
-    <p>Pour commencer, cliquez sur le bouton ci-dessous et complétez votre profil.</p>
-  </div>
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ url_connexion }}" class="cta-button">Accéder à mon espace</a>
+</div>
 
-  <div class="cta-wrapper">
-    <a href="{{ url_connexion }}" class="cta-btn">Accéder à mon espace</a>
-  </div>
-
-  <div class="content">
-    <p>Si vous avez des questions, notre équipe est disponible pour vous accompagner.</p>
-    <p>À très bientôt,<br/><strong>L'équipe ImmobilierPro</strong></p>
-  </div>
+<p style="margin-top: 32px; font-size: 14px; color: #64748b;">
+  Si vous avez des questions, notre équipe support est à votre entière disposition.
+</p>
 {% endblock %}
+

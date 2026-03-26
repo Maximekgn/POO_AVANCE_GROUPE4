@@ -1,0 +1,46 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %} Votre visite est confirmée {% endblock %}
+
+{% block body %}
+<div class="greeting">🗓️ Votre visite est programmée</div>
+
+<p>Bonjour {{ prenom }},</p>
+<p>
+  Nous avons le plaisir de vous confirmer votre rendez-vous pour la visite du bien <strong>{{ reference_bien }}</strong>.
+</p>
+
+<div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
+  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Détails du rendez-vous</p>
+  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date et Heure</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #6366f1;">{{ date_visite }}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Lieu</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ adresse_bien }}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Ville</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ ville }}</td>
+    </tr>
+  </table>
+</div>
+
+<div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; margin: 24px 0;">
+  <p style="font-size: 13px; color: #475569; margin: 0; line-height: 1.5;">
+    <strong>Conseils :</strong> Soyez présent 5 minutes avant l'heure prévue. En cas d'empêchement, merci de nous prévenir au plus vite depuis votre messagerie ImmoPlus.
+  </p>
+</div>
+
+<div class="divider"></div>
+
+<div style="text-align: center; margin: 32px 0;">
+  <a href="{{ url_dashboard }}" class="cta-button">Voir ma demande</a>
+</div>
+
+<p style="font-size: 14px; color: #64748b; text-align: center;">
+  À très bientôt,<br/>L'équipe <strong>ImmoPlus</strong>
+</p>
+{% endblock %}

@@ -7,8 +7,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminMessagesPage({
   searchParams,
 }: {
-  searchParams: { conversation?: string };
+  searchParams: Promise<{ conversation?: string }>;
 }) {
+  const resolvedParams = await searchParams;
   const currentUser = await getCurrentUser();
 
   if (!currentUser?.accessToken || !currentUser.isAdmin) {
@@ -45,7 +46,7 @@ export default async function AdminMessagesPage({
             currentUser={{ id: currentUser.id, isAdmin: currentUser.isAdmin }}
             accessToken={currentUser.accessToken}
             showConversationList
-            initialConversationId={searchParams.conversation}
+            initialConversationId={resolvedParams.conversation}
           />
         </div>
       </section>

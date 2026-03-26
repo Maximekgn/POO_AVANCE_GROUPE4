@@ -76,7 +76,7 @@ class EmailService:
         url_connexion: Lien vers la page de connexion.
         """
         return cls._envoyer(
-            sujet="🎉 Bienvenue sur ImmobilierPro !",
+            sujet="✨ Bienvenue chez ImmoPlus !",
             template="emails/bienvenue.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -99,7 +99,8 @@ class EmailService:
         sujet, statut_label = labels.get(statut, ('Mise à jour de votre compte', 'mis à jour'))
 
         return cls._envoyer(
-            sujet=f"{sujet} — ImmobilierPro",
+        return cls._envoyer(
+            sujet=f"{sujet} — ImmoPlus",
             template="emails/statut_compte_admin.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -127,7 +128,8 @@ class EmailService:
         validite_heures: Durée de validité du lien (en heures).
         """
         return cls._envoyer(
-            sujet="🔐 Réinitialisation de votre mot de passe — ImmobilierPro",
+        return cls._envoyer(
+            sujet="🔐 Réinitialisation de votre mot de passe — ImmoPlus",
             template="emails/reinitialisation_mdp.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -156,7 +158,8 @@ class EmailService:
         """
         statut_label = "validé" if valide else "refusé"
         return cls._envoyer(
-            sujet=f"{'✅' if valide else '❌'} Votre bien a été {statut_label} — ImmobilierPro",
+        return cls._envoyer(
+            sujet=f"{'✅' if valide else '❌'} Mise à jour de votre bien — ImmoPlus",
             template="emails/validation_bien.html",
             contexte={
                 "prenom": proprietaire.first_name or proprietaire.username,
@@ -275,6 +278,73 @@ class EmailService:
             destinataire=demandeur.email,
         )
 
+    @classmethod
+    def envoyer_notification_visite_programmee(cls, demande, url_dashboard: str = "/trips") -> bool:
+        """Notifie le demandeur que sa visite est programmée."""
+        demandeur = getattr(demande, 'demandeur', None)
+        bien = getattr(demande, 'bien', None)
+        date_visite = getattr(demande, 'date_visite', None)
+
+        if not demandeur or not demandeur.email or not bien or not date_visite:
+            return False
+
+        return cls._envoyer(
+            sujet="📅 Votre visite a été programmée",
+            template="emails/notification_visite.html",
+            contexte={
+                "prenom": demandeur.first_name or demandeur.username,
+                "reference_bien": bien.reference,
+                "adresse_bien": bien.adresse,
+                "date_visite": date_visite.strftime("%d/%m/%Y à %H:%M"),
+                "url_dashboard": url_dashboard,
+            },
+            destinataire=demandeur.email,
+        )
+
+    @classmethod
+    def envoyer_notification_privatisation_acceptee(cls, demande, url_dashboard: str = "/reservations") -> bool:
+        """Notifie le demandeur que sa demande de privatisation est acceptée."""
+        demandeur = getattr(demande, 'demandeur', None)
+        bien = getattr(demande, 'bien', None)
+
+        if not demandeur or not demandeur.email or not bien:
+            return False
+
+        return cls._envoyer(
+            sujet="🎉 Votre demande de privatisation est acceptée",
+            template="emails/notification_privatisation_acceptee.html",
+            contexte={
+                "prenom": demandeur.first_name or demandeur.username,
+                "reference_bien": bien.reference,
+                "adresse_bien": bien.adresse,
+                "date_fin": demande.date_fin.strftime("%d/%m/%Y"),
+                "url_dashboard": url_dashboard,
+            },
+            destinataire=demandeur.email,
+        )
+
+    @classmethod
+    def envoyer_notification_privatisation_expiree(cls, demande, url_dashboard: str = "/reservations") -> bool:
+        """Notifie le demandeur que sa réservation/privatisation a expiré."""
+        demandeur = getattr(demande, 'demandeur', None)
+        bien = getattr(demande, 'bien', None)
+
+        if not demandeur or not demandeur.email or not bien:
+            return False
+
+        return cls._envoyer(
+            sujet="⏳ Votre privatisation est arrivée à expiration",
+            template="emails/notification_privatisation_expiree.html",
+            contexte={
+                "prenom": demandeur.first_name or demandeur.username,
+                "reference_bien": bien.reference,
+                "adresse_bien": bien.adresse,
+                "date_fin": demande.date_fin.strftime("%d/%m/%Y"),
+                "url_dashboard": url_dashboard,
+            },
+            destinataire=demandeur.email,
+        )
+
     # ─────────────────────────────────────────────
     #  4. Mise à jour du statut d'un dossier
     # ─────────────────────────────────────────────
@@ -292,7 +362,8 @@ class EmailService:
         url_mes_dossiers: Lien vers la liste des dossiers du client.
         """
         return cls._envoyer(
-            sujet=f"📄 Mise à jour de votre dossier #{dossier.id} — ImmobilierPro",
+        return cls._envoyer(
+            sujet=f"📄 Mise à jour de votre dossier #{dossier.id} — ImmoPlus",
             template="emails/statut_dossier.html",
             contexte={
                 "prenom": client.first_name or client.username,
@@ -325,7 +396,8 @@ class EmailService:
         """
         impaye = paiement.statut == 'IMPAYE'
         return cls._envoyer(
-            sujet=f"{'⚠️ Loyer impayé' if impaye else '📅 Rappel de paiement'} — ImmobilierPro",
+        return cls._envoyer(
+            sujet=f"{'⚠️ Loyer impayé' if impaye else '📅 Rappel de paiement'} — ImmoPlus",
             template="emails/rappel_paiement.html",
             contexte={
                 "prenom": client.first_name or client.username,

@@ -44,6 +44,7 @@ const DemandeDetailClient: React.FC<Props> = ({ demandeId, currentUser }) => {
   const [submitting, setSubmitting] = useState(false);
   const [motifRefus, setMotifRefus] = useState("");
   const [noteProprietaire, setNoteProprietaire] = useState("");
+  const [dateVisite, setDateVisite] = useState("");
 
   const typeLabel = useMemo(
     () => ({
@@ -108,12 +109,18 @@ const DemandeDetailClient: React.FC<Props> = ({ demandeId, currentUser }) => {
         return;
       }
 
+      if (decision === "ACCEPTEE" && demande.type_demande === "VISITE" && !dateVisite) {
+        toast.error("La date de visite est obligatoire pour accepter cette demande.");
+        return;
+      }
+
       setSubmitting(true);
       try {
         await axios.patch(`/api/demandes-actions/${demande.id}/decision`, {
           statut: decision,
           motif_refus: decision === "REFUSEE" ? motifRefus : "",
           note_proprietaire: noteProprietaire,
+          ...(decision === "ACCEPTEE" && demande.type_demande === "VISITE" ? { date_visite: new Date(dateVisite).toISOString() } : {}),
         });
         toast.success(
           decision === "ACCEPTEE"
@@ -284,6 +291,21 @@ const DemandeDetailClient: React.FC<Props> = ({ demandeId, currentUser }) => {
               className="w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
+
+          {demande.type_demande === "VISITE" && canDecide ? (
+            <div className="mt-4">
+              <label className="mb-2 block text-sm font-medium text-neutral-700">
+                Date et heure de visite (obligatoire si acceptation)
+              </label>
+              <input
+                type="datetime-local"
+                value={dateVisite}
+                onChange={(e) => setDateVisite(e.target.value)}
+                disabled={submitting || !canDecide}
+                className="w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
+          ) : null}
 
           {demande.motif_refus ? (
             <p className="mt-3 text-sm text-blue-600">
