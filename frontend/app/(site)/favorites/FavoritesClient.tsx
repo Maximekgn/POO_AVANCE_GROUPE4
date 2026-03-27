@@ -3,7 +3,7 @@
 import type { CurrentUser } from "@/app/(site)/actions/getCurrentUser";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
-import ListingCard from "../../../../components/listings/ListingCard";
+import ListingCard from "@/components/listings/ListingCard";
 
 type ListingItem = {
   id: string;

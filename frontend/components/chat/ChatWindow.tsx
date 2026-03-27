@@ -72,7 +72,11 @@ export default function ChatWindow({
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [stackedView, setStackedView] = useState<"list" | "chat">(
-    initialConversationId ? "chat" : (conversationLayout === "stacked" ? "list" : "chat"),
+    initialConversationId
+      ? "chat"
+      : conversationLayout === "stacked"
+        ? "list"
+        : "chat",
   );
 
   const socketRef = useRef<WebSocket | null>(null);
@@ -215,6 +219,7 @@ export default function ChatWindow({
                 email: "Inconnu",
                 is_admin: false,
                 is_online: false,
+                conversation_id: newMessage.conversation_id,
               };
             }
 
@@ -230,7 +235,7 @@ export default function ChatWindow({
               last_message: newMessage,
               unread_count:
                 newMessage.destinataire_id === currentUserId &&
-                  activeConversationRef.current !== newMessage.conversation_id
+                activeConversationRef.current !== newMessage.conversation_id
                   ? 1
                   : 0,
             };
@@ -240,7 +245,7 @@ export default function ChatWindow({
 
           const unreadIncrement =
             newMessage.destinataire_id === currentUserId &&
-              activeConversationRef.current !== newMessage.conversation_id
+            activeConversationRef.current !== newMessage.conversation_id
               ? 1
               : 0;
 
@@ -248,10 +253,10 @@ export default function ChatWindow({
             prev.map((item) =>
               item.conversation_id === newMessage.conversation_id
                 ? {
-                  ...item,
-                  last_message: newMessage,
-                  unread_count: item.unread_count + unreadIncrement,
-                }
+                    ...item,
+                    last_message: newMessage,
+                    unread_count: item.unread_count + unreadIncrement,
+                  }
                 : item,
             ),
           );
@@ -291,6 +296,7 @@ export default function ChatWindow({
                 email: "Inconnu",
                 is_admin: false,
                 is_online: false,
+                conversation_id: newMessage.conversation_id,
               };
             }
 
@@ -306,7 +312,7 @@ export default function ChatWindow({
               last_message: newMessage,
               unread_count:
                 newMessage.destinataire_id === currentUserId &&
-                  activeConversationRef.current !== convId
+                activeConversationRef.current !== convId
                   ? 1
                   : 0,
             };
@@ -315,7 +321,7 @@ export default function ChatWindow({
 
           const unreadIncrement =
             newMessage.destinataire_id === currentUserId &&
-              activeConversationRef.current !== convId
+            activeConversationRef.current !== convId
               ? 1
               : 0;
 
@@ -323,10 +329,10 @@ export default function ChatWindow({
             prev.map((item) =>
               item.conversation_id === convId
                 ? {
-                  ...item,
-                  last_message: newMessage,
-                  unread_count: item.unread_count + unreadIncrement,
-                }
+                    ...item,
+                    last_message: newMessage,
+                    unread_count: item.unread_count + unreadIncrement,
+                  }
                 : item,
             ),
           );
@@ -376,12 +382,12 @@ export default function ChatWindow({
           prev.map((conversation) =>
             conversation.other_user.id === userId
               ? {
-                ...conversation,
-                other_user: {
-                  ...conversation.other_user,
-                  is_online: isOnline,
-                },
-              }
+                  ...conversation,
+                  other_user: {
+                    ...conversation.other_user,
+                    is_online: isOnline,
+                  },
+                }
               : conversation,
           ),
         );
@@ -404,9 +410,9 @@ export default function ChatWindow({
     if (activeConversationId) {
       const parts = activeConversationId.split("_");
 
-      // Identification strategy: 
+      // Identification strategy:
       // 1. First, look for the ID that matches someone in our contact list.
-      // 2. Since the current user is normally excluded from his own contact list, 
+      // 2. Since the current user is normally excluded from his own contact list,
       // this will reliably pick the "other" person.
       let targetIdStr = parts.find((p) =>
         contacts.some((c) => c.id === Number(p)),
@@ -502,8 +508,8 @@ export default function ChatWindow({
     const data = (await response.json()) as ChatConversation[];
     const filtered = Array.isArray(data)
       ? data.filter((item) =>
-        restrictToAdmins ? item.other_user.is_admin : true,
-      )
+          restrictToAdmins ? item.other_user.is_admin : true,
+        )
       : [];
 
     const sorted = sortConversations(filtered);
@@ -716,10 +722,11 @@ export default function ChatWindow({
     >
       {showListPane ? (
         <aside
-          className={`border-r border-neutral-200 bg-neutral-50 ${isStacked
+          className={`border-r border-neutral-200 bg-neutral-50 ${
+            isStacked
               ? "flex w-full flex-col"
               : "hidden w-72 lg:flex lg:flex-col"
-            }`}
+          }`}
         >
           <div className="border-b border-neutral-200 px-4 py-3">
             <p className="text-sm font-semibold text-neutral-700">
@@ -742,20 +749,22 @@ export default function ChatWindow({
                 onClick={() =>
                   handleConversationSelect(conversation.conversation_id)
                 }
-                className={`mb-2 w-full rounded-xl px-3 py-2 text-left transition ${conversation.conversation_id === activeConversationId
+                className={`mb-2 w-full rounded-xl px-3 py-2 text-left transition ${
+                  conversation.conversation_id === activeConversationId
                     ? "bg-neutral-900 text-white"
                     : "bg-white hover:bg-neutral-100"
-                  }`}
+                }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-sm font-semibold">
                     {conversation.other_user.full_name}
                   </p>
                   <span
-                    className={`h-2.5 w-2.5 rounded-full ${conversation.other_user.is_online
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      conversation.other_user.is_online
                         ? "bg-emerald-400"
                         : "bg-neutral-300"
-                      }`}
+                    }`}
                   />
                 </div>
                 <p className="mt-1 truncate text-xs opacity-80">
@@ -807,8 +816,9 @@ export default function ChatWindow({
                 </div>
               </div>
               <span
-                className={`h-2.5 w-2.5 rounded-full ${activeContact?.is_online ? "bg-emerald-400" : "bg-neutral-300"
-                  }`}
+                className={`h-2.5 w-2.5 rounded-full ${
+                  activeContact?.is_online ? "bg-emerald-400" : "bg-neutral-300"
+                }`}
               />
             </div>
           </header>
@@ -831,15 +841,17 @@ export default function ChatWindow({
                     className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${isMine
+                      className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                        isMine
                           ? "bg-neutral-900 text-white"
                           : "bg-white text-neutral-800"
-                        }`}
+                      }`}
                     >
                       <p>{message.contenu}</p>
                       <p
-                        className={`mt-1 text-[11px] ${isMine ? "text-neutral-300" : "text-neutral-500"
-                          }`}
+                        className={`mt-1 text-[11px] ${
+                          isMine ? "text-neutral-300" : "text-neutral-500"
+                        }`}
                       >
                         {formatTime(message.date_envoi)}
                       </p>

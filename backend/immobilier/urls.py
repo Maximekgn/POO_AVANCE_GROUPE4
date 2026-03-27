@@ -57,6 +57,8 @@ from immobilier.views import (
     DemandeActionDetailView,
     DemandeActionDecisionView,
     DemandeActionFinaliserLocationView,
+    DemandeActionRequestPaymentView,
+    DemandeActionConfirmPaymentView,
     DemandeActionActionableListView,
     BailListView,
     BailDetailView,
@@ -253,6 +255,8 @@ urlpatterns = [
     path('demandes-actions/<int:pk>', DemandeActionDetailView.as_view(), name='demandes-actions-detail'),
     path('demandes-actions/<int:pk>/decision', DemandeActionDecisionView.as_view(), name='demandes-actions-decision'),
     path('demandes-actions/<int:pk>/finaliser', DemandeActionFinaliserLocationView.as_view(), name='demandes-actions-finaliser'),
+    path('demandes-actions/<int:pk>/request-payment', DemandeActionRequestPaymentView.as_view(), name='demandes-actions-request-payment'),
+    path('demandes-actions/<int:pk>/confirm-payment', DemandeActionConfirmPaymentView.as_view(), name='demandes-actions-confirm-payment'),
     path('demandes-actions/actionable', DemandeActionActionableListView.as_view(), name='demandes-actions-actionable'),
 
     # ── Baux & signatures (Sprint 7 backend) ───────────────────────────────

@@ -17,7 +17,9 @@ class DemandeActionSerializer(serializers.ModelSerializer):
     demandeur_telephone = serializers.CharField(source='demandeur.telephone', read_only=True)
 
     has_lease = serializers.SerializerMethodField()
- 
+    paiement_demande_envoyee = serializers.BooleanField(read_only=True)
+    paiement_effectue = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = DemandeAction
         fields = [
@@ -43,6 +45,8 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'note_proprietaire',
             'motif_refus',
             'has_lease',
+            'paiement_demande_envoyee',
+            'paiement_effectue',
             'date_creation',
             'date_traitement',
         ]

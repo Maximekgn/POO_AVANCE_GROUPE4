@@ -99,7 +99,6 @@ class EmailService:
         sujet, statut_label = labels.get(statut, ('Mise à jour de votre compte', 'mis à jour'))
 
         return cls._envoyer(
-        return cls._envoyer(
             sujet=f"{sujet} — ImmoPlus",
             template="emails/statut_compte_admin.html",
             contexte={
@@ -127,7 +126,6 @@ class EmailService:
         url_reset      : URL unique contenant le token de réinitialisation.
         validite_heures: Durée de validité du lien (en heures).
         """
-        return cls._envoyer(
         return cls._envoyer(
             sujet="🔐 Réinitialisation de votre mot de passe — ImmoPlus",
             template="emails/reinitialisation_mdp.html",
@@ -157,7 +155,6 @@ class EmailService:
         url_mon_espace: Lien vers l'espace propriétaire.
         """
         statut_label = "validé" if valide else "refusé"
-        return cls._envoyer(
         return cls._envoyer(
             sujet=f"{'✅' if valide else '❌'} Mise à jour de votre bien — ImmoPlus",
             template="emails/validation_bien.html",
@@ -362,7 +359,6 @@ class EmailService:
         url_mes_dossiers: Lien vers la liste des dossiers du client.
         """
         return cls._envoyer(
-        return cls._envoyer(
             sujet=f"📄 Mise à jour de votre dossier #{dossier.id} — ImmoPlus",
             template="emails/statut_dossier.html",
             contexte={
@@ -395,7 +391,6 @@ class EmailService:
         url_paiements: Lien vers l'historique des paiements.
         """
         impaye = paiement.statut == 'IMPAYE'
-        return cls._envoyer(
         return cls._envoyer(
             sujet=f"{'⚠️ Loyer impayé' if impaye else '📅 Rappel de paiement'} — ImmoPlus",
             template="emails/rappel_paiement.html",
@@ -444,4 +439,38 @@ class EmailService:
                 "url_bail": url_bail,
             },
             destinataire=utilisateur.email,
+        )
+
+    # ─────────────────────────────────────────────
+    #  7. Demande de paiement avant bail
+    # ─────────────────────────────────────────────
+
+    @classmethod
+    def envoyer_demande_paiement(cls, demandeur, demande, url_paiement: str = "/") -> bool:
+        """
+        Notifie le demandeur qu'il doit effectuer le paiement pour finaliser la location.
+
+        Paramètres
+        ----------
+        demandeur   : Instance du modèle Utilisateur (le locataire).
+        demande     : Instance du modèle DemandeAction.
+        url_paiement: Lien vers la page de paiement.
+        """
+        bien = getattr(demande, 'bien', None)
+        if not bien or not demandeur.email:
+            return False
+
+        return cls._envoyer(
+            sujet=f"💳 Paiement requis pour votre location — ImmoPlus",
+            template="emails/demande_paiement.html",
+            contexte={
+                "prenom": demandeur.first_name or demandeur.username,
+                "reference_bien": bien.reference,
+                "adresse_bien": bien.adresse,
+                "montant_total": demande.montant_total,
+                "date_debut": demande.date_debut.strftime("%d/%m/%Y"),
+                "date_fin": demande.date_fin.strftime("%d/%m/%Y"),
+                "url_paiement": url_paiement,
+            },
+            destinataire=demandeur.email,
         )

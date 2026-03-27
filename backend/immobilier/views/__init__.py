@@ -51,6 +51,8 @@ from .request_views import (
 	DemandeActionDetailView,
 	DemandeActionDecisionView,
 	DemandeActionFinaliserLocationView,
+	DemandeActionRequestPaymentView,
+	DemandeActionConfirmPaymentView,
 	DemandeActionActionableListView,
 )
 from .lease_views import (
@@ -109,6 +111,8 @@ __all__ = [
 	'DemandeActionDetailView',
 	'DemandeActionDecisionView',
 	'DemandeActionFinaliserLocationView',
+	'DemandeActionRequestPaymentView',
+	'DemandeActionConfirmPaymentView',
 	'DemandeActionActionableListView',
 	'BailListView',
 	'BailDetailView',

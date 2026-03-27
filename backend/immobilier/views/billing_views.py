@@ -74,7 +74,7 @@ class DownloadFactureView(APIView):
 
         response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
         est_paye = paiement.statut in [StatutPaiementEnum.PAYE_A_L_ADMIN, StatutPaiementEnum.REVERSE_AU_PROPRIETAIRE, StatutPaiementEnum.PAYE]
-        nom_fichier = f"{"Quittance" if est_paye else "Facture"}_{paiement.reference}.pdf"
+        nom_fichier = f"{'Quittance' if est_paye else 'Facture'}_{paiement.reference}.pdf"
         response['Content-Disposition'] = f'attachment; filename="{nom_fichier}"'
         return response
 

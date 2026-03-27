@@ -11,10 +11,10 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const scope = searchParams.get("scope") || "incoming";
+  const scope = searchParams.get("scope") || "outgoing";
 
   const backendPath =
-    scope === "outgoing" ? "/demandes-actions" : "/demandes-actions/recues";
+    scope === "incoming" ? "/demandes-actions/recues" : "/demandes-actions";
 
   const response = await fetch(`${API_URL}${backendPath}`, {
     method: "GET",

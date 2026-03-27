@@ -131,20 +131,22 @@ export default async function AdminBienDetailPage(props: PageProps) {
             <div className="col-span-4">
               <div className="flex gap-4 mb-4">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${bien.statut === "VACANT"
-                    ? "bg-green-100 text-green-800"
-                    : bien.statut === "EN_ATTENTE_VALIDATION"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                    }`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    bien.statut === "VACANT"
+                      ? "bg-green-100 text-green-800"
+                      : bien.statut === "EN_ATTENTE_VALIDATION"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                  }`}
                 >
                   {bien.statut || "INCONNU"}
                 </span>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${bien.is_active
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-red-100 text-red-800"
-                    }`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    bien.is_active
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
                 >
                   {bien.is_active ? "ACTIF (Publié)" : "INACTIF (Masqué)"}
                 </span>
@@ -201,7 +203,15 @@ export default async function AdminBienDetailPage(props: PageProps) {
                 roomCount={bien.nb_pieces || 1}
                 guestCount={1}
                 bathroomCount={1}
-                locationValue={bien.ville}
+                locationValue={bien.ville || ""}
+                nb_salons={0}
+                nb_chambres={0}
+                nb_douches={1}
+                caution_mois={0}
+                avance_mois={0}
+                frais_assistance={0}
+                superficie={Number(bien.superficie) || 0}
+                avance={0}
               />
 
               <hr className="my-6" />

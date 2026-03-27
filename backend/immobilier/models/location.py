@@ -33,6 +33,8 @@ class DemandeAction(models.Model):
         blank=True,
         related_name='demandes_traitees',
     )
+    paiement_demande_envoyee = models.BooleanField(default=False, help_text="True si une demande de paiement a été envoyée au locataire")
+    paiement_effectue = models.BooleanField(default=False, help_text="True si le locataire a effectué le paiement")
 
     class Meta:
         ordering = ['-date_creation']

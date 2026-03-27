@@ -4,9 +4,8 @@ import type { CurrentUser } from "@/app/(site)/actions/getCurrentUser";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import toast from "react-hot-toast";
 import toast from "react-hot-toast";
 import ListingCard from "@/components/listings/ListingCard";
 
@@ -28,6 +27,8 @@ type DemandeItem = {
   duree_jours: number;
   montant_total: number;
   date_creation: string;
+  paiement_demande_envoyee?: boolean;
+  paiement_effectue?: boolean;
 };
 
 type ListingItem = {
@@ -59,9 +60,14 @@ const TripsClient: React.FC<TripsClientProps> = ({
 }) => {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState("");
-  const [activeTab, setActiveTab] = useState<"reservations" | "demandes">("demandes");
+  const [activeTab, setActiveTab] = useState<"reservations" | "demandes">(
+    "demandes",
+  );
   const [loadingDemandes, setLoadingDemandes] = useState(false);
   const [demandes, setDemandes] = useState<DemandeItem[]>([]);
+  const [confirmingPayment, setConfirmingPayment] = useState<number | null>(
+    null,
+  );
 
   const fetchDemandes = useCallback(async () => {
     setLoadingDemandes(true);
@@ -75,16 +81,38 @@ const TripsClient: React.FC<TripsClientProps> = ({
     }
   }, []);
 
+  const handleConfirmPayment = useCallback(async (demandeId: number) => {
+    setConfirmingPayment(demandeId);
+    try {
+      await axios.post(`/api/demandes-actions/${demandeId}/confirm-payment`);
+      toast.success(
+        "Paiement confirmé. Le propriétaire va finaliser la location.",
+      );
+      setDemandes((prev) =>
+        prev.map((d) =>
+          d.id === demandeId ? { ...d, paiement_effectue: true } : d,
+        ),
+      );
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.detail ||
+          "Erreur lors de la confirmation du paiement.",
+      );
+    } finally {
+      setConfirmingPayment(null);
+    }
+  }, []);
+
   const getRemainingTime = (dateFin: string) => {
     const end = new Date(dateFin).getTime();
     const now = new Date().getTime();
     const diff = end - now;
     if (diff <= 0) return "Expiré";
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (days > 0) return `${days} j, ${hours} h restantes`;
     if (hours > 0) return `${hours} h, ${minutes} min restantes`;
     return `${minutes} min restantes`;
@@ -118,26 +146,31 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
   return (
     <Container>
-      <Heading title="Mes Voyages & Réservations" subtitle="Consultez les statuts de vos locations, visites et privatisations" />
-      
+      <Heading
+        title="Mes Voyages & Réservations"
+        subtitle="Consultez les statuts de vos locations, visites et privatisations"
+      />
+
       <div className="mt-6 flex gap-2">
         <button
           type="button"
           onClick={() => setActiveTab("demandes")}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold ${activeTab === "demandes"
-            ? "bg-neutral-900 text-white"
-            : "bg-neutral-100 text-neutral-700"
-            }`}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            activeTab === "demandes"
+              ? "bg-neutral-900 text-white"
+              : "bg-neutral-100 text-neutral-700"
+          }`}
         >
           Mes Demandes et Privatisations
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("reservations")}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold ${activeTab === "reservations"
-            ? "bg-neutral-900 text-white"
-            : "bg-neutral-100 text-neutral-700"
-            }`}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+            activeTab === "reservations"
+              ? "bg-neutral-900 text-white"
+              : "bg-neutral-100 text-neutral-700"
+          }`}
         >
           Anciennes réservations
         </button>
@@ -146,9 +179,13 @@ const TripsClient: React.FC<TripsClientProps> = ({
       {activeTab === "demandes" ? (
         <div className="mt-6">
           {loadingDemandes ? (
-            <p className="text-sm text-neutral-500">Chargement de vos demandes...</p>
+            <p className="text-sm text-neutral-500">
+              Chargement de vos demandes...
+            </p>
           ) : demandes.length === 0 ? (
-            <p className="text-sm text-neutral-500">Vous n'avez effectué aucune demande pour le moment.</p>
+            <p className="text-sm text-neutral-500">
+              Vous n'avez effectué aucune demande pour le moment.
+            </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8">
               {demandes.map((demande) => {
@@ -163,11 +200,19 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
                 const reservationData = {
                   totalPrice: demande.montant_total,
-                  startDate: demande.type_demande === "VISITE" && demande.date_visite ? demande.date_visite : demande.date_debut,
-                  endDate: demande.type_demande === "VISITE" && demande.date_visite ? demande.date_visite : demande.date_fin,
+                  startDate:
+                    demande.type_demande === "VISITE" && demande.date_visite
+                      ? demande.date_visite
+                      : demande.date_debut,
+                  endDate:
+                    demande.type_demande === "VISITE" && demande.date_visite
+                      ? demande.date_visite
+                      : demande.date_fin,
                 };
 
-                const isPrivatisationActive = demande.type_demande === "PRIVATISATION" && demande.statut === "ACCEPTEE";
+                const isPrivatisationActive =
+                  demande.type_demande === "PRIVATISATION" &&
+                  demande.statut === "ACCEPTEE";
 
                 return (
                   <div key={demande.id} className="flex flex-col gap-3">
@@ -178,20 +223,36 @@ const TripsClient: React.FC<TripsClientProps> = ({
                     />
                     <div className="flex flex-col gap-2 px-1">
                       <div className="flex items-center justify-between text-xs font-semibold">
-                        <span className={`px-2 py-0.5 rounded-full ${demande.statut === 'ACCEPTEE' ? 'bg-green-100 text-green-700' :
-                          demande.statut === 'REFUSEE' ? 'bg-red-100 text-blue-700' :
-                          demande.statut === 'EXPIREE' ? 'bg-gray-100 text-gray-700' :
-                            'bg-amber-100 text-amber-700'
-                          }`}>
+                        <span
+                          className={`px-2 py-0.5 rounded-full ${
+                            demande.statut === "ACCEPTEE"
+                              ? "bg-green-100 text-green-700"
+                              : demande.statut === "REFUSEE"
+                                ? "bg-red-100 text-blue-700"
+                                : demande.statut === "EXPIREE"
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
                           {demande.statut}
                         </span>
                         <span className="text-neutral-500 text-right">
-                          {demande.type_demande === "VISITE" && demande.statut === "ACCEPTEE" && demande.date_visite 
-                             ? new Date(demande.date_visite).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
-                             : ""}
+                          {demande.type_demande === "VISITE" &&
+                          demande.statut === "ACCEPTEE" &&
+                          demande.date_visite
+                            ? new Date(demande.date_visite).toLocaleString(
+                                "fr-FR",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )
+                            : ""}
                         </span>
                       </div>
-                      
+
                       {isPrivatisationActive && (
                         <div className="mt-2 text-center py-2 px-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 shadow-sm flex items-center justify-center gap-2">
                           <span className="relative flex h-2 w-2">
@@ -202,6 +263,47 @@ const TripsClient: React.FC<TripsClientProps> = ({
                         </div>
                       )}
 
+                      {/* Payment confirmation button for accepted location demands */}
+                      {demande.statut === "ACCEPTEE" &&
+                        demande.type_demande === "LOCATION_DIRECTE" && (
+                          <div className="mt-2 flex flex-col gap-2">
+                            {demande.paiement_demande_envoyee &&
+                            !demande.paiement_effectue ? (
+                              <button
+                                type="button"
+                                onClick={() => handleConfirmPayment(demande.id)}
+                                disabled={confirmingPayment === demande.id}
+                                className="
+                                flex
+                                items-center
+                                justify-center
+                                rounded-lg
+                                bg-green-600
+                                py-2
+                                text-xs
+                                font-bold
+                                text-white
+                                hover:bg-green-700
+                                transition
+                                disabled:opacity-50
+                              "
+                              >
+                                {confirmingPayment === demande.id
+                                  ? "Traitement..."
+                                  : "✅ Confirmer le paiement"}
+                              </button>
+                            ) : demande.paiement_effectue ? (
+                              <div className="text-center text-xs text-green-600 bg-green-50 py-2 rounded-lg">
+                                Paiement confirmé - En attente du bail
+                              </div>
+                            ) : (
+                              <div className="text-center text-xs text-neutral-500 bg-neutral-50 py-2 rounded-lg">
+                                En attente de la demande de paiement du
+                                propriétaire
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </div>
                   </div>
                 );

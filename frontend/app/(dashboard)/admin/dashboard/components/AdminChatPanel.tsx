@@ -1,6 +1,6 @@
 "use client";
 
-import ChatWindow from "@/app/components/chat/ChatWindow";
+import ChatWindow from "@/components/chat/ChatWindow";
 
 type CurrentUserLite = {
   id: string | number;

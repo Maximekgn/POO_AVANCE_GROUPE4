@@ -17,7 +17,10 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
 import type { SingleValue } from "react-select";
-import { QuartierOption, TOGO_QUARTIERS } from "@/app/(site)/libs/togoQuartiers";
+import {
+  QuartierOption,
+  TOGO_QUARTIERS,
+} from "@/app/(site)/libs/togoQuartiers";
 
 enum STEPS {
   CATEGORY = 0,
@@ -151,7 +154,7 @@ const RentModal = () => {
 
     if (
       step === STEPS.IMAGES &&
-      (!Array.isArray(formData.imageSrc) || formData.imageSrc.length === 0)
+      (!Array.isArray(watch("imageSrc")) || watch("imageSrc").length === 0)
     ) {
       toast.error("Ajoutez au moins une photo pour continuer.");
       return;
@@ -163,7 +166,7 @@ const RentModal = () => {
 
     setIsLoading(true);
 
-    if (!formData.latitude || !formData.longitude) {
+    if (!watch("latitude") || !watch("longitude")) {
       toast.error(
         "Choisissez une position sur la carte ou utilisez votre position actuelle.",
       );

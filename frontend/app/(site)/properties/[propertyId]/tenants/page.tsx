@@ -11,7 +11,7 @@ interface IParams {
   propertyId: string;
 }
 
-const TenantsPage = async ({ params }: { params: IParams }) => {
+const TenantsPage = async ({ params }: { params: Promise<IParams> }) => {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
@@ -24,13 +24,14 @@ const TenantsPage = async ({ params }: { params: IParams }) => {
       </ClientOnly>
     );
   }
-  
-  // Wait for the Promise wrapper (Next 15 params promise behavior if applicable, or just standard param)
+
   const awaitedParams = await params;
   const propertyId = awaitedParams.propertyId;
 
   // Récupérer toutes les réservations "reçues" par ce propriétaire
-  const reservations = await getReservations({ authorId: currentUser.id.toString() });
+  const reservations = await getReservations({
+    authorId: currentUser.id.toString(),
+  });
 
   return (
     <ClientOnly>
