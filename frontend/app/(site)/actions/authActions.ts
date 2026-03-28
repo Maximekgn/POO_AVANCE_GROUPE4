@@ -44,9 +44,11 @@ export async function registerUser(data: any) {
     return {
       success: true,
       message: result.message,
+      email: result.email,
       nextStep: result.next_step,
       emailVerified: result.email_verified,
       documentsCompleted: result.documents_completed,
+      otpExpiresInSeconds: result.otp_expires_in_seconds,
     };
   } catch (error) {
     console.error("Registration error:", error);
@@ -80,6 +82,35 @@ export async function verifyEmail(token: string) {
   } catch (error) {
     console.error("Email verification error:", error);
     return { error: "Erreur lors de la vérification de l'email." };
+  }
+}
+
+export async function verifyEmailWithOtp(email: string, otpCode: string) {
+  try {
+    const response = await fetch(`${API_URL}/auth/verify-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, otp_code: otpCode }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        error:
+          result.error ||
+          result.message ||
+          result.detail ||
+          "Code OTP invalide ou expiré.",
+      };
+    }
+
+    return { success: true, message: result.message };
+  } catch (error) {
+    console.error("OTP verification error:", error);
+    return { error: "Erreur lors de la vérification OTP." };
   }
 }
 
