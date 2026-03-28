@@ -24,6 +24,11 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
 
     def get(self, request: Request) -> Response:
         self.check_admin(request)
+        paid_statuses = [
+            StatutPaiementEnum.PAYE,
+            StatutPaiementEnum.PAYE_A_L_ADMIN,
+            StatutPaiementEnum.REVERSE_AU_PROPRIETAIRE,
+        ]
 
         # 1. General Stats
         total_biens = Bien.objects.count()
@@ -44,7 +49,7 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
 
         daily_revenue = (
             Paiement.objects.filter(
-                statut=StatutPaiementEnum.PAYE,
+                statut__in=paid_statuses,
                 date_paiement__gte=thirty_days_ago
             )
             .annotate(day=TruncDay('date_paiement'))
@@ -55,7 +60,7 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
 
         monthly_revenue = (
             Paiement.objects.filter(
-                statut=StatutPaiementEnum.PAYE,
+                statut__in=paid_statuses,
                 date_paiement__gte=one_year_ago
             )
             .annotate(month=TruncMonth('date_paiement'))
@@ -66,7 +71,7 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
 
         yearly_revenue = (
             Paiement.objects.filter(
-                statut=StatutPaiementEnum.PAYE,
+                statut__in=paid_statuses,
                 date_paiement__gte=ten_years_ago
             )
             .annotate(year=TruncYear('date_paiement'))
@@ -94,7 +99,7 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
                 'total_users': total_users,
                 'total_baux': total_baux,
                 'pending_demands': pending_demands,
-                'total_revenue': Paiement.objects.filter(statut=StatutPaiementEnum.PAYE).aggregate(total=Sum('montant'))['total'] or 0,
+                'total_revenue': Paiement.objects.filter(statut__in=paid_statuses).aggregate(total=Sum('montant'))['total'] or 0,
             },
             'status_stats': {s['statut']: s['count'] for s in status_distribution},
             'category_stats': [{'name': c['categorie__nom'] or 'Inconnu', 'value': c['count']} for c in category_distribution],
