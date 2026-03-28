@@ -7,3 +7,4 @@ daphne
 python-dotenv
 PyJWT
 Pillow
+reportlab

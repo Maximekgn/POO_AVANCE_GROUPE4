@@ -45,7 +45,9 @@ class BillingService:
         content.append(Spacer(1, 0.3*cm))
         
         # Le Bien
-        bien_text = f"<b>Bien loué :</b> {bien.type_bien} - {bien.ville}, {bien.quartier or ''}"
+        type_bien = getattr(bien, 'sous_type', None)
+        type_bien_label = type_bien.nom if type_bien else (bien.categorie.nom if getattr(bien, 'categorie', None) else 'Bien immobilier')
+        bien_text = f"<b>Bien loué :</b> {type_bien_label} - {bien.ville}, {bien.quartier or ''}"
         content.append(Paragraph(bien_text, styles['Normal']))
         content.append(Spacer(1, 1*cm))
         
