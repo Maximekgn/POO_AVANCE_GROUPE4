@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 
 class Utilisateur(AbstractUser):
@@ -188,3 +189,36 @@ class RGPDAnonymizationLog(models.Model):
 
     def __str__(self):
         return f"RGPD log user#{self.cible_utilisateur_id_original} le {self.date_creation}"
+
+
+class EmailVerificationOTP(models.Model):
+    """OTP email de verification associe a un utilisateur."""
+
+    utilisateur = models.ForeignKey(
+        Utilisateur,
+        on_delete=models.CASCADE,
+        related_name='email_verification_otps',
+    )
+    code_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    max_attempts = models.PositiveSmallIntegerField(default=5)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['utilisateur', 'is_used', 'expires_at']),
+            models.Index(fields=['created_at']),
+        ]
+        verbose_name = 'OTP verification email'
+        verbose_name_plural = 'OTP verifications email'
+
+    def __str__(self):
+        return f"OTP<{self.utilisateur.email}> exp={self.expires_at} used={self.is_used}"
+
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() >= self.expires_at

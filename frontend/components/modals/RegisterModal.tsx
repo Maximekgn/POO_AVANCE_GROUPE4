@@ -9,10 +9,12 @@ import Input from "../Inputs/Input";
 import toast from "react-hot-toast";
 import useLoginModal from "@/app/(site)/hooks/useLoginModal";
 import { registerUser } from "@/app/(site)/actions/authActions";
+import { useRouter } from "next/navigation";
 
 const RegisterModal = () => {
   const registerModal = useRegisterModal();
   const loginModal = useLoginModal();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -41,12 +43,14 @@ const RegisterModal = () => {
         result.message || "Compte créé ! Veuillez vérifier vos emails.",
       );
       toast(
-        "Prochaine étape: connectez-vous puis déposez vos documents de profil.",
+        "Entrez le code OTP reçu par email pour activer votre compte.",
       );
       registerModal.onClose();
-      loginModal.onOpen();
-      // On n'ouvre pas forcément le login direct si le compte n'est pas activé
-      // Mais le diagramme dit "Redirige vers la page de Connexion" après activation.
+      const email = (result.email || data.email || "").toString().trim();
+      const target = email
+        ? `/verify-email?email=${encodeURIComponent(email)}`
+        : "/verify-email";
+      router.push(target);
     } else {
       toast.error(result.error || "Une erreur est survenue.");
     }

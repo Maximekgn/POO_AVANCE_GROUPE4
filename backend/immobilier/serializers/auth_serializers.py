@@ -165,7 +165,25 @@ class VerifyEmailSerializer(serializers.Serializer):
     Champs attendus :
         - token : Le token JWT reçu dans l'email de confirmation
     """
-    token = serializers.CharField()
+    token = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False)
+    otp_code = serializers.CharField(required=False, min_length=4, max_length=8)
+
+    def validate(self, attrs):
+        token = (attrs.get('token') or '').strip()
+        email = attrs.get('email')
+        otp_code = (attrs.get('otp_code') or '').strip()
+
+        if token:
+            return attrs
+
+        if not email or not otp_code:
+            raise serializers.ValidationError(
+                "Fournissez soit 'token', soit le couple 'email' + 'otp_code'."
+            )
+
+        attrs['otp_code'] = otp_code
+        return attrs
 
 
 class ResendVerificationSerializer(serializers.Serializer):
@@ -176,3 +194,6 @@ class ResendVerificationSerializer(serializers.Serializer):
         - email : L'email du compte non encore activé
     """
     email = serializers.EmailField()
+
+    def validate_email(self, value: str) -> str:
+        return value.lower().strip()

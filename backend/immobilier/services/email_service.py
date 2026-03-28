@@ -88,6 +88,27 @@ class EmailService:
         )
 
     @classmethod
+    def envoyer_code_verification_email(
+        cls,
+        utilisateur,
+        otp_code: str,
+        validite_minutes: int = 10,
+        url_verification: str = "/verify-email",
+    ) -> bool:
+        """Envoie un OTP de verification email pour activer le compte."""
+        return cls._envoyer(
+            sujet="Code OTP de verification de votre email — ImmoPlus",
+            template="emails/verification_email_otp.html",
+            contexte={
+                "prenom": utilisateur.first_name or utilisateur.username,
+                "otp_code": otp_code,
+                "validite_minutes": validite_minutes,
+                "url_verification": url_verification,
+            },
+            destinataire=utilisateur.email,
+        )
+
+    @classmethod
     def envoyer_statut_compte_admin(cls, utilisateur, statut: str, url_support: str = "/") -> bool:
         """Notifie l'utilisateur lors d'un changement de statut de compte par un administrateur."""
         statut = (statut or '').upper()
