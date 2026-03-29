@@ -1,22 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { BsChatDotsFill } from "react-icons/bs";
-
 import ChatWindow from "./ChatWindow";
+import { useAuth } from "@/contexts/AuthContext";
 
-type CurrentUserLite = {
-  id: string | number;
-  isAdmin: boolean;
-  accessToken?: string;
-};
-
-type ChatWidgetProps = {
-  currentUser: CurrentUserLite | null;
-};
-
-export default function ChatWidget({ currentUser }: ChatWidgetProps) {
+export default function ChatWidget() {
+  const { currentUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [initialConversationId, setInitialConversationId] = useState<
     string | undefined

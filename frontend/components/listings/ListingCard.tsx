@@ -23,7 +23,6 @@ type ReservationLike = {
   endDate?: string | Date;
 };
 
-import HeartButton from "../HeartButton";
 import Button from "../Button";
 import { AiFillStar } from "react-icons/ai";
 
@@ -80,7 +79,6 @@ interface ListingCardProps {
   disabled?: boolean;
   actionLabel?: string;
   actionId?: string;
-  currentUser?: any | null;
 }
 
 const ListingCard: React.FC<ListingCardProps> = ({
@@ -90,7 +88,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
   disabled,
   actionLabel,
   actionId = "",
-  currentUser,
 }) => {
   const router = useRouter();
   const { getByValue } = useCountries();
@@ -170,41 +167,37 @@ const ListingCard: React.FC<ListingCardProps> = ({
             sizes="100%"
             unoptimized={shouldDisableOptimization}
             className="
-              object-cover 
-              h-full 
-              w-full 
-              group-hover:scale-105 
+              object-cover
+              h-full
+              w-full
+              group-hover:scale-105
               transition
               duration-300
             "
             src={safeImageSrc}
             alt="Listing"
           />
-          <div
-            className="
-            absolute
-            top-3
-            right-3
-          "
-          >
-            <HeartButton listingId={data.id} currentUser={currentUser} />
-          </div>
         </div>
-        
+
         <div className="px-1">
           <div className="font-bold text-[17px] text-neutral-900 line-clamp-1">
             {location?.region && location?.label
               ? `${location.region}, ${location.label}`
               : data.ville || data.locationValue || "Localisation"}
           </div>
-          
+
           <div className="font-medium text-neutral-500 text-[15px]">
             {reservationDate ? (
               reservationDate
             ) : (
               <span className="flex items-center gap-1">
-                À partir de <span className="font-semibold text-neutral-800">FCFA {price?.toLocaleString()}</span> 
-                {!reservation && <span className="font-normal text-neutral-500"> / nuit</span>}
+                À partir de{" "}
+                <span className="font-semibold text-neutral-800">
+                  FCFA {price?.toLocaleString()}
+                </span>
+                {!reservation && (
+                  <span className="font-normal text-neutral-500"> / nuit</span>
+                )}
               </span>
             )}
           </div>

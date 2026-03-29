@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import LoginModal from "@/components/modals/LoginModal";
 import RegisterModal from "@/components/modals/RegisterModal";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { AuthProvider } from "@/contexts/AuthContext";
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 
 const font = Nunito({ subsets: ["latin"] });
@@ -42,15 +43,16 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={font.className}>
-        <ClientOnly>
-          <Toaster />
-          <LoginModal />
-          <RegisterModal />
-          <PWAInstallPrompt />
-          
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
+        <AuthProvider>
+          <ClientOnly>
+            <Toaster />
+            <LoginModal />
+            <RegisterModal />
+            <PWAInstallPrompt />
+
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
                 if ("serviceWorker" in navigator) {
                   window.addEventListener("load", function() {
                     navigator.serviceWorker.register("/sw.js").then(
@@ -64,11 +66,12 @@ export default async function RootLayout({
                   });
                 }
               `,
-            }}
-          />
+              }}
+            />
 
-          {children}
-        </ClientOnly>
+            {children}
+          </ClientOnly>
+        </AuthProvider>
       </body>
     </html>
   );

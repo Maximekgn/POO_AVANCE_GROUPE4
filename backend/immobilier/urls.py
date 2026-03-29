@@ -14,6 +14,8 @@ from immobilier.views import (
     UploadDocumentsView,
     VerifyEmailView,
     ResendVerificationView,
+    VerifyOTPView,
+    ResendOTPView,
     CategorieBienListCreateView,
     CategorieBienDetailView,
     SousTypeBienListCreateView,
@@ -87,6 +89,8 @@ def api_root(_request):
                 'upload_documents': '/api/auth/upload-documents',
                 'login': '/api/auth/login',
                 'refresh_token': '/api/auth/token/refresh',
+                'verify_otp': '/api/auth/verify-otp',
+                'resend_otp': '/api/auth/resend-otp',
                 'categories': '/api/categories',
                 'category_detail': '/api/categories/{id}',
                 'sous_types': '/api/sous-types',
@@ -181,6 +185,18 @@ urlpatterns = [
     #   → Retourne un nouvel access token
     #   → HTTP 200 | 401
     path('auth/token/refresh', TokenRefreshView.as_view(), name='auth-token-refresh'),
+
+    # POST /api/auth/verify-otp
+    #   Body: { temp_token, otp }
+    #   → Vérifie l'OTP et retourne les tokens JWT finaux
+    #   → HTTP 200 | 400 | 401
+    path('auth/verify-otp', VerifyOTPView.as_view(), name='auth-verify-otp'),
+
+    # POST /api/auth/resend-otp
+    #   Body: { temp_token }
+    #   → Renvoie un code OTP pour le login en cours
+    #   → HTTP 200 | 400 | 401 | 429
+    path('auth/resend-otp', ResendOTPView.as_view(), name='auth-resend-otp'),
 
     # ── Catégories de biens (Sprint 2) ───────────────────────────────────────
     # GET/POST /api/categories

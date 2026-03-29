@@ -4,21 +4,18 @@ import Navbar from "@/components/navbar/Navbar";
 import RentModal from "@/components/modals/RentModal";
 import SearchModal from "@/components/modals/SearchModal";
 import ChatWidget from "@/components/chat/ChatWidget";
-import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 
 export default async function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const currentUser = await getCurrentUser();
-
   return (
     <ClientOnly>
       <RentModal />
       <SearchModal />
-      <Navbar currentUser={currentUser} />
-      <ChatWidget currentUser={currentUser} />
+      <Navbar />
+      <ChatWidget />
       <div className="py-36">{children}</div>
     </ClientOnly>
   );

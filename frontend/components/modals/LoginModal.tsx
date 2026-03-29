@@ -1,6 +1,5 @@
 "use client";
 
-import { getSession, signIn } from "next-auth/react";
 import { useCallback, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -9,24 +8,40 @@ import useLoginModal from "@/app/(site)/hooks/useLoginModal";
 import Modal from "./Modal";
 import Heading from "../Heading";
 import Input from "../Inputs/Input";
+import OtpInput from "../Inputs/OtpInput";
+import Button from "../Button";
 import toast from "react-hot-toast";
 import useRegisterModal from "@/app/(site)/hooks/useRegisterModal";
 import { resendVerificationEmail } from "@/app/(site)/actions/authActions";
+import { useAuth } from "@/contexts/AuthContext";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 const LoginModal = () => {
   const router = useRouter();
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
+  const { refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [lastEmail, setLastEmail] = useState("");
+
+  // 2FA states
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [tempToken, setTempToken] = useState("");
+  const [loginData, setLoginData] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
+    reset,
   } = useForm<FieldValues>({
     defaultValues: {
       email: "",
@@ -39,30 +54,139 @@ const LoginModal = () => {
     setNeedsVerification(false);
     setLastEmail((data.email || "").toString());
 
-    const response = await signIn("credentials", {
-      ...data,
-      redirect: false,
-    });
+    try {
+      const loginUrl = `${API_URL}/auth/login`;
 
-    setIsLoading(false);
+      const response = await fetch(loginUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
 
-    if (response?.ok) {
-      toast.success("Connexion réussie");
-      const session = await getSession();
-      loginModal.onClose();
+      const result = await response.json();
 
-      if ((session as any)?.isAdmin) {
-        router.push("/admin/dashboard");
+      if (response.ok) {
+        // Vérifier si 2FA est requis
+        if (result.requires_2fa || result.otp_required) {
+          setRequires2FA(true);
+          setTempToken(result.temp_token || result.access);
+          setLoginData({ email: data.email, password: data.password });
+          toast("Veuillez saisir le code OTP envoyé à votre adresse email.");
+        } else {
+          // Pas de 2FA, connexion directe
+          completeLogin(result);
+        }
       } else {
-        router.refresh();
+        if (result?.detail?.toLowerCase()?.includes("email non verifie")) {
+          setNeedsVerification(true);
+        }
+        toast.error(
+          result?.detail ||
+            result?.non_field_errors?.[0] ||
+            "Erreur de connexion",
+        );
       }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Erreur de connexion au serveur");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Vérification OTP
+  const onVerifyOtp = async () => {
+    if (otpValue.length !== 6) {
+      toast.error("Veuillez saisir un code OTP valide (6 chiffres).");
+      return;
     }
 
-    if (response?.error) {
-      if (response.error.toLowerCase().includes("email non verifie")) {
-        setNeedsVerification(true);
+    setIsLoading(true);
+
+    try {
+      const verifyUrl = `${API_URL}/auth/verify-otp`;
+      const response = await fetch(verifyUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          temp_token: tempToken,
+          otp: otpValue,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        completeLogin(result);
+      } else {
+        toast.error(result?.detail || "Code OTP invalide ou expiré.");
+        setOtpValue("");
       }
-      toast.error(response.error);
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      toast.error("Erreur lors de la vérification du code OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Finaliser la connexion
+  const completeLogin = async (result: any) => {
+    localStorage.setItem("accessToken", result.access);
+    localStorage.setItem("refreshToken", result.refresh);
+
+    // Also store in cookies for server-side access
+    document.cookie = `accessToken=${result.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+    document.cookie = `refreshToken=${result.refresh}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+
+    toast.success("Connexion réussie");
+    loginModal.onClose();
+
+    await refreshUser();
+
+    if (result.is_admin) {
+      router.push("/admin/dashboard");
+    } else {
+      router.refresh();
+    }
+  };
+
+  // Réinitialiser le formulaire pour revenir à l'étape 1
+  const handleBackToLogin = () => {
+    setRequires2FA(false);
+    setOtpValue("");
+    setTempToken("");
+    setLoginData(null);
+    reset();
+  };
+
+  // Renvoyer le code OTP
+  const handleResendOtp = async () => {
+    setIsResending(true);
+    try {
+      const resendUrl = `${API_URL}/auth/resend-otp`;
+      await fetch(resendUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          temp_token: tempToken,
+        }),
+      });
+      toast.success("Nouveau code OTP envoyé à votre adresse email.");
+      setOtpValue("");
+    } catch (error) {
+      toast.error("Impossible de renvoyer le code OTP.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -90,6 +214,46 @@ const LoginModal = () => {
     registerModal.onOpen();
   }, [loginModal, registerModal]);
 
+  // Contenu pour l'étape 2FA
+  const otpBodyContent = (
+    <div className="flex flex-col gap-4">
+      <Heading
+        title="Double authentification"
+        subtitle="Un code OTP a été envoyé à votre adresse email."
+      />
+
+      <div className="py-4">
+        <OtpInput
+          length={6}
+          value={otpValue}
+          onChange={setOtpValue}
+          disabled={isLoading}
+        />
+      </div>
+
+      <div className="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={handleResendOtp}
+          disabled={isResending}
+          className="text-sm text-blue-500 hover:text-blue-600 disabled:opacity-50"
+        >
+          {isResending ? "Envoi en cours..." : "Renvoyer le code"}
+        </button>
+        <span className="text-neutral-300">|</span>
+        <button
+          type="button"
+          onClick={handleBackToLogin}
+          disabled={isLoading}
+          className="text-sm text-neutral-500 hover:text-neutral-700 disabled:opacity-50"
+        >
+          Changer de compte
+        </button>
+      </div>
+    </div>
+  );
+
+  // Contenu pour l'étape 1 (Email + Password)
   const bodyContent = (
     <div className="flex flex-col gap-4">
       <Heading title="Bon retour !" subtitle="Connectez-vous à votre compte" />
@@ -159,12 +323,12 @@ const LoginModal = () => {
     <Modal
       disabled={isLoading}
       isOpen={loginModal.isOpen}
-      title="Connexion"
-      actionLabel="Continuer"
+      title={requires2FA ? "Code de vérification" : "Connexion"}
+      actionLabel={requires2FA ? "Vérifier" : "Continuer"}
       onClose={loginModal.onClose}
-      onSubmit={handleSubmit(onSubmit)}
-      body={bodyContent}
-      footer={footerContent}
+      onSubmit={requires2FA ? onVerifyOtp : handleSubmit(onSubmit)}
+      body={requires2FA ? otpBodyContent : bodyContent}
+      footer={requires2FA ? undefined : footerContent}
     />
   );
 };

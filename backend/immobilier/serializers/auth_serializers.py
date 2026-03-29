@@ -2,12 +2,17 @@
 Serializers pour l'inscription et la vérification d'email.
 """
 
+import jwt
+from datetime import timedelta
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from immobilier.models import Utilisateur, Document, ClientInfo
+from django.conf import settings
+from immobilier.models import Utilisateur, Document, ClientInfo, EmailVerificationOTP
 from immobilier.models.enums import TypeDocumentEnum
+from immobilier.services.email_service import EmailService
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -58,7 +63,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Permet l'authentification JWT avec email + password."""
+    """
+    Permet l'authentification JWT avec email + password.
+    Envoie un code OTP par email et retourne un temp_token.
+    L'utilisateur doit ensuite vérifier l'OTP pour obtenir les tokens finaux.
+    """
 
     username_field = 'email'
 
@@ -93,20 +102,55 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         if not user.email_verifie:
             raise AuthenticationFailed("Email non verifie. Veuillez verifier votre compte avant de vous connecter.")
 
-        self.user = user
+        # Générer et envoyer le code OTP
+        from django.utils import timezone
+        from django.contrib.auth.hashers import make_password
+        import secrets
+        import string
+        
+        OTP_LENGTH = 6
+        OTP_EXPIRY_MINUTES = 10
+        
+        alphabet = string.digits
+        otp_code = ''.join(secrets.choice(alphabet) for _ in range(OTP_LENGTH))
+        expires_at = timezone.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)
+        
+        # Invalider les OTP précédents
+        EmailVerificationOTP.objects.filter(utilisateur=user, is_used=False).update(is_used=True)
+        
+        EmailVerificationOTP.objects.create(
+            utilisateur=user,
+            code_hash=make_password(otp_code),
+            expires_at=expires_at,
+        )
+        
+        # Envoyer l'OTP par email
+        EmailService.envoyer_code_verification_email(
+            user,
+            otp_code=otp_code,
+            validite_minutes=OTP_EXPIRY_MINUTES,
+            url_verification="/verify-email",
+        )
+        
+        # Générer un temp_token valide 10 minutes pour la vérification OTP
+        temp_token = jwt.encode(
+            {
+                'user_id': user.id,
+                'email': user.email,
+                'exp': timezone.now() + timedelta(minutes=OTP_EXPIRY_MINUTES),
+                'type': 'temp_login',
+            },
+            settings.SECRET_KEY,
+            algorithm='HS256'
+        )
 
-        refresh = self.get_token(user)
-        data = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user_id': user.id,
-            'name': f"{user.first_name} {user.last_name}".strip() or user.email,
-            'is_admin': bool(user.is_staff or user.is_superuser),
-            'role': 'ADMIN' if (user.is_staff or user.is_superuser) else 'USER',
-            'email_verified': bool(user.email_verifie),
-            'documents_completed': bool(user.documents_complets),
+        return {
+            'temp_token': temp_token,
+            'requires_2fa': True,
+            'otp_required': True,
+            'message': 'Code OTP envoyé à votre adresse email.',
+            'otp_expires_in_seconds': OTP_EXPIRY_MINUTES * 60,
         }
-        return data
 
 
 class UploadUserDocumentsSerializer(serializers.Serializer):

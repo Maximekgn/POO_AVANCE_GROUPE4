@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { cookies } from "next/headers";
 
 export interface CurrentUser {
   id: string;
@@ -11,44 +10,49 @@ export interface CurrentUser {
   emailVerified: boolean;
   documentsCompleted: boolean;
   accessToken?: string;
-  favoriteIds: string[];
 }
 
-export async function getSession() {
-  const session = await getServerSession(authOptions);
-  return session;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export default async function getCurrentUser(): Promise<CurrentUser | null> {
   try {
-    const session = await getSession();
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
 
-    if (!session?.user?.email) {
+    if (!accessToken) {
       return null;
     }
 
-    const sessionUser = session.user as any;
-    // Prefer numeric ID from session if available (from our NextAuth fix)
-    let userId = sessionUser.id;
+    const response = await fetch(`${API_URL}/profile/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
 
-    // If ID is missing or is the email, fallback carefully
-    if (!userId || userId === session.user.email) {
-      userId = sessionUser.user_id || sessionUser.id || session.user.email;
+    if (!response.ok) {
+      return null;
     }
 
+    const user = await response.json();
+
     return {
-      ...session.user,
-      id: userId,
-      role: (session as any).role || "USER",
-      isAdmin: Boolean((session as any).isAdmin),
-      emailVerified: Boolean((session as any).emailVerified),
-      documentsCompleted: Boolean((session as any).documentsCompleted),
-      accessToken: (session as any).accessToken,
-      favoriteIds: Array.isArray((session as any).favoriteIds)
-        ? (session as any).favoriteIds
-        : [],
+      id: user.id?.toString() || "",
+      name:
+        user.first_name || user.last_name
+          ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+          : user.email,
+      email: user.email,
+      image: user.photo_profil || user.image,
+      role: user.is_staff || user.is_superuser ? "ADMIN" : "USER",
+      isAdmin: Boolean(user.is_staff || user.is_superuser),
+      emailVerified: Boolean(user.email_verified || user.email_verifie),
+      documentsCompleted: Boolean(user.documents_complets),
+      accessToken,
     };
-  } catch (error: any) {
+  } catch (error) {
+    console.error("Error fetching current user:", error);
     return null;
   }
 }

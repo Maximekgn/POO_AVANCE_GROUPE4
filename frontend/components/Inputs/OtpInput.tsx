@@ -47,7 +47,7 @@ const OtpInput: React.FC<OtpInputProps> = ({
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !value[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -77,12 +77,16 @@ const OtpInput: React.FC<OtpInputProps> = ({
     inputRefs.current[nextIndex]?.focus();
   };
 
+  const setInputRef = (index: number) => (el: HTMLInputElement | null) => {
+    inputRefs.current[index] = el;
+  };
+
   return (
     <div className="flex gap-2 justify-center">
       {Array.from({ length }).map((_, index) => (
         <input
           key={index}
-          ref={(el) => (inputRefs.current[index] = el)}
+          ref={setInputRef(index)}
           type="text"
           inputMode="numeric"
           pattern="\d*"

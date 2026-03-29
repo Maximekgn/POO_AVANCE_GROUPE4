@@ -7,14 +7,12 @@ interface ListingSectionProps {
   title: string;
   subtitle?: string;
   listings: any[];
-  currentUser?: any;
 }
 
 const ListingSection: React.FC<ListingSectionProps> = ({
   title,
   subtitle,
   listings,
-  currentUser,
 }) => {
   if (!listings || listings.length === 0) {
     return null;
@@ -27,31 +25,27 @@ const ListingSection: React.FC<ListingSectionProps> = ({
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm font-medium text-neutral-500">
-            {subtitle}
-          </p>
+          <p className="text-sm font-medium text-neutral-500">{subtitle}</p>
         )}
       </div>
-      
-      <div className="
-        grid 
-        grid-cols-1 
-        sm:grid-cols-2 
-        md:grid-cols-3 
-        lg:grid-cols-4 
-        xl:grid-cols-5 
-        2xl:grid-cols-6 
+
+      <div
+        className="
+        grid
+        grid-cols-1
+        sm:grid-cols-2
+        md:grid-cols-3
+        lg:grid-cols-4
+        xl:grid-cols-5
+        2xl:grid-cols-6
         gap-6
-      ">
+      "
+      >
         {listings.slice(0, 12).map((listing) => (
-          <ListingCard
-            key={listing.id}
-            data={listing}
-            currentUser={currentUser}
-          />
+          <ListingCard key={listing.id} data={listing} />
         ))}
       </div>
-      
+
       <div className="mt-8 border-b border-neutral-100" />
     </div>
   );

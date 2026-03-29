@@ -1,4 +1,4 @@
-from .auth_views import RegisterView, VerifyEmailView, ResendVerificationView, LoginView, UploadDocumentsView
+from .auth_views import RegisterView, VerifyEmailView, ResendVerificationView, LoginView, UploadDocumentsView, VerifyOTPView, ResendOTPView
 from .category_views import (
 	CategorieBienListCreateView,
 	CategorieBienDetailView,
@@ -68,6 +68,8 @@ __all__ = [
 	'UploadDocumentsView',
 	'VerifyEmailView',
 	'ResendVerificationView',
+	'VerifyOTPView',
+	'ResendOTPView',
 	'CategorieBienListCreateView',
 	'CategorieBienDetailView',
 	'SousTypeBienListCreateView',

@@ -2,7 +2,6 @@
 
 import { AiOutlineMenu } from "react-icons/ai";
 import { useCallback, useState } from "react";
-import { signOut } from "next-auth/react";
 
 import Avatar from "../Avatar";
 import MenuItem from "./MenuItem";
@@ -11,12 +10,10 @@ import useRegisterModal from "@/app/(site)/hooks/useRegisterModal";
 import useLoginModal from "@/app/(site)/hooks/useLoginModal";
 import useRentModal from "@/app/(site)/hooks/useRentModal";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface UserMenuProps {
-  currentUser?: any | null; // Changed from User to any since we don't use Prisma
-}
-
-const UserMenu: React.FC<UserMenuProps> = ({ currentUser }) => {
+const UserMenu: React.FC = () => {
+  const { currentUser, signOut } = useAuth();
   const registerModal = useRegisterModal();
   const loginModal = useLoginModal();
   const rentModal = useRentModal();

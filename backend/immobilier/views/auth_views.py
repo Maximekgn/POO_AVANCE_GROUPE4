@@ -5,6 +5,9 @@ Endpoints exposés :
   POST  /api/auth/register              → Phase 1 : créer le compte + envoyer l'email
   POST  /api/auth/verify-email          → Phase 3 : activer le compte via le token
   POST  /api/auth/resend-verification   → Optionnel : renvoyer le lien si expiré
+  POST  /api/auth/login                 → Connexion avec envoi OTP obligatoire
+  POST  /api/auth/verify-otp            → Vérifier OTP et obtenir les tokens finaux
+  POST  /api/auth/resend-otp            → Renvoyer l'OTP pendant le login
 """
 
 import jwt
@@ -378,5 +381,226 @@ class ResendVerificationView(APIView):
 
         return Response(
             {"message": "Si un compte inactif existe pour cet email, un code OTP vous a été envoyé."},
+            status=status.HTTP_200_OK,
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  POST /api/auth/verify-otp
+# ──────────────────────────────────────────────────────────────────────────────
+
+class VerifyOTPView(APIView):
+    """
+    Vérifie le code OTP soumis après le login et retourne les tokens JWT finaux.
+
+    Flux :
+    1. Valide le temp_token reçu lors du login
+    2. Récupère l'utilisateur associé
+    3. Vérifie le code OTP soumis
+    4. Si valide, retourne les tokens access/refresh finaux
+    5. Réponse HTTP 200
+
+    Body JSON attendu :
+    {
+        "temp_token": "eyJhbGciOiJIUzI1NiIs...",
+        "otp": "123456"
+    }
+
+    Réponses :
+        200 : Tokens JWT retournés
+        400 : OTP invalide ou expiré
+        401 : temp_token invalide ou expiré
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request: Request) -> Response:
+        temp_token = (request.data.get('temp_token') or '').strip()
+        otp_code = (request.data.get('otp') or '').strip()
+
+        if not temp_token or not otp_code:
+            return Response(
+                {"error": "temp_token et otp sont requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 1. Valider le temp_token
+        try:
+            payload = jwt.decode(
+                temp_token,
+                settings.SECRET_KEY,
+                algorithms=['HS256'],
+                options={'require': ['exp', 'user_id', 'type']},
+            )
+            if payload.get('type') != 'temp_login':
+                raise jwt.InvalidTokenError("Token invalide.")
+        except jwt.ExpiredSignatureError:
+            return Response(
+                {"error": "Le token a expiré. Veuillez vous reconnecter."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except jwt.InvalidTokenError as exc:
+            return Response(
+                {"error": f"Token invalide : {str(exc)}"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # 2. Récupérer l'utilisateur
+        user_id = payload.get('user_id')
+        try:
+            user = Utilisateur.objects.get(pk=user_id)
+        except Utilisateur.DoesNotExist:
+            return Response(
+                {"error": "Utilisateur introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # 3. Vérifier l'OTP
+        otp = (
+            EmailVerificationOTP.objects
+            .filter(utilisateur=user, is_used=False)
+            .order_by('-created_at')
+            .first()
+        )
+
+        if otp is None:
+            return Response(
+                {"error": "Aucun code OTP actif trouvé. Veuillez vous reconnecter."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if otp.is_expired:
+            otp.is_used = True
+            otp.save(update_fields=['is_used'])
+            return Response(
+                {"error": "Code OTP expiré. Veuillez vous reconnecter."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if otp.attempts >= otp.max_attempts:
+            otp.is_used = True
+            otp.save(update_fields=['is_used'])
+            return Response(
+                {"error": "Nombre maximal de tentatives atteint. Veuillez vous reconnecter."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not check_password(otp_code, otp.code_hash):
+            otp.attempts += 1
+            otp.save(update_fields=['attempts'])
+            return Response(
+                {"error": "Code OTP invalide."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # OTP valide - le marquer comme utilisé
+        otp.is_used = True
+        otp.used_at = timezone.now()
+        otp.save(update_fields=['is_used', 'used_at'])
+
+        # 4. Générer les tokens finaux
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        refresh['email'] = user.email
+        refresh['is_admin'] = bool(user.is_staff or user.is_superuser)
+
+        return Response(
+            {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user_id': user.id,
+                'name': f"{user.first_name} {user.last_name}".strip() or user.email,
+                'is_admin': bool(user.is_staff or user.is_superuser),
+                'role': 'ADMIN' if (user.is_staff or user.is_superuser) else 'USER',
+                'email_verified': bool(user.email_verifie),
+                'documents_completed': bool(user.documents_complets),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  POST /api/auth/resend-otp
+# ──────────────────────────────────────────────────────────────────────────────
+
+class ResendOTPView(APIView):
+    """
+    Renvoie un code OTP pour le login en cours.
+
+    Body JSON attendu :
+    {
+        "temp_token": "eyJhbGciOiJIUzI1NiIs..."
+    }
+
+    Réponses :
+        200 : OTP renvoyé
+        401 : temp_token invalide ou expiré
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request: Request) -> Response:
+        temp_token = (request.data.get('temp_token') or '').strip()
+
+        if not temp_token:
+            return Response(
+                {"error": "temp_token requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Valider le temp_token
+        try:
+            payload = jwt.decode(
+                temp_token,
+                settings.SECRET_KEY,
+                algorithms=['HS256'],
+                options={'require': ['exp', 'user_id', 'type']},
+            )
+            if payload.get('type') != 'temp_login':
+                raise jwt.InvalidTokenError("Token invalide.")
+        except jwt.ExpiredSignatureError:
+            return Response(
+                {"error": "Le token a expiré. Veuillez vous reconnecter."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except jwt.InvalidTokenError as exc:
+            return Response(
+                {"error": f"Token invalide : {str(exc)}"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # Récupérer l'utilisateur
+        user_id = payload.get('user_id')
+        try:
+            user = Utilisateur.objects.get(pk=user_id)
+        except Utilisateur.DoesNotExist:
+            return Response(
+                {"error": "Utilisateur introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Vérifier le cooldown
+        last_otp = (
+            EmailVerificationOTP.objects
+            .filter(utilisateur=user)
+            .order_by('-created_at')
+            .first()
+        )
+
+        if last_otp:
+            delta = (timezone.now() - last_otp.created_at).total_seconds()
+            if delta < OTP_RESEND_COOLDOWN_SECONDS:
+                wait_seconds = int(OTP_RESEND_COOLDOWN_SECONDS - delta)
+                return Response(
+                    {"error": f"Veuillez patienter {wait_seconds}s avant de renvoyer un nouveau code."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
+        # Générer et envoyer un nouvel OTP
+        _send_verification_otp(user)
+        logger.info(f"[ResendOTP] Code OTP renvoyé pour {user.email}")
+
+        return Response(
+            {"message": "Nouveau code OTP envoyé à votre adresse email."},
             status=status.HTTP_200_OK,
         )

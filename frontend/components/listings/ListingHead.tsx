@@ -3,7 +3,6 @@
 import useCountries from "@/app/(site)/hooks/useCountries";
 import Heading from "../Heading";
 import Image from "next/image";
-import HeartButton from "../HeartButton";
 import { useMemo, useState, useCallback } from "react";
 
 const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
@@ -34,7 +33,9 @@ function getSafeImageSrc(src?: string): string {
 function isLocalDevImage(src: string): boolean {
   try {
     const parsedUrl = new URL(src);
-    return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(parsedUrl.hostname);
+    return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(
+      parsedUrl.hostname,
+    );
   } catch {
     return false;
   }
@@ -47,7 +48,6 @@ interface IListingHeadProps {
   imageSrc: string;
   imageSources?: string[];
   id: string;
-  currentUser?: any | null;
 }
 
 const ListingHead: React.FC<IListingHeadProps> = ({
@@ -69,7 +69,8 @@ const ListingHead: React.FC<IListingHeadProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
-  const selectedImage = galleryImages[selectedIndex] || "/placeholder-image.jpg";
+  const selectedImage =
+    galleryImages[selectedIndex] || "/placeholder-image.jpg";
   const selectedImageIsLocal = isLocalDevImage(selectedImage);
 
   const location = getByValue(locationValue);
@@ -80,9 +81,11 @@ const ListingHead: React.FC<IListingHeadProps> = ({
   const handlePrev = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      setSelectedIndex((i) => (i - 1 + galleryImages.length) % galleryImages.length);
+      setSelectedIndex(
+        (i) => (i - 1 + galleryImages.length) % galleryImages.length,
+      );
     },
-    [galleryImages.length]
+    [galleryImages.length],
   );
 
   const handleNext = useCallback(
@@ -90,7 +93,7 @@ const ListingHead: React.FC<IListingHeadProps> = ({
       e.stopPropagation();
       setSelectedIndex((i) => (i + 1) % galleryImages.length);
     },
-    [galleryImages.length]
+    [galleryImages.length],
   );
 
   // Grid layout: 1 big left + up to 4 right (Airbnb style)
@@ -106,7 +109,10 @@ const ListingHead: React.FC<IListingHeadProps> = ({
       <div className="relative mt-4 rounded-2xl overflow-hidden">
         {galleryImages.length === 1 ? (
           /* Single image – full width */
-          <div className="relative h-[55vh] w-full cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+          <div
+            className="relative h-[55vh] w-full cursor-pointer"
+            onClick={() => setIsGalleryOpen(true)}
+          >
             <Image
               alt={title}
               src={mainImage}
@@ -130,7 +136,10 @@ const ListingHead: React.FC<IListingHeadProps> = ({
               className={`relative overflow-hidden cursor-pointer group ${
                 sideImages.length >= 2 ? "" : "col-span-1"
               }`}
-              onClick={() => { setSelectedIndex(0); setIsGalleryOpen(true); }}
+              onClick={() => {
+                setSelectedIndex(0);
+                setIsGalleryOpen(true);
+              }}
             >
               <Image
                 alt={title}
@@ -151,8 +160,8 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                   sideImages.length === 1
                     ? "grid-rows-1"
                     : sideImages.length <= 2
-                    ? "grid-rows-2"
-                    : "grid-rows-2 grid-cols-2"
+                      ? "grid-rows-2"
+                      : "grid-rows-2 grid-cols-2"
                 }`}
               >
                 {sideImages.map((src, idx) => {
@@ -162,7 +171,10 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                     <div
                       key={`${src}-${idx}`}
                       className="relative overflow-hidden cursor-pointer group"
-                      onClick={() => { setSelectedIndex(realIndex); setIsGalleryOpen(true); }}
+                      onClick={() => {
+                        setSelectedIndex(realIndex);
+                        setIsGalleryOpen(true);
+                      }}
                     >
                       <Image
                         alt={`Photo ${realIndex + 1}`}
@@ -204,17 +216,16 @@ const ListingHead: React.FC<IListingHeadProps> = ({
               transition-all duration-200
             "
           >
-            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor">
+            <svg
+              viewBox="0 0 16 16"
+              className="w-3.5 h-3.5"
+              fill="currentColor"
+            >
               <path d="M5 2a1 1 0 100-2 1 1 0 000 2zM2 5a1 1 0 110-2 1 1 0 010 2zm1 3a1 1 0 100-2 1 1 0 000 2zm-1 3a1 1 0 110-2 1 1 0 010 2zm1 3a1 1 0 100-2 1 1 0 000 2zm9-12a1 1 0 100-2 1 1 0 000 2zm2 3a1 1 0 110-2 1 1 0 010 2zm-1 3a1 1 0 100-2 1 1 0 000 2zm1 3a1 1 0 110-2 1 1 0 010 2zm-1 3a1 1 0 100-2 1 1 0 000 2z" />
             </svg>
             Toutes les photos
           </button>
         )}
-
-        {/* HeartButton */}
-        <div className="absolute top-4 right-4 z-20">
-          <HeartButton listingId={id} currentUser={currentUser} />
-        </div>
       </div>
 
       {/* ── Fullscreen gallery modal ── */}
@@ -238,13 +249,21 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                 hover:bg-white/10 transition-colors
               "
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                className="w-4 h-4"
+              >
                 <path d="M19 12H5M5 12l7-7M5 12l7 7" />
               </svg>
               Retour
             </button>
             <span className="text-sm text-white/60 font-medium tracking-wide">
-              {selectedIndex + 1} <span className="text-white/30">/</span> {galleryImages.length}
+              {selectedIndex + 1} <span className="text-white/30">/</span>{" "}
+              {galleryImages.length}
             </span>
             <div className="w-24" />
           </div>
@@ -277,7 +296,14 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                 "
                 aria-label="Photo précédente"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-5 h-5 text-neutral-800">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  className="w-5 h-5 text-neutral-800"
+                >
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
@@ -296,7 +322,14 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                 "
                 aria-label="Photo suivante"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-5 h-5 text-neutral-800">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  className="w-5 h-5 text-neutral-800"
+                >
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
@@ -317,9 +350,10 @@ const ListingHead: React.FC<IListingHeadProps> = ({
                   className={`
                     relative h-16 w-24 shrink-0 overflow-hidden rounded-xl
                     border-2 transition-all duration-150
-                    ${selectedIndex === index
-                      ? "border-white scale-105"
-                      : "border-white/20 opacity-60 hover:opacity-90 hover:border-white/50"
+                    ${
+                      selectedIndex === index
+                        ? "border-white scale-105"
+                        : "border-white/20 opacity-60 hover:opacity-90 hover:border-white/50"
                     }
                   `}
                   aria-label={`Photo ${index + 1}`}

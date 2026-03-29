@@ -1,18 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { CurrentUser } from "@/app/(site)/actions/getCurrentUser";
 import Container from "../Container";
 import Logo from "./Logo";
 import Search from "./Search";
 import UserMenu from "./UserMenu";
 import Categories from "./Categories";
 
-interface NavbarProps {
-  currentUser?: CurrentUser | null;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
+const Navbar: React.FC = () => {
   const pathname = usePathname();
   const isDashboard = pathname?.includes("/dashboard");
 
@@ -36,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
           >
             <Logo />
             <Search />
-            <UserMenu currentUser={currentUser} />
+            <UserMenu />
           </div>
         </Container>
       </div>
