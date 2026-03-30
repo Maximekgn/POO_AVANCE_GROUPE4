@@ -3,6 +3,7 @@ import ClientOnly from "@/components/ClientOnly";
 import Navbar from "@/components/navbar/Navbar";
 import RentModal from "@/components/modals/RentModal";
 import SearchModal from "@/components/modals/SearchModal";
+import BailModal from "@/components/modals/BailModal";
 import ChatWidget from "@/components/chat/ChatWidget";
 
 export default async function SiteLayout({
@@ -14,6 +15,7 @@ export default async function SiteLayout({
     <ClientOnly>
       <RentModal />
       <SearchModal />
+      <BailModal />
       <Navbar />
       <ChatWidget />
       <div className="py-36">{children}</div>

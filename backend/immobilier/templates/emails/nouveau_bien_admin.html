@@ -1,43 +1,74 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %} Nouveau bien soumis {% endblock %}
+{% extends "emails/base_email.html" %} {% block title %} Nouveau bien soumis {%
+endblock %}
 
 {% block body %}
 <div class="greeting">Action requise : Nouveau bien à valider</div>
 
 <p>Bonjour,</p>
 <p>
-  Un nouveau bien a été soumis sur la plateforme ImmoPlus et nécessite votre examen avant publication.
+  Un nouveau bien a été soumis sur la plateforme Miabe - Immo et nécessite votre
+  examen avant publication.
 </p>
 
-<div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
-  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Fiche technique du bien</p>
-  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+<div
+  style="
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    border: 1px solid #e2e8f0;
+  "
+>
+  <p
+    style="
+      margin: 0;
+      font-size: 14px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    "
+  >
+    Fiche technique du bien
+  </p>
+  <table style="width: 100%; margin-top: 12px; border-collapse: collapse">
     <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Référence</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ reference_bien }}</td>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px">Référence</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600">
+        {{ reference_bien }}
+      </td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Ville</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ ville }}</td>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px">Ville</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600">
+        {{ ville }}
+      </td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Propriétaire</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ proprietaire }}</td>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px">
+        Propriétaire
+      </td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600">
+        {{ proprietaire }}
+      </td>
     </tr>
   </table>
 </div>
 
-<p>Nous vous recommandons de traiter cette soumission dans les prochaines 24 heures pour garantir une bonne réactivité sur la plateforme.</p>
+<p>
+  Nous vous recommandons de traiter cette soumission dans les prochaines 24
+  heures pour garantir une bonne réactivité sur la plateforme.
+</p>
 
 <div class="divider"></div>
 
-<div style="text-align: center; margin: 32px 0;">
-  <a href="{{ url_dashboard_admin }}" class="cta-button">Accéder au Dashboard Admin</a>
+<div style="text-align: center; margin: 32px 0">
+  <a href="{{ url_dashboard_admin }}" class="cta-button"
+    >Accéder au Dashboard Admin</a
+  >
 </div>
 
-<p style="font-size: 14px; color: #64748b; text-align: center;">
-  Système de gestion <strong>ImmoPlus</strong>
+<p style="font-size: 14px; color: #64748b; text-align: center">
+  Système de gestion <strong>Miabe - Immo</strong>
 </p>
 {% endblock %}
-

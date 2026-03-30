@@ -13,6 +13,8 @@ from .property_views import (
 	BienRefusView,
 	PublicBienListView,
 	PublicBienDetailView,
+	BienDepenseCreateView,
+	BienDetailFinancierView,
 )
 from .photo_views import BienPhotoListCreateView, PhotoDetailView, BienPhotoReorderView
 from .message_views import (
@@ -53,12 +55,18 @@ from .request_views import (
 	DemandeActionFinaliserLocationView,
 	DemandeActionRequestPaymentView,
 	DemandeActionConfirmPaymentView,
+	DemandeActionConfirmPaymentPublicView,
 	DemandeActionActionableListView,
+	DemandeActionUpdateTarifsView,
+	DemandeActionSignerBailView,
 )
 from .lease_views import (
 	BailListView,
 	BailDetailView,
 	BailSignView,
+	BailSignPublicView,
+	BailRelancerSignatureView,
+	BailEnvoyerBailView,
 )
 from .dashboard_views import AdminDashboardStatsView
 
@@ -81,6 +89,8 @@ __all__ = [
 	'BienStatutUpdateView',
 	'BienActivationUpdateView',
 	'BienRefusView',
+	'BienDepenseCreateView',
+	'BienDetailFinancierView',
 	'BienPhotoListCreateView',
 	'BienPhotoReorderView',
 	'PhotoDetailView',
@@ -115,9 +125,13 @@ __all__ = [
 	'DemandeActionFinaliserLocationView',
 	'DemandeActionRequestPaymentView',
 	'DemandeActionConfirmPaymentView',
+	'DemandeActionConfirmPaymentPublicView',
 	'DemandeActionActionableListView',
 	'BailListView',
 	'BailDetailView',
 	'BailSignView',
+	'BailSignPublicView',
+	'BailRelancerSignatureView',
+	'BailEnvoyerBailView',
 	'AdminDashboardStatsView',
 ]

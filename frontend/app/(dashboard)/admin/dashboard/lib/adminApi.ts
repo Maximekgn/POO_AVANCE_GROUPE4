@@ -135,12 +135,15 @@ export type AdminFinanceStats = {
   taux_recouvrement: number;
   nombre_paiements: number;
   nombre_depenses: number;
+  commissions_plateforme: number;
 };
 
 export type AdminPayment = {
   id: number;
   reference: string;
   montant: number;
+  commission_plateforme?: number | null;
+  montant_reverse?: number | null;
   date_echeance: string;
   date_paiement?: string | null;
   statut: string;
@@ -258,7 +261,10 @@ export async function createAdminCategory(
     });
     if (!response.ok) {
       const payload = await response.json().catch(() => null);
-      return { ok: false, message: payload?.nom?.[0] || "Erreur lors de la création." };
+      return {
+        ok: false,
+        message: payload?.nom?.[0] || "Erreur lors de la création.",
+      };
     }
     return { ok: true };
   } catch {
@@ -281,7 +287,10 @@ export async function updateAdminCategory(
     });
     if (!response.ok) {
       const payload = await response.json().catch(() => null);
-      return { ok: false, message: payload?.nom?.[0] || "Erreur lors de la mise à jour." };
+      return {
+        ok: false,
+        message: payload?.nom?.[0] || "Erreur lors de la mise à jour.",
+      };
     }
     return { ok: true };
   } catch {
@@ -302,7 +311,10 @@ export async function deleteAdminCategory(
     });
     if (!response.ok) {
       const payload = await response.json().catch(() => null);
-      return { ok: false, message: payload?.error || "Erreur lors de la suppression." };
+      return {
+        ok: false,
+        message: payload?.error || "Erreur lors de la suppression.",
+      };
     }
     return { ok: true };
   } catch {
@@ -474,6 +486,40 @@ export async function getAdminExpenses(
     return Array.isArray(data) ? (data as AdminExpense[]) : [];
   } catch {
     return [];
+  }
+}
+
+export async function createAdminExpense(
+  currentUser: AdminUser,
+  data: {
+    categorie: string;
+    libelle: string;
+    montant: number;
+    date_depense: string;
+    fournisseur?: string;
+    numero_facture?: string;
+    bien_id: number;
+  },
+): Promise<{ ok: boolean; data?: AdminExpense; message?: string }> {
+  const token = currentUser?.accessToken;
+  if (!token) return { ok: false, message: "No token" };
+
+  try {
+    const response = await fetch(`${API_URL}/admin/finances/depenses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      return { ok: false, message: error.message || "Erreur création dépense" };
+    }
+    return { ok: true, data: await response.json() };
+  } catch {
+    return { ok: false, message: "Erreur réseau" };
   }
 }
 

@@ -26,6 +26,7 @@ class TypeDemandeEnum(models.TextChoices):
     VISITE = 'VISITE', _('Demande de visite')
     PRIVATISATION = 'PRIVATISATION', _('Demande de privatisation')
     LOCATION_DIRECTE = 'LOCATION_DIRECTE', _('Demande de location directe')
+    BAIL = 'BAIL', _('Demande de bail')
 
 
 class StatutDemandeEnum(models.TextChoices):

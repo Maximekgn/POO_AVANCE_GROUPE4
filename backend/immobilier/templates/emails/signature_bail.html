@@ -1,51 +1,223 @@
-{% extends "emails/base_email.html" %}
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signature de bail - Miabe Immo</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #3b82f6;
+        margin-bottom: 25px;
+      }
+      .header h1 {
+        color: #1e40af;
+        margin: 0;
+        font-size: 24px;
+      }
+      .header .subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+      .greeting {
+        font-size: 16px;
+        color: #1f2937;
+        margin-bottom: 20px;
+      }
+      .info-box {
+        background-color: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 6px;
+      }
+      .info-box h3 {
+        margin: 0 0 10px 0;
+        color: #1e40af;
+        font-size: 16px;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #dbeafe;
+      }
+      .info-row:last-child {
+        border-bottom: none;
+      }
+      .info-label {
+        color: #6b7280;
+        font-weight: 500;
+      }
+      .info-value {
+        color: #1f2937;
+        font-weight: 600;
+      }
+      .cta-button {
+        display: inline-block;
+        background-color: #10b981;
+        color: white;
+        text-decoration: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+        margin: 25px 0;
+        width: 100%;
+        box-sizing: border-box;
+        transition: background-color 0.3s;
+      }
+      .cta-button:hover {
+        background-color: #059669;
+      }
+      .footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #e5e7eb;
+        text-align: center;
+        color: #6b7280;
+        font-size: 14px;
+      }
+      .footer a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+      .warning-box {
+        background-color: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 6px;
+        color: #92400e;
+      }
+      .success-box {
+        background-color: #f0fdf4;
+        border-left: 4px solid #10b981;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 6px;
+        color: #065f46;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏠 Miabe Immo</h1>
+        <div class="subtitle">Votre plateforme de gestion immobilière</div>
+      </div>
 
-{% block title %}
-  {% if signe_par_tous %} 🎉 Votre bail est prêt {% else %} ✍️ Signature de bail requise {% endif %}
-{% endblock %}
+      <div class="greeting">Bonjour <strong>{{ prenom }}</strong>,</div>
 
-{% block body %}
-<div class="greeting">
-  {% if signe_par_tous %} 🎉 Félicitations, votre bail est signé ! {% else %} ✍️ Votre signature est requise {% endif %}
-</div>
+      {% if signe_par_tous %}
+      <div class="success-box">
+        <h3 style="margin-top: 0; color: #065f46">
+          🎉 Bail signé avec succès !
+        </h3>
+        <p style="margin: 8px 0; color: #065f46">
+          Toutes les parties ont signé le bail. Il est maintenant effectif.
+        </p>
+      </div>
+      {% else %}
+      <div class="warning-box">
+        <h3 style="margin-top: 0; color: #92400e">✍️ Signature requise</h3>
+        <p style="margin: 8px 0; color: #92400e">
+          Votre signature est requise pour finaliser le contrat de bail.
+        </p>
+      </div>
+      {% endif %}
 
-<p>Bonjour {{ prenom }},</p>
-<p>
-  {% if signe_par_tous %}
-    Nous avons le plaisir de vous informer que toutes les parties ont signé le contrat de bail pour le bien <strong>{{ reference_bien }}</strong>. Votre document est désormais officiel.
-  {% else %}
-    Le contrat de bail pour le bien <strong>{{ reference_bien }}</strong> a été généré et attend votre signature pour devenir effectif.
-  {% endif %}
-</p>
+      <div class="info-box">
+        <h3>📍 Détails du bail</h3>
+        <div class="info-row">
+          <span class="info-label">Référence du bail</span>
+          <span class="info-value">{{ numero_bail }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Bien</span>
+          <span class="info-value">{{ reference_bien }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Adresse</span>
+          <span class="info-value">{{ adresse_bien }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Date d'entrée</span>
+          <span class="info-value">{{ date_entree }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Loyer mensuel</span>
+          <span class="info-value">{{ loyer }} FCFA</span>
+        </div>
+      </div>
 
-<div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
-  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Détails du contrat</p>
-  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Référence</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ numero_bail }}</td>
-    </tr>
-    <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Loyer mensuel</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #1e293b;">{{ loyer }} FCFA</td>
-    </tr>
-    <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date d'effet</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ date_entree }}</td>
-    </tr>
-  </table>
-</div>
+      {% if not signe_par_tous %}
+      <p style="text-align: center; color: #6b7280; font-size: 14px">
+        Cliquez sur le bouton ci-dessous pour signer le bail électroniquement :
+      </p>
 
-<div class="divider"></div>
+      <a href="{{ url_bail }}" class="cta-button"> ✍️ Signer le bail </a>
 
-<div style="text-align: center; margin: 32px 0;">
-  <a href="{{ url_bail }}" class="cta-button">
-    {% if signe_par_tous %} Télécharger mon exemplaire {% else %} Signer le contrat en ligne {% endif %}
-  </a>
-</div>
+      <p style="text-align: center; color: #9ca3af; font-size: 12px">
+        Ou copiez ce lien dans votre navigateur :<br />
+        <a href="{{ url_bail }}" style="color: #3b82f6; word-break: break-all"
+          >{{ url_bail }}</a
+        >
+      </p>
 
-<p style="font-size: 14px; color: #64748b; text-align: center;">
-  Merci de votre confiance,<br/>L'équipe <strong>ImmoPlus</strong>
-</p>
-{% endblock %}
+      <div class="warning-box">
+        <h3 style="margin-top: 0; color: #92400e">⚠️ Important</h3>
+        <p style="margin: 8px 0; color: #92400e">
+          La signature électronique a la même valeur légale qu'une signature
+          manuscrite.<br />
+          En signant, vous vous engagez à respecter les termes du contrat de
+          bail.
+        </p>
+      </div>
+      {% else %}
+      <div
+        class="info-box"
+        style="background-color: #f0fdf4; border-left-color: #10b981"
+      >
+        <h3 style="margin-top: 0; color: #065f46">
+          📄 Bail signé en pièce jointe
+        </h3>
+        <p style="margin: 8px 0; color: #065f46">
+          Vous trouverez le bail signé par toutes les parties en pièce jointe de
+          cet email.<br />
+          Conservez ce document précieusement.
+        </p>
+      </div>
+      {% endif %}
 
+      <div class="footer">
+        <p>
+          Besoin d'aide ?
+          <a href="{{ url_dashboard }}">Accéder à votre espace</a>
+        </p>
+        <p style="margin-top: 15px; font-size: 12px">
+          © {{ year }} Miabe Immo. Tous droits réservés.<br />
+          Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

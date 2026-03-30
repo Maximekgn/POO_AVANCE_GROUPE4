@@ -10,6 +10,7 @@ Usage rapide :
 """
 
 from datetime import date
+from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -61,6 +62,62 @@ class EmailService:
             print(f"[EmailService] Erreur envoi email à {destinataire} : {exc}")
             return False
 
+    @staticmethod
+    def _envoyer_avec_piece_jointe(
+        sujet: str,
+        template: str,
+        contexte: dict,
+        destinataire: str,
+        piece_jointe: dict
+    ) -> bool:
+        """
+        Envoie un email HTML + version texte brute avec pièce jointe PDF.
+
+        Paramètres
+        ----------
+        sujet        : Objet de l'email.
+        template     : Chemin relatif du template HTML.
+        contexte     : Dictionnaire de variables.
+        destinataire : Adresse email du destinataire.
+        piece_jointe : Dict avec 'filename', 'content', 'mimetype'.
+
+        Retour
+        ------
+        True si l'envoi s'est effectué sans erreur, False sinon.
+        """
+        contexte.setdefault('year', date.today().year)
+        try:
+            print(f"[EmailService] Rendu template: {template}")
+            html_content = render_to_string(template, contexte)
+            text_content = strip_tags(html_content)
+
+            print(f"[EmailService] Création message pour {destinataire}")
+            msg = EmailMultiAlternatives(
+                subject=sujet,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[destinataire],
+            )
+            msg.attach_alternative(html_content, "text/html")
+            
+            # Attacher le PDF
+            print(f"[EmailService] Attachment PDF: {piece_jointe['filename']} ({len(piece_jointe['content'])} octets)")
+            msg.attach(
+                filename=piece_jointe["filename"],
+                content=piece_jointe["content"],
+                mimetype=piece_jointe["mimetype"]
+            )
+            
+            print(f"[EmailService] Envoi en cours...")
+            msg.send()
+            print(f"[EmailService] Email envoyé avec succès !")
+            return True
+        except Exception as exc:
+            print(f"[EmailService] ERREUR envoi email avec PJ à {destinataire} : {exc}")
+            import traceback
+            traceback.print_exc()
+            return False
+
     # ─────────────────────────────────────────────
     #  1. Bienvenue / Inscription
     # ─────────────────────────────────────────────
@@ -76,7 +133,7 @@ class EmailService:
         url_connexion: Lien vers la page de connexion.
         """
         return cls._envoyer(
-            sujet="✨ Bienvenue chez ImmoPlus !",
+            sujet="✨ Bienvenue chez Miabe - Immo !",
             template="emails/bienvenue.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -97,7 +154,7 @@ class EmailService:
     ) -> bool:
         """Envoie un OTP de verification email pour activer le compte."""
         return cls._envoyer(
-            sujet="Code OTP de verification de votre email — ImmoPlus",
+            sujet="Code OTP de verification de votre email — Miabe - Immo",
             template="emails/verification_email_otp.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -120,7 +177,7 @@ class EmailService:
         sujet, statut_label = labels.get(statut, ('Mise à jour de votre compte', 'mis à jour'))
 
         return cls._envoyer(
-            sujet=f"{sujet} — ImmoPlus",
+            sujet=f"{sujet} — Miabe - Immo",
             template="emails/statut_compte_admin.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -148,7 +205,7 @@ class EmailService:
         validite_heures: Durée de validité du lien (en heures).
         """
         return cls._envoyer(
-            sujet="🔐 Réinitialisation de votre mot de passe — ImmoPlus",
+            sujet="🔐 Réinitialisation de votre mot de passe — Miabe - Immo",
             template="emails/reinitialisation_mdp.html",
             contexte={
                 "prenom": utilisateur.first_name or utilisateur.username,
@@ -177,7 +234,7 @@ class EmailService:
         """
         statut_label = "validé" if valide else "refusé"
         return cls._envoyer(
-            sujet=f"{'✅' if valide else '❌'} Mise à jour de votre bien — ImmoPlus",
+            sujet=f"{'✅' if valide else '❌'} Mise à jour de votre bien — Miabe - Immo",
             template="emails/validation_bien.html",
             contexte={
                 "prenom": proprietaire.first_name or proprietaire.username,
@@ -380,7 +437,7 @@ class EmailService:
         url_mes_dossiers: Lien vers la liste des dossiers du client.
         """
         return cls._envoyer(
-            sujet=f"📄 Mise à jour de votre dossier #{dossier.id} — ImmoPlus",
+            sujet=f"📄 Mise à jour de votre dossier #{dossier.id} — Miabe - Immo",
             template="emails/statut_dossier.html",
             contexte={
                 "prenom": client.first_name or client.username,
@@ -413,7 +470,7 @@ class EmailService:
         """
         impaye = paiement.statut == 'IMPAYE'
         return cls._envoyer(
-            sujet=f"{'⚠️ Loyer impayé' if impaye else '📅 Rappel de paiement'} — ImmoPlus",
+            sujet=f"{'⚠️ Loyer impayé' if impaye else '📅 Rappel de paiement'} — Miabe - Immo",
             template="emails/rappel_paiement.html",
             contexte={
                 "prenom": client.first_name or client.username,
@@ -458,6 +515,7 @@ class EmailService:
                 "date_entree": bail.date_entree.strftime("%d/%m/%Y"),
                 "loyer": bail.loyer_actuel,
                 "url_bail": url_bail,
+                "url_dashboard": "/reservations?tab=envoyees",
             },
             destinataire=utilisateur.email,
         )
@@ -470,6 +528,7 @@ class EmailService:
     def envoyer_demande_paiement(cls, demandeur, demande, url_paiement: str = "/") -> bool:
         """
         Notifie le demandeur qu'il doit effectuer le paiement pour finaliser la location.
+        Inclut la facture PDF en pièce jointe.
 
         Paramètres
         ----------
@@ -479,19 +538,270 @@ class EmailService:
         """
         bien = getattr(demande, 'bien', None)
         if not bien or not demandeur.email:
+            print(f"[EmailService] Impossible d'envoyer: bien={bien}, email={demandeur.email if demandeur else None}")
             return False
 
-        return cls._envoyer(
-            sujet=f"💳 Paiement requis pour votre location — ImmoPlus",
-            template="emails/demande_paiement.html",
-            contexte={
-                "prenom": demandeur.first_name or demandeur.username,
-                "reference_bien": bien.reference,
-                "adresse_bien": bien.adresse,
-                "montant_total": demande.montant_total,
-                "date_debut": demande.date_debut.strftime("%d/%m/%Y"),
-                "date_fin": demande.date_fin.strftime("%d/%m/%Y"),
-                "url_paiement": url_paiement,
-            },
-            destinataire=demandeur.email,
-        )
+        # Générer un lien de paiement sécurisé
+        from django.conf import settings
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+        import hashlib
+        import time
+        token_data = f"{demande.id}-{demande.demandeur_id}-{int(time.time())}"
+        token = hashlib.sha256(token_data.encode()).hexdigest()[:32]
+        payment_url = f"{frontend_url}/paiement/{demande.id}/{token}"
+
+        print(f"[EmailService] Génération facture pour demande {demande.id}...")
+
+        # Calculer les montants pour la facture
+        loyer_hc = float(bien.loyer_hc) if bien.loyer_hc else 0
+        charges = float(bien.charges) if bien.charges else 0
+        caution_mois = bien.caution_mois or 1
+        avance_mois = bien.avance_mois or 1
+        frais_assistance = float(bien.frais_assistance) if bien.frais_assistance else 0
+
+        total_caution = loyer_hc * caution_mois
+        total_avance = loyer_hc * avance_mois
+        total_loyer_charges = (loyer_hc + charges)
+        total_a_payer = total_caution + total_avance + total_loyer_charges + frais_assistance
+
+        print(f"[EmailService] Montants: loyer={loyer_hc}, charges={charges}, caution={caution_mois}, avance={avance_mois}")
+        print(f"[EmailService] Total à payer: {total_a_payer}")
+
+        # Générer la facture PDF
+        pdf_buffer = None
+        try:
+            from immobilier.services.billing_service import BillingService
+            pdf_buffer = BillingService.generate_lease_invoice_pdf(
+                demande=demande,
+                loyer_hc=loyer_hc,
+                charges=charges,
+                caution_mois=caution_mois,
+                avance_mois=avance_mois,
+                frais_assistance=frais_assistance,
+                total_a_payer=total_a_payer,
+            )
+            print(f"[EmailService] PDF généré avec succès: {pdf_buffer.tell()} octets")
+        except Exception as e:
+            print(f"[EmailService] ERREUR génération PDF: {e}")
+            import traceback
+            traceback.print_exc()
+
+        # Préparer le contexte de l'email
+        contexte = {
+            "prenom": demandeur.first_name or demandeur.username,
+            "reference_bien": bien.reference,
+            "adresse_bien": f"{bien.adresse}, {bien.ville}",
+            "montant_total": f"{total_a_payer:,.0f}",
+            "date_debut": demande.date_debut.strftime("%d/%m/%Y") if demande.date_debut else "N/A",
+            "date_fin": demande.date_fin.strftime("%d/%m/%Y") if demande.date_fin else "N/A",
+            "url_paiement": payment_url,
+            "url_dashboard": f"{frontend_url}/reservations?tab=envoyees",
+            "detail_caution": f"{total_caution:,.0f}",
+            "detail_avance": f"{total_avance:,.0f}",
+            "detail_loyer": f"{total_loyer_charges:,.0f}",
+            "detail_frais": f"{frais_assistance:,.0f}",
+        }
+
+        # Envoyer l'email avec ou sans PDF
+        if pdf_buffer:
+            print(f"[EmailService] Envoi email AVEC PDF à {demandeur.email}...")
+            result = cls._envoyer_avec_piece_jointe(
+                sujet=f"💳 Paiement requis + Facture — {bien.reference} — Miabe Immo",
+                template="emails/demande_paiement.html",
+                contexte=contexte,
+                destinataire=demandeur.email,
+                piece_jointe={
+                    "filename": f"Facture_{bien.reference}_{demandeur.last_name or 'locataire'}.pdf",
+                    "content": pdf_buffer.getvalue(),
+                    "mimetype": "application/pdf"
+                }
+            )
+            print(f"[EmailService] Résultat envoi: {result}")
+            return result
+        else:
+            print(f"[EmailService] Envoi email SANS PDF à {demandeur.email}...")
+            result = cls._envoyer(
+                sujet=f"💳 Paiement requis pour votre location — {bien.reference} — Miabe Immo",
+                template="emails/demande_paiement.html",
+                contexte=contexte,
+                destinataire=demandeur.email,
+            )
+            print(f"[EmailService] Résultat envoi: {result}")
+            return result
+
+    @classmethod
+    def envoyer_facture_paiement(cls, destinataire, demande, total_a_payer, pdf_buffer) -> bool:
+        """
+        Envoie la facture PDF par email au locataire avec la facture en pièce jointe.
+
+        Paramètres
+        ----------
+        destinataire : Email du locataire.
+        demande      : Instance du modèle DemandeAction.
+        total_a_payer: Montant total à payer en FCFA.
+        pdf_buffer   : BytesIO contenant le PDF de la facture.
+        """
+        bien = getattr(demande, 'bien', None)
+        if not bien or not destinataire:
+            return False
+
+        from django.core.mail import EmailMessage
+        from django.conf import settings
+
+        try:
+            email = EmailMessage(
+                subject=f"📄 Facture de location - {bien.reference} — Miabe Immo",
+                body=f"""
+                Bonjour {demande.demandeur.first_name or demande.demandeur.username},
+
+                Vous avez accepté une demande de location pour le bien suivant :
+                - Référence : {bien.reference}
+                - Adresse : {bien.adresse}, {bien.ville}
+                - Période : du {demande.date_debut.strftime('%d/%m/%Y') if demande.date_debut else 'N/A'} au {demande.date_fin.strftime('%d/%m/%Y') if demande.date_fin else 'N/A'}
+
+                MONTANT TOTAL À PAYER : {total_a_payer:,.0f} FCFA
+
+                Cette facture détaille :
+                - Le loyer mensuel Hors Charges
+                - Les charges mensuelles
+                - La caution
+                - L'avance sur loyer
+                - Les frais d'assistance
+                - Le premier mois de loyer (HC + Charges)
+
+                Veuillez effectuer le paiement avant la date d'échéance.
+                Modes de paiement acceptés : Mobile Money (Orange Money, MTN Mobile Money, Moov Money) ou Virement Bancaire.
+
+                Cordialement,
+                L'équipe Miabe Immo
+                """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[destinataire],
+            )
+
+            # Attacher le PDF
+            email.attach(
+                filename=f"Facture_{bien.reference}_{demande.demandeur.last_name}.pdf",
+                content=pdf_buffer.getvalue(),
+                mimetype="application/pdf"
+            )
+
+            email.send()
+            return True
+        except Exception as e:
+            print(f"Erreur lors de l'envoi de la facture : {e}")
+            return False
+
+    @classmethod
+    def envoyer_confirmation_paiement(cls, destinataire, demande, total_a_payer, receipt_pdf_buffer) -> bool:
+        """
+        Envoie un email de confirmation de paiement avec le reçu PDF en pièce jointe.
+
+        Paramètres
+        ----------
+        destinataire : Email du locataire.
+        demande      : Instance du modèle DemandeAction.
+        total_a_payer: Montant total payé en FCFA.
+        receipt_pdf_buffer : BytesIO contenant le PDF du reçu.
+        """
+        bien = getattr(demande, 'bien', None)
+        if not bien or not destinataire:
+            return False
+
+        from django.core.mail import EmailMessage
+        from django.conf import settings
+
+        try:
+            email = EmailMessage(
+                subject=f"✅ Paiement confirmé - Reçu - {bien.reference} — Miabe Immo",
+                body=f"""
+                Bonjour {demande.demandeur.first_name or demandeur.demandeur.username},
+
+                Nous vous confirmons que votre paiement pour la location du bien {bien.reference} a été enregistré avec succès.
+
+                MONTANT PAYÉ : {total_a_payer:,.0f} FCFA
+
+                Vous trouverez votre reçu officiel en pièce jointe de cet email.
+
+                PROCHAINES ÉTAPES :
+                1. Le propriétaire va finaliser votre contrat de bail
+                2. Vous recevrez le bail signé par email
+                3. Vous pourrez alors emménager dans votre nouveau logement
+
+                Merci de votre confiance !
+
+                Cordialement,
+                L'équipe Miabe Immo
+                """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[destinataire],
+            )
+
+            # Attacher le PDF du reçu
+            email.attach(
+                filename=f"Recu_Paiement_{bien.reference}_{demande.demandeur.last_name}.pdf",
+                content=receipt_pdf_buffer.getvalue(),
+                mimetype="application/pdf"
+            )
+
+            email.send()
+            return True
+        except Exception as e:
+            print(f"Erreur lors de l'envoi de la confirmation de paiement : {e}")
+            return False
+
+    @classmethod
+    def envoyer_bail_signe(cls, destinataire, bail, bien, pdf_buffer, role: str = "locataire") -> bool:
+        """
+        Envoie le bail signé PDF aux deux parties.
+
+        Paramètres
+        ----------
+        destinataire : Email du destinataire.
+        bail         : Instance du modèle Bail.
+        bien         : Instance du modèle Bien.
+        pdf_buffer   : BytesIO contenant le PDF du bail.
+        role         : "locataire" ou "proprietaire".
+        """
+        if not destinataire:
+            return False
+
+        from django.core.mail import EmailMessage
+        from django.conf import settings
+
+        try:
+            email = EmailMessage(
+                subject=f"📄 Bail signé - {bien.reference} — Miabe Immo",
+                body=f"""
+                Bonjour,
+
+                Votre bail pour le bien {bien.reference} a été signé par toutes les parties et est maintenant effectif.
+
+                BIEN : {bien.adresse}, {bien.ville}
+                NUMÉRO DE BAIL : {bail.numero_bail}
+                DATE D'ENTRÉE : {bail.date_entree.strftime('%d/%m/%Y') if bail.date_entree else 'N/A'}
+                LOYER MENSUEL : {bail.loyer_actuel:,.0f} FCFA
+
+                Vous trouverez le bail signé en pièce jointe de cet email.
+
+                Conservez ce document précieusement, il vous sera demandé pour toutes les démarches administratives.
+
+                Cordialement,
+                L'équipe Miabe Immo
+                """,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[destinataire],
+            )
+
+            # Attacher le PDF du bail
+            email.attach(
+                filename=f"Bail_{bien.reference}_{bail.numero_bail}.pdf",
+                content=pdf_buffer.getvalue(),
+                mimetype="application/pdf"
+            )
+
+            email.send()
+            return True
+        except Exception as e:
+            print(f"Erreur lors de l'envoi du bail signé : {e}")
+            return False

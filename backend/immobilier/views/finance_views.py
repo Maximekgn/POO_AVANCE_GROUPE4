@@ -1,5 +1,6 @@
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -7,12 +8,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from immobilier.models import Depense, Paiement, Utilisateur
+from immobilier.models import Depense, Paiement, Utilisateur, Bien
 from immobilier.models.enums import StatutPaiementEnum, StatutDemandeEnum
 from immobilier.models.location import DemandeAction
 from immobilier.serializers.finance_serializers import (
     AdminDepenseSerializer,
     AdminPaiementSerializer,
+    DepenseCreateSerializer,
 )
 
 
@@ -28,16 +30,34 @@ class AdminFinanceStatsView(AdminFinancePermissionMixin, APIView):
     def get(self, request: Request) -> Response:
         self.check_admin(request)
 
+        # Tous les paiements
         paiements = Paiement.objects.all()
         depenses = Depense.objects.all()
 
+        # Statuts de paiement considérés comme "payés"
+        paid_statuses = [
+            StatutPaiementEnum.PAYE,
+            StatutPaiementEnum.PAYE_A_L_ADMIN,
+            StatutPaiementEnum.REVERSE_AU_PROPRIETAIRE,
+        ]
+
         loyers_attendus = paiements.aggregate(total=Sum('montant')).get('total') or 0
-        loyers_payes = paiements.filter(statut=StatutPaiementEnum.PAYE).aggregate(total=Sum('montant')).get('total') or 0
+        loyers_payes = paiements.filter(statut__in=paid_statuses).aggregate(total=Sum('montant')).get('total') or 0
         en_attente = paiements.filter(statut=StatutPaiementEnum.EN_ATTENTE).aggregate(total=Sum('montant')).get('total') or 0
         impayes = paiements.filter(statut=StatutPaiementEnum.IMPAYE).aggregate(total=Sum('montant')).get('total') or 0
         total_depenses = depenses.aggregate(total=Sum('montant')).get('total') or 0
 
+        # Calcul des commissions (5%)
+        commissions = paiements.filter(
+            Q(statut__in=paid_statuses)
+        ).aggregate(total=Sum('commission_plateforme')).get('total') or 0
+
         taux_recouvrement = round((float(loyers_payes) / float(loyers_attendus)) * 100, 2) if loyers_attendus else 0
+
+        print(f"[Finances Stats] Paiements total: {paiements.count()}")
+        print(f"[Finances Stats] Loyers attendus: {loyers_attendus}")
+        print(f"[Finances Stats] Loyers payés: {loyers_payes}")
+        print(f"[Finances Stats] Commissions: {commissions}")
 
         return Response(
             {
@@ -49,6 +69,7 @@ class AdminFinanceStatsView(AdminFinancePermissionMixin, APIView):
                 'taux_recouvrement': taux_recouvrement,
                 'nombre_paiements': paiements.count(),
                 'nombre_depenses': depenses.count(),
+                'commissions_plateforme': commissions,
             },
             status=status.HTTP_200_OK,
         )
@@ -101,9 +122,9 @@ class AdminPaiementDetailView(AdminFinancePermissionMixin, APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class AdminDepenseListView(AdminFinancePermissionMixin, generics.ListAPIView):
+class AdminDepenseListView(AdminFinancePermissionMixin, generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = AdminDepenseSerializer
+    serializer_class = DepenseCreateSerializer
 
     def get_queryset(self):
         self.check_admin(self.request)
@@ -134,6 +155,10 @@ class AdminDepenseListView(AdminFinancePermissionMixin, generics.ListAPIView):
             )
 
         return queryset
+
+    def perform_create(self, serializer):
+        self.check_admin(self.request)
+        serializer.save()
 
 
 class AdminDepenseDetailView(AdminFinancePermissionMixin, APIView):

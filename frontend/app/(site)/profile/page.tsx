@@ -143,7 +143,7 @@ export default async function ProfilePage({
 
   return (
     <Container>
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto  space-y-6">
         <div className="rounded-2xl border border-neutral-200 bg-white p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -176,10 +176,11 @@ export default async function ProfilePage({
             <Link
               key={tab.key}
               href={`/profile?tab=${tab.key}`}
-              className={`rounded-lg px-4 py-2 text-sm font-medium ${activeTab === tab.key
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
-                }`}
+              className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                activeTab === tab.key
+                  ? "bg-neutral-900 text-white"
+                  : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+              }`}
             >
               {tab.label}
             </Link>

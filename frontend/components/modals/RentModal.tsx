@@ -67,16 +67,9 @@ const RentModal = () => {
       meuble: false,
       etage: 0,
       nb_pieces: 0,
-      loyer_hc: 0,
-      charges: 0,
-      depot_garantie: 0,
-      avance: 0,
       nb_salons: 0,
       nb_chambres: 0,
       nb_douches: 0,
-      caution_mois: 0,
-      avance_mois: 0,
-      frais_assistance: 0,
     },
   });
 
@@ -95,16 +88,9 @@ const RentModal = () => {
   const meuble = watch("meuble");
   const etage = watch("etage");
   const nb_pieces = watch("nb_pieces");
-  const loyer_hc = watch("loyer_hc");
-  const charges = watch("charges");
-  const depot_garantie = watch("depot_garantie");
-  const avance = watch("avance");
   const nb_salons = watch("nb_salons");
   const nb_chambres = watch("nb_chambres");
   const nb_douches = watch("nb_douches");
-  const caution_mois = watch("caution_mois");
-  const avance_mois = watch("avance_mois");
-  const frais_assistance = watch("frais_assistance");
 
   const getNearestQuartier = (lat: number, lng: number): QuartierOption => {
     return TOGO_QUARTIERS.reduce((nearest, current) => {
@@ -494,7 +480,7 @@ const RentModal = () => {
       <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-2">
         <Heading
           title="Définissez vos tarifs"
-          subtitle="Indiquez les loyers, charges et dépôts"
+          subtitle="Indiquez le prix par jour et par mois"
         />
         <div className="grid grid-cols-2 gap-4">
           <Input
@@ -518,80 +504,6 @@ const RentModal = () => {
             required
           />
         </div>
-        <hr />
-        <Input
-          id="loyer_hc"
-          label="Loyer Hors Charges (FCFA)"
-          formatPrice
-          type="number"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            id="charges"
-            label="Charges mensuelles (FCFA)"
-            formatPrice
-            type="number"
-            disabled={isLoading}
-            register={register}
-            errors={errors}
-            required
-          />
-          <Input
-            id="depot_garantie"
-            label="Dépôt de garantie (FCFA)"
-            formatPrice
-            type="number"
-            disabled={isLoading}
-            register={register}
-            errors={errors}
-            required
-          />
-        </div>
-        <Input
-          id="avance"
-          label="Avance totale (FCFA)"
-          formatPrice
-          type="number"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
-        />
-        <hr />
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            id="caution_mois"
-            label="Mois de caution"
-            type="number"
-            disabled={isLoading}
-            register={register}
-            errors={errors}
-            required
-          />
-          <Input
-            id="avance_mois"
-            label="Mois d'avance"
-            type="number"
-            disabled={isLoading}
-            register={register}
-            errors={errors}
-            required
-          />
-        </div>
-        <Input
-          id="frais_assistance"
-          label="Frais d'assistance (Assurance/Agence)"
-          formatPrice
-          type="number"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
-        />
       </div>
     );
   }

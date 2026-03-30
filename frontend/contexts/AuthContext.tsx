@@ -72,8 +72,10 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
           : user.email,
       email: user.email,
       image: user.photo_profil || user.image,
-      role: user.is_staff || user.is_superuser ? "ADMIN" : "USER",
-      isAdmin: Boolean(user.is_staff || user.is_superuser),
+      role:
+        user.role || (user.is_staff || user.is_superuser ? "ADMIN" : "USER"),
+      isAdmin:
+        user.role === "ADMIN" || Boolean(user.is_staff || user.is_superuser),
       emailVerified: Boolean(user.email_verified || user.email_verifie),
       documentsCompleted: Boolean(user.documents_complets),
       accessToken,

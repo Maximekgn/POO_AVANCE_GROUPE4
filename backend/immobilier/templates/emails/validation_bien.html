@@ -1,44 +1,63 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %}
-  {% if valide %} Félicitations, votre bien est en ligne {% else %} Information sur votre bien {% endif %}
-{% endblock %}
-
-{% block body %}
+{% extends "emails/base_email.html" %} {% block title %} {% if valide %}
+Félicitations, votre bien est en ligne {% else %} Information sur votre bien {%
+endif %} {% endblock %} {% block body %}
 <div class="greeting">
-  {% if valide %} ✅ Votre bien a été validé {% else %} ✖️ Information sur votre publication {% endif %}
+  {% if valide %} ✅ Votre bien a été validé {% else %} ✖️ Information sur votre
+  publication {% endif %}
 </div>
 
 <p>Bonjour {{ prenom }},</p>
 <p>
-  Nous avons terminé l'examen de votre annonce pour le bien <strong>{{ reference_bien }}</strong> situé à <strong>{{ adresse_bien }}</strong>.
+  Nous avons terminé l'examen de votre annonce pour le bien
+  <strong>{{ reference_bien }}</strong> situé à
+  <strong>{{ adresse_bien }}</strong>.
 </p>
 
-<div style="background-color: {% if valide %} #f0fdf4 {% else %} #fef2f2 {% endif %}; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid {% if valide %} #dcfce7 {% else %} #fee2e2 {% endif %};">
-  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">État de la publication</p>
-  <p style="margin: 12px 0 0; font-size: 20px; font-weight: 800; color: {% if valide %} #166534 {% else %} #991b1b {% endif %};">
+<div
+  style="background-color: {% if valide %} #f0fdf4 {% else %} #fef2f2 {% endif %}; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid {% if valide %} #dcfce7 {% else %} #fee2e2 {% endif %};"
+>
+  <p
+    style="
+      margin: 0;
+      font-size: 14px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    "
+  >
+    État de la publication
+  </p>
+  <p
+    style="margin: 12px 0 0; font-size: 20px; font-weight: 800; color: {% if valide %} #166534 {% else %} #991b1b {% endif %};"
+  >
     {% if valide %} PUBLIÉ {% else %} REFUSÉ {% endif %}
   </p>
 </div>
 
 {% if valide %}
-  <p>Votre annonce est désormais visible par tous les utilisateurs de la plateforme ImmoPlus. Nous espérons qu'elle trouvera rapidement preneur.</p>
+<p>
+  Votre annonce est désormais visible par tous les utilisateurs de la plateforme
+  Miabe - Immo. Nous espérons qu'elle trouvera rapidement preneur.
+</p>
 {% else %}
-  <p>Votre annonce n'a pas pu être validée pour la raison suivante :</p>
-  <div style="border-left: 4px solid #ef4444; padding-left: 16px; margin: 16px 0;">
-    <p style="color: #991b1b; font-style: italic;">"{{ motif_refus }}"</p>
-  </div>
-  <p>Vous pouvez modifier votre annonce depuis votre espace pour la soumettre à nouveau.</p>
+<p>Votre annonce n'a pas pu être validée pour la raison suivante :</p>
+<div style="border-left: 4px solid #ef4444; padding-left: 16px; margin: 16px 0">
+  <p style="color: #991b1b; font-style: italic">"{{ motif_refus }}"</p>
+</div>
+<p>
+  Vous pouvez modifier votre annonce depuis votre espace pour la soumettre à
+  nouveau.
+</p>
 {% endif %}
 
 <div class="divider"></div>
 
-<div style="text-align: center; margin: 32px 0;">
+<div style="text-align: center; margin: 32px 0">
   <a href="{{ url_mon_espace }}" class="cta-button">Gérer mes biens</a>
 </div>
 
-<p style="font-size: 14px; color: #64748b; text-align: center;">
-  Merci de votre collaboration,<br/>L'équipe <strong>ImmoPlus</strong>
+<p style="font-size: 14px; color: #64748b; text-align: center">
+  Merci de votre collaboration,<br />L'équipe <strong>Miabe - Immo</strong>
 </p>
 {% endblock %}
-

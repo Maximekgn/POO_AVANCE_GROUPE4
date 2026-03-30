@@ -8,12 +8,14 @@ class Paiement(models.Model):
     bail = models.ForeignKey(Bail, on_delete=models.CASCADE, related_name='paiements')
     reference = models.CharField(max_length=100, unique=True)
     montant = models.DecimalField(max_digits=10, decimal_places=2)
+    commission_plateforme = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Commission de 5% retenue par la plateforme")
+    montant_reverse = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Montant reversé au propriétaire (montant - commission)")
     date_paiement = models.DateTimeField(null=True, blank=True)
     date_echeance = models.DateField()
     statut = models.CharField(max_length=50, choices=StatutPaiementEnum.choices, default=StatutPaiementEnum.EN_ATTENTE)
     mode_paiement = models.CharField(max_length=100, blank=True, null=True)
     commentaire = models.TextField(blank=True, null=True)
-    
+
     quittance = models.ForeignKey('immobilier.Document', on_delete=models.SET_NULL, null=True, blank=True, related_name='paiement_associe')
 
     def __str__(self):
@@ -27,6 +29,10 @@ class Paiement(models.Model):
     def envoyerRappel(self): pass
     def genererReference(self) -> str: return ""
     def calculerPenaliteRetard(self, tauxJour: float) -> float: return 0.0
+    
+    def calculer_commission(self, taux=0.05):
+        """Calcule la commission de la plateforme (par défaut 5%)"""
+        return float(self.montant) * taux
 
 class Depense(models.Model):
     proprietaire_info = models.ForeignKey(ProprietaireInfo, on_delete=models.CASCADE, related_name='depenses', null=True, blank=True)

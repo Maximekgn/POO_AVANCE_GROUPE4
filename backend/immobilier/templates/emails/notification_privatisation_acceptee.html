@@ -1,45 +1,89 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %} Félicitations, privatisation acceptée {% endblock %}
+{% extends "emails/base_email.html" %} {% block title %} Félicitations,
+privatisation acceptée {% endblock %}
 
 {% block body %}
 <div class="greeting">🔒 Votre privatisation est confirmée</div>
 
 <p>Bonjour {{ prenom }},</p>
 <p>
-  Nous avons le plaisir de vous informer que votre demande de privatisation pour le bien <strong>{{ reference_bien }}</strong> a été acceptée.
+  Nous avons le plaisir de vous informer que votre demande de privatisation pour
+  le bien <strong>{{ reference_bien }}</strong> a été acceptée.
 </p>
 
-<div style="background-color: #f0fdf4; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #dcfce7;">
-  <p style="margin: 0; font-size: 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: #166534;">Détails de votre réservation</p>
-  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+<div
+  style="
+    background-color: #f0fdf4;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    border: 1px solid #dcfce7;
+  "
+>
+  <p
+    style="
+      margin: 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #166534;
+    "
+  >
+    Détails de votre réservation
+  </p>
+  <table style="width: 100%; margin-top: 12px; border-collapse: collapse">
     <tr>
-      <td style="padding: 8px 0; color: #166534; font-size: 14px;">Bien</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #064e3b;">{{ reference_bien }}</td>
+      <td style="padding: 8px 0; color: #166534; font-size: 14px">Bien</td>
+      <td
+        style="
+          padding: 8px 0;
+          text-align: right;
+          font-weight: 700;
+          color: #064e3b;
+        "
+      >
+        {{ reference_bien }}
+      </td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; color: #166534; font-size: 14px;">Ville</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ adresse_bien }}</td>
+      <td style="padding: 8px 0; color: #166534; font-size: 14px">Ville</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600">
+        {{ adresse_bien }}
+      </td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; color: #166534; font-size: 14px;">Fin de privatisation</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: #dc2626;">{{ date_fin }}</td>
+      <td style="padding: 8px 0; color: #166534; font-size: 14px">
+        Fin de privatisation
+      </td>
+      <td
+        style="
+          padding: 8px 0;
+          text-align: right;
+          font-weight: 700;
+          color: #dc2626;
+        "
+      >
+        {{ date_fin }}
+      </td>
     </tr>
   </table>
 </div>
 
 <p>
-  Pendant cette période, vous disposez d'un accès prioritaire à cet hébergement pour finaliser vos démarches ou organiser votre séjour. 
-  Un compte à rebours est maintenant visible sur votre tableau de bord.
+  Pendant cette période, vous disposez d'un accès prioritaire à cet hébergement
+  pour finaliser vos démarches ou organiser votre séjour. Un compte à rebours
+  est maintenant visible sur votre tableau de bord.
 </p>
 
 <div class="divider"></div>
 
-<div style="text-align: center; margin: 32px 0;">
-  <a href="{{ url_dashboard }}" class="cta-button">Accéder à mon tableau de bord</a>
+<div style="text-align: center; margin: 32px 0">
+  <a href="{{ url_dashboard }}" class="cta-button"
+    >Accéder à mon tableau de bord</a
+  >
 </div>
 
-<p style="font-size: 14px; color: #64748b; text-align: center;">
-  Profitez bien de votre séjour,<br/>L'équipe <strong>ImmoPlus</strong>
+<p style="font-size: 14px; color: #64748b; text-align: center">
+  Profitez bien de votre séjour,<br />L'équipe <strong>Miabe - Immo</strong>
 </p>
 {% endblock %}

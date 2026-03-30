@@ -40,14 +40,31 @@ class ContractService:
         content.append(Spacer(1, 0.2*cm))
         
         # Infos Propriétaire
-        proprietaire = bail.bien.proprietaire
-        prop_text = f"<b>Le Bailleur :</b> {proprietaire.first_name} {proprietaire.last_name}<br/>Email : {proprietaire.email}"
+        proprietaire_info = getattr(bail.bien, 'proprietaire_info', None)
+        if proprietaire_info:
+            proprietaire = proprietaire_info.utilisateur
+            prop_text = f"<b>Le Bailleur :</b> {proprietaire.first_name} {proprietaire.last_name}<br/>Email : {proprietaire.email}"
+        else:
+            prop_text = "<b>Le Bailleur :</b> Informations non disponibles"
         content.append(Paragraph(prop_text, styles['Normal']))
         content.append(Spacer(1, 0.3*cm))
         
         # Infos Locataire
-        client = bail.client_info.utilisateur
-        client_text = f"<b>Le Locataire :</b> {client.first_name} {client.last_name}<br/>Email : {client.email}"
+        client_info = getattr(bail, 'client_info', None)
+        if client_info:
+            client = client_info.utilisateur
+            client_text = f"<b>Le Locataire :</b> {client.first_name} {client.last_name}<br/>Email : {client.email}"
+        else:
+            # Fallback: utiliser la demande
+            demande = getattr(bail, 'demande', None)
+            if demande:
+                demandeur = getattr(demande, 'demandeur', None)
+                if demandeur:
+                    client_text = f"<b>Le Locataire :</b> {demandeur.first_name} {demandeur.last_name}<br/>Email : {demandeur.email}"
+                else:
+                    client_text = "<b>Le Locataire :</b> Informations non disponibles"
+            else:
+                client_text = "<b>Le Locataire :</b> Informations non disponibles"
         content.append(Paragraph(client_text, styles['Normal']))
         content.append(Spacer(1, 0.5*cm))
         
@@ -55,9 +72,13 @@ class ContractService:
         content.append(Paragraph("<b>2. OBJET DU CONTRAT</b>", styles['Heading2']))
         content.append(Spacer(1, 0.2*cm))
         bien = bail.bien
+        # Récupérer le type de bien
+        type_bien = getattr(bien, 'sous_type', None)
+        type_bien_label = type_bien.nom if type_bien else (getattr(bien, 'categorie', None).nom if getattr(bien, 'categorie', None) else 'Bien immobilier')
+        
         bien_text = f"Le bailleur donne en location au locataire le bien immobilier suivant :<br/>" \
-                    f"Type : {bien.type_bien}<br/>" \
-                    f"Adresse : {bien.ville}, {bien.quartier or ''}<br/>" \
+                    f"Type : {type_bien_label}<br/>" \
+                    f"Adresse : {bien.ville}, {getattr(bien, 'quartier', '') or ''}<br/>" \
                     f"Référence Bien : {bien.reference}"
         content.append(Paragraph(bien_text, styles['Normal']))
         content.append(Spacer(1, 0.5*cm))

@@ -6,6 +6,7 @@ import Heading from "@/components/Heading";
 
 import { getAdminBienById } from "../../lib/adminApi";
 import AdminBienSidebar from "./AdminBienSidebar";
+import BienFinancierSection from "./BienFinancierSection";
 import ListingHead from "@/components/listings/ListingHead";
 import ListingInfo from "@/components/listings/ListingInfo";
 import BackButton from "@/components/BackButton";
@@ -23,9 +24,9 @@ const formatDate = (value?: string | null) => {
 };
 
 const formatNumber = (value?: number | string | null) => {
-  if (value === undefined || value === null || value === "") return "-";
-  const parsed = Number(value);
-  if (Number.isNaN(parsed)) return String(value);
+  if (value === undefined || value === null || value === "") return "0";
+  const parsed = typeof value === "string" ? parseFloat(value) : Number(value);
+  if (Number.isNaN(parsed)) return "0";
   return parsed.toLocaleString("fr-FR");
 };
 
@@ -194,6 +195,171 @@ export default async function AdminBienDetailPage(props: PageProps) {
                 </div>
               </div>
 
+              {/* Section Occupation du bien */}
+              <div className="flex flex-col gap-2">
+                <div className="text-xl font-semibold flex flex-row items-center gap-2">
+                  <div>📋 Occupation du bien</div>
+                </div>
+
+                {/* Locataire actuel */}
+                {bien.locataire_actuel ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-green-800">
+                        ✅ Locataire actuel
+                      </span>
+                      <span className="text-xs text-green-600 font-medium ml-auto">
+                        {bien.locataire_actuel.statut_bail === "EN_COURS"
+                          ? "Bail en cours"
+                          : "Bail en attente de signature"}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-700">Nom :</span>
+                        <span className="font-medium text-green-900">
+                          {bien.locataire_actuel.nom || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-700">Email :</span>
+                        <span className="text-green-900 text-xs">
+                          {bien.locataire_actuel.email || "N/A"}
+                        </span>
+                      </div>
+                      {bien.locataire_actuel.telephone && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-700">Téléphone :</span>
+                          <span className="text-green-900 text-xs">
+                            {bien.locataire_actuel.telephone}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-700">Période :</span>
+                        <span className="text-green-900 text-xs">
+                          {bien.locataire_actuel.date_entree
+                            ? new Date(
+                                bien.locataire_actuel.date_entree,
+                              ).toLocaleDateString("fr-FR")
+                            : "N/A"}{" "}
+                          -{" "}
+                          {bien.locataire_actuel.date_sortie
+                            ? new Date(
+                                bien.locataire_actuel.date_sortie,
+                              ).toLocaleDateString("fr-FR")
+                            : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-2 border-t border-green-200">
+                        <span className="text-green-700">Loyer mensuel :</span>
+                        <span className="font-bold text-green-900">
+                          {bien.locataire_actuel.loyer
+                            ? parseFloat(
+                                bien.locataire_actuel.loyer,
+                              ).toLocaleString("fr-FR")
+                            : "0"}{" "}
+                          FCFA
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-blue-800">
+                        👤 Locataire actuel
+                      </span>
+                    </div>
+                    <div className="text-sm text-blue-700">
+                      <p className="font-medium">
+                        Aucun locataire actif pour le moment
+                      </p>
+                      <p className="text-xs mt-1">
+                        Les informations du locataire s'afficheront ici
+                        lorsqu'un bail sera en cours.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Visites & Privatisations */}
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-purple-800">
+                      📅 Visites & Privatisations
+                    </span>
+                    <span className="text-xs text-purple-600 font-medium">
+                      {bien.visites_a_venir || 0} visites •{" "}
+                      {bien.privatisations_actives || 0} privatisations
+                    </span>
+                  </div>
+                  <div className="text-sm text-purple-700">
+                    {(bien.visites_a_venir || 0) > 0 ||
+                    (bien.privatisations_actives || 0) > 0 ? (
+                      <p className="font-medium">
+                        {bien.visites_a_venir || 0} visite(s) et{" "}
+                        {bien.privatisations_actives || 0} privatisation(s) en
+                        cours
+                      </p>
+                    ) : (
+                      <p className="font-medium">
+                        Aucune visite ou privatisation en cours
+                      </p>
+                    )}
+                    <p className="text-xs mt-1">
+                      Les demandes acceptées s'afficheront ici.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Demandes en attente */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-amber-800">
+                      📝 Demandes en attente
+                    </span>
+                    <span className="text-xs text-amber-600 font-medium">
+                      {bien.demandes_en_attente || 0}
+                    </span>
+                  </div>
+                  <div className="text-sm text-amber-700">
+                    {(bien.demandes_en_attente || 0) > 0 ? (
+                      <p className="font-medium">
+                        {bien.demandes_en_attente} demande(s) de location en
+                        attente de traitement
+                      </p>
+                    ) : (
+                      <p className="font-medium">
+                        Aucune demande de bail pour ce bien
+                      </p>
+                    )}
+                    <p className="text-xs mt-1">
+                      Les demandes de location s'afficheront ici.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-2 flex-wrap">
+                  <Link
+                    href={`/admin/dashboard/biens/${bien.id}/create-lease`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                  >
+                    <span>📄</span>
+                    Créer et envoyer un bail
+                  </Link>
+                  {bien.demandes_en_attente > 0 && (
+                    <Link
+                      href={`/admin/dashboard/demandes-actions?bien=${bien.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition"
+                    >
+                      <span>📋</span>
+                      Voir les demandes ({bien.demandes_en_attente})
+                    </Link>
+                  )}
+                </div>
+              </div>
+
               <hr className="my-6" />
 
               <ListingInfo
@@ -207,12 +373,20 @@ export default async function AdminBienDetailPage(props: PageProps) {
                 nb_salons={0}
                 nb_chambres={0}
                 nb_douches={1}
-                caution_mois={0}
-                avance_mois={0}
-                frais_assistance={0}
                 superficie={Number(bien.superficie) || 0}
                 avance={0}
               />
+
+              <hr className="my-6" />
+
+              {/* Section financière (pour proprio et admin) */}
+              {currentUser?.accessToken && (
+                <BienFinancierSection
+                  bienId={bien.id}
+                  token={currentUser.accessToken}
+                  apiUrl={API_URL}
+                />
+              )}
 
               <hr className="my-6" />
 

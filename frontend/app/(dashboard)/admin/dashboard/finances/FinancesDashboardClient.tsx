@@ -8,13 +8,20 @@ import {
   FiClock,
   FiDollarSign,
   FiSend,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 import Heading from "@/components/Heading";
 
-import { AdminExpense, AdminFinanceStats, AdminPayment, reverserPaiement } from "../lib/adminApi";
+import {
+  AdminExpense,
+  AdminFinanceStats,
+  AdminPayment,
+  reverserPaiement,
+  createAdminExpense,
+} from "../lib/adminApi";
 
 type Props = {
   initialStats: AdminFinanceStats | null;
@@ -27,7 +34,8 @@ const formatFcfa = (value: number) => `${value.toLocaleString("fr-FR")} FCFA`;
 const statusClass = (status: string) => {
   if (status === "PAYE") return "bg-emerald-100 text-emerald-700";
   if (status === "PAYE_A_L_ADMIN") return "bg-blue-100 text-blue-700";
-  if (status === "REVERSE_AU_PROPRIETAIRE") return "bg-indigo-100 text-indigo-700";
+  if (status === "REVERSE_AU_PROPRIETAIRE")
+    return "bg-indigo-100 text-indigo-700";
   if (status === "EN_ATTENTE") return "bg-amber-100 text-amber-700";
   return "bg-rose-100 text-rose-700";
 };
@@ -44,15 +52,38 @@ export default function FinancesDashboardClient({
   initialExpenses,
 }: Props) {
   const router = useRouter();
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : "";
+
   const [selectedStatus, setSelectedStatus] = useState<
-    "TOUS" | "PAYE" | "PAYE_A_L_ADMIN" | "REVERSE_AU_PROPRIETAIRE" | "EN_ATTENTE" | "IMPAYE"
+    | "TOUS"
+    | "PAYE"
+    | "PAYE_A_L_ADMIN"
+    | "REVERSE_AU_PROPRIETAIRE"
+    | "EN_ATTENTE"
+    | "IMPAYE"
   >("TOUS");
 
-  const [reversionPayment, setReversionPayment] = useState<AdminPayment | null>(null);
+  const [reversionPayment, setReversionPayment] = useState<AdminPayment | null>(
+    null,
+  );
   const [reversionData, setReversionData] = useState({
     mode: "Virement Bancaire",
     preuve: "",
   });
+
+  // État pour le modal de création de dépense
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [expenseData, setExpenseData] = useState({
+    categorie: "Réparations",
+    libelle: "",
+    montant: "",
+    date_depense: new Date().toISOString().split("T")[0],
+    fournisseur: "",
+    numero_facture: "",
+    bien_id: "",
+  });
+
   const [submitting, setSubmitting] = useState(false);
 
   const handleReversion = async () => {
@@ -76,6 +107,50 @@ export default function FinancesDashboardClient({
         router.refresh();
       } else {
         toast.error(res.message || "Erreur.");
+      }
+    } catch {
+      toast.error("Erreur réseau.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateExpense = async () => {
+    if (!expenseData.libelle || !expenseData.montant || !expenseData.bien_id) {
+      toast.error("Veuillez remplir les champs obligatoires.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await createAdminExpense(
+        { accessToken: token },
+        {
+          categorie: expenseData.categorie,
+          libelle: expenseData.libelle,
+          montant: parseFloat(expenseData.montant),
+          date_depense: expenseData.date_depense,
+          fournisseur: expenseData.fournisseur || undefined,
+          numero_facture: expenseData.numero_facture || undefined,
+          bien_id: parseInt(expenseData.bien_id),
+        },
+      );
+
+      if (res.ok) {
+        toast.success("Dépense créée avec succès !");
+        setShowExpenseModal(false);
+        setExpenseData({
+          categorie: "Réparations",
+          libelle: "",
+          montant: "",
+          date_depense: new Date().toISOString().split("T")[0],
+          fournisseur: "",
+          numero_facture: "",
+          bien_id: "",
+        });
+        router.refresh();
+      } else {
+        toast.error(res.message || "Erreur création dépense.");
       }
     } catch {
       toast.error("Erreur réseau.");
@@ -165,6 +240,16 @@ export default function FinancesDashboardClient({
             {formatFcfa(stats.total_depenses)}
           </p>
         </div>
+
+        <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-purple-700">Commissions (5%)</p>
+            <FiTrendingUp className="text-purple-600" />
+          </div>
+          <p className="mt-3 text-2xl font-bold text-purple-700">
+            {formatFcfa(stats.commissions_plateforme || 0)}
+          </p>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -179,14 +264,24 @@ export default function FinancesDashboardClient({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          {(["TOUS", "PAYE", "PAYE_A_L_ADMIN", "REVERSE_AU_PROPRIETAIRE", "EN_ATTENTE", "IMPAYE"] as const).map((status) => (
+          {(
+            [
+              "TOUS",
+              "PAYE",
+              "PAYE_A_L_ADMIN",
+              "REVERSE_AU_PROPRIETAIRE",
+              "EN_ATTENTE",
+              "IMPAYE",
+            ] as const
+          ).map((status) => (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${selectedStatus === status
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-                }`}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === status
+                  ? "bg-neutral-900 text-white"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              }`}
             >
               {status === "TOUS" ? "Tous" : statusLabel(status)}
             </button>
@@ -202,6 +297,8 @@ export default function FinancesDashboardClient({
                 <th className="px-3 py-3">Locataire</th>
                 <th className="px-3 py-3">Échéance</th>
                 <th className="px-3 py-3">Montant</th>
+                <th className="px-3 py-3">Commission</th>
+                <th className="px-3 py-3">À reverser</th>
                 <th className="px-3 py-3">Statut</th>
                 <th className="px-3 py-3">Action</th>
               </tr>
@@ -209,7 +306,7 @@ export default function FinancesDashboardClient({
             <tbody>
               {filteredPayments.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-5 text-neutral-500" colSpan={7}>
+                  <td className="px-3 py-5 text-neutral-500" colSpan={9}>
                     Aucun paiement pour ce filtre.
                   </td>
                 </tr>
@@ -230,6 +327,16 @@ export default function FinancesDashboardClient({
                     </td>
                     <td className="px-3 py-3 text-neutral-700">
                       {formatFcfa(payment.montant)}
+                    </td>
+                    <td className="px-3 py-3 text-purple-700 font-medium">
+                      {payment.commission_plateforme
+                        ? formatFcfa(payment.commission_plateforme)
+                        : "-"}
+                    </td>
+                    <td className="px-3 py-3 text-emerald-700 font-medium">
+                      {payment.montant_reverse
+                        ? formatFcfa(payment.montant_reverse)
+                        : "-"}
                     </td>
                     <td className="px-3 py-3">
                       <span
@@ -274,9 +381,17 @@ export default function FinancesDashboardClient({
       </section>
 
       <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-neutral-800">
-          Dépenses récentes
-        </h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-neutral-800">
+            Dépenses récentes
+          </h2>
+          <button
+            onClick={() => setShowExpenseModal(true)}
+            className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-600"
+          >
+            + Nouvelle dépense
+          </button>
+        </div>
         <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200">
           <table className="min-w-full text-sm">
             <thead className="bg-neutral-50">
@@ -348,8 +463,9 @@ export default function FinancesDashboardClient({
               Confirmer le Reversement
             </h3>
             <p className="mt-2 text-sm text-neutral-500">
-              Vous allez marquer le paiement <b>{reversionPayment.reference}</b> (
-              {formatFcfa(reversionPayment.montant)}) comme reversé au propriétaire.
+              Vous allez marquer le paiement <b>{reversionPayment.reference}</b>{" "}
+              ({formatFcfa(reversionPayment.montant)}) comme reversé au
+              propriétaire.
             </p>
 
             <div className="mt-6 space-y-4">
@@ -407,6 +523,158 @@ export default function FinancesDashboardClient({
                 className="flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {submitting ? "Traitement..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de création de dépense */}
+      {showExpenseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-6 text-xl font-bold text-neutral-800">
+              Nouvelle dépense
+            </h3>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Catégorie *
+                </label>
+                <select
+                  value={expenseData.categorie}
+                  onChange={(e) =>
+                    setExpenseData({
+                      ...expenseData,
+                      categorie: e.target.value,
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                >
+                  <option value="Réparations">Réparations</option>
+                  <option value="Entretien">Entretien</option>
+                  <option value="Charges">Charges</option>
+                  <option value="Assurance">Assurance</option>
+                  <option value="Taxe">Taxe</option>
+                  <option value="Gestion">Gestion</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  ID Bien *
+                </label>
+                <input
+                  type="number"
+                  placeholder="Ex: 123"
+                  value={expenseData.bien_id}
+                  onChange={(e) =>
+                    setExpenseData({ ...expenseData, bien_id: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Libellé *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Réparation fuite d'eau"
+                  value={expenseData.libelle}
+                  onChange={(e) =>
+                    setExpenseData({ ...expenseData, libelle: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Montant (FCFA) *
+                </label>
+                <input
+                  type="number"
+                  placeholder="Ex: 50000"
+                  value={expenseData.montant}
+                  onChange={(e) =>
+                    setExpenseData({ ...expenseData, montant: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Date de dépense
+                </label>
+                <input
+                  type="date"
+                  value={expenseData.date_depense}
+                  onChange={(e) =>
+                    setExpenseData({
+                      ...expenseData,
+                      date_depense: e.target.value,
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Fournisseur
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Entreprise ABC"
+                  value={expenseData.fournisseur}
+                  onChange={(e) =>
+                    setExpenseData({
+                      ...expenseData,
+                      fournisseur: e.target.value,
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-neutral-400">
+                  Numéro de facture
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: FAC-2024-001"
+                  value={expenseData.numero_facture}
+                  onChange={(e) =>
+                    setExpenseData({
+                      ...expenseData,
+                      numero_facture: e.target.value,
+                    })
+                  }
+                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                disabled={submitting}
+                onClick={() => setShowExpenseModal(false)}
+                className="flex-1 rounded-xl border border-neutral-200 py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={submitting}
+                onClick={handleCreateExpense}
+                className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {submitting ? "Création..." : "Créer la dépense"}
               </button>
             </div>
           </div>

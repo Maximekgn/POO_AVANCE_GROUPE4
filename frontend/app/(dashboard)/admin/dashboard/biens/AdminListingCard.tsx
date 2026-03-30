@@ -25,7 +25,9 @@ const ALLOWED_REMOTE_IMAGE_HOSTS = new Set([
   "127.0.0.1",
 ]);
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace("/api", "");
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+).replace("/api", "");
 
 function getSafeImageSrc(src?: string): string {
   if (!src) {
@@ -70,7 +72,8 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
   const imageSrc = useMemo(() => {
     const principal = data.photos?.find((p) => p.principale);
     const first = data.photos?.[0];
-    const src = principal?.image || principal?.url || first?.image || first?.url;
+    const src =
+      principal?.image || principal?.url || first?.image || first?.url;
     return getSafeImageSrc(src as string | undefined);
   }, [data.photos]);
 
@@ -111,10 +114,14 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
           className="object-cover transition duration-500 group-hover:scale-105"
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          <div className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${statusColor} backdrop-blur-md bg-opacity-90`}>
+          <div
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${statusColor} backdrop-blur-md bg-opacity-90`}
+          >
             {data.statut.replace(/_/g, " ")}
           </div>
-          <div className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${activationColor} backdrop-blur-md bg-opacity-90`}>
+          <div
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${activationColor} backdrop-blur-md bg-opacity-90`}
+          >
             {data.is_active ? "Actif" : "Désactivé"}
           </div>
         </div>
@@ -126,7 +133,8 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
       <div className="flex flex-col gap-1.5 px-2">
         <div className="flex items-start justify-between">
           <div className="font-bold text-neutral-900 text-lg line-clamp-1 tracking-tight">
-            {data.ville}{data.quartier ? `, ${data.quartier}` : ""}
+            {data.ville}
+            {data.quartier ? `, ${data.quartier}` : ""}
           </div>
         </div>
 
@@ -138,8 +146,13 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
 
         <div className="mt-0.5 flex flex-col gap-0.5">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-extrabold text-neutral-900">FCFA {Number(data.loyer_hc).toLocaleString()}</span>
-            <span className="text-xs font-semibold text-neutral-500">/ mois</span>
+            <span className="text-lg font-extrabold text-neutral-900">
+              FCFA{" "}
+              {Number(data.loyer_hc || data.prix_mois || 0).toLocaleString()}
+            </span>
+            <span className="text-xs font-semibold text-neutral-500">
+              / mois
+            </span>
           </div>
 
           <div className="flex items-center justify-between mt-1">
@@ -149,7 +162,9 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
             </div>
             {data.date_creation && (
               <div className="text-[10px] font-medium text-black">
-                {format(new Date(data.date_creation), "dd MMM yyyy", { locale: fr })}
+                {format(new Date(data.date_creation), "dd MMM yyyy", {
+                  locale: fr,
+                })}
               </div>
             )}
           </div>
@@ -178,17 +193,18 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
           <button
             onClick={() => onToggleActivation?.(data)}
             disabled={disabled}
-            className={`col-span-1 rounded-xl border py-2 text-xs font-semibold transition disabled:opacity-50 ${data.is_active
+            className={`col-span-1 rounded-xl border py-2 text-xs font-semibold transition disabled:opacity-50 ${
+              data.is_active
                 ? "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
                 : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-              }`}
+            }`}
           >
             {data.is_active ? "Désactiver" : "Réactiver"}
           </button>
         )}
         <button
           onClick={() => router.push(`/admin/dashboard/biens/${data.id}`)}
-          className={`rounded-xl border border-neutral-200 bg-white py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50 ${!canValidate ? 'col-span-1' : 'col-span-2'}`}
+          className={`rounded-xl border border-neutral-200 bg-white py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50 ${!canValidate ? "col-span-1" : "col-span-2"}`}
         >
           Détails
         </button>

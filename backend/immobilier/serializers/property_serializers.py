@@ -28,6 +28,11 @@ class BienSerializer(serializers.ModelSerializer):
     sous_type_nom = serializers.CharField(source='sous_type.nom', read_only=True)
     proprietaire_nom = serializers.SerializerMethodField()
     proprietaire_email = serializers.CharField(source='proprietaire_info.utilisateur.email', read_only=True)
+    
+    # Champs financiers
+    loyer_hc = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    charges = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    depot_garantie = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Bien
@@ -58,19 +63,27 @@ class BienSerializer(serializers.ModelSerializer):
             'meuble',
             'prix_jour',
             'prix_mois',
-            'loyer_hc',
-            'charges',
-            'depot_garantie',
-            'caution_mois',
-            'avance_mois',
-            'avance',
-            'frais_assistance',
             'statut',
             'is_active',
             'date_creation',
             'photos',
+            # Champs financiers
+            'loyer_hc',
+            'charges',
+            'depot_garantie',
         ]
-        read_only_fields = ['id', 'date_creation', 'photos', 'categorie_nom', 'sous_type_nom', 'is_active', 'owner_user_id']
+        read_only_fields = [
+            'id',
+            'date_creation',
+            'photos',
+            'categorie_nom',
+            'sous_type_nom',
+            'is_active',
+            'owner_user_id',
+            'loyer_hc',
+            'charges',
+            'depot_garantie',
+        ]
 
     def get_proprietaire_nom(self, obj):
         owner = getattr(getattr(obj, 'proprietaire_info', None), 'utilisateur', None)
@@ -104,6 +117,25 @@ class BienSerializer(serializers.ModelSerializer):
         if value.utilisateur_id is None:
             raise serializers.ValidationError('Le proprietaire doit etre lie a un utilisateur valide.')
         return value
+
+    def create(self, validated_data):
+        # Calcul automatique des champs derives a partir des prix
+        prix_jour = validated_data.get('prix_jour', 0)
+        prix_mois = validated_data.get('prix_mois', 0)
+        
+        # loyer_hc = prix mensuel
+        validated_data['loyer_hc'] = prix_mois
+        
+        # charges = 0 par defaut
+        validated_data['charges'] = 0
+        
+        # depot_garantie = 1 mois de loyer par defaut
+        validated_data['depot_garantie'] = prix_mois
+        
+        # avance = 0 par defaut (sera defini lors de la demande de bail)
+        validated_data['avance'] = 0
+        
+        return super().create(validated_data)
 
 
 class BienStatutUpdateSerializer(serializers.Serializer):

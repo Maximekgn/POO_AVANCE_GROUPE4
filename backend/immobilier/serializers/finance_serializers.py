@@ -1,6 +1,7 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from immobilier.models import Depense, Paiement
+from immobilier.models import Depense, Paiement, Bien
 
 
 class AdminPaiementSerializer(serializers.ModelSerializer):
@@ -9,6 +10,8 @@ class AdminPaiementSerializer(serializers.ModelSerializer):
     locataire_id = serializers.IntegerField(source='bail.client_info.utilisateur.id', read_only=True)
     locataire_nom = serializers.SerializerMethodField()
     locataire_email = serializers.CharField(source='bail.client_info.utilisateur.email', read_only=True)
+    commission_plateforme = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
+    montant_reverse = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
 
     class Meta:
         model = Paiement
@@ -16,6 +19,8 @@ class AdminPaiementSerializer(serializers.ModelSerializer):
             'id',
             'reference',
             'montant',
+            'commission_plateforme',
+            'montant_reverse',
             'date_echeance',
             'date_paiement',
             'statut',
@@ -66,3 +71,34 @@ class AdminDepenseSerializer(serializers.ModelSerializer):
             return None
         full_name = f"{owner.first_name or ''} {owner.last_name or ''}".strip()
         return full_name or owner.email
+
+
+class DepenseCreateSerializer(serializers.ModelSerializer):
+    """Serializer pour créer une dépense (admin uniquement)."""
+    bien_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Depense
+        fields = [
+            'categorie',
+            'libelle',
+            'montant',
+            'date_depense',
+            'fournisseur',
+            'numero_facture',
+            'bien_id',
+        ]
+
+    def create(self, validated_data):
+        bien_id = validated_data.pop('bien_id')
+        bien = get_object_or_404(Bien, pk=bien_id)
+        
+        # Récupérer le propriétaire du bien
+        proprietaire_info = getattr(bien, 'proprietaire_info', None)
+        
+        depense = Depense.objects.create(
+            bien=bien,
+            proprietaire_info=proprietaire_info,
+            **validated_data
+        )
+        return depense

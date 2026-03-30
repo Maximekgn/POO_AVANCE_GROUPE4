@@ -3,10 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from decimal import Decimal
 
-from immobilier.models import Bien, ProprietaireInfo
-from immobilier.models.enums import StatutBienEnum
+from immobilier.models import Bien, ProprietaireInfo, Depense, Bail, Paiement, DemandeAction
+from immobilier.models.enums import StatutBienEnum, StatutBailEnum, StatutPaiementEnum
 from immobilier.permissions import IsBienOwnerOrAdminForWrite
 from immobilier.serializers import (
     BienSerializer,
@@ -136,9 +139,103 @@ class PublicBienDetailView(generics.RetrieveAPIView):
 
 
 class BienDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Bien.objects.select_related('categorie', 'sous_type', 'proprietaire_info').prefetch_related('photos').all()
+    queryset = Bien.objects.select_related(
+        'categorie',
+        'sous_type',
+        'proprietaire_info'
+    ).prefetch_related('photos').all()
     serializer_class = BienSerializer
     permission_classes = [IsAuthenticated, IsBienOwnerOrAdminForWrite]
+
+    def get(self, request, *args, **kwargs):
+        """Retourne les détails du bien avec informations d'occupation"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        
+        # Ajouter les informations d'occupation
+        from immobilier.models import Bail, DemandeAction
+        from immobilier.models.enums import StatutBailEnum, StatutDemandeEnum, TypeDemandeEnum
+        from django.utils import timezone
+        
+        print(f"[BienDetailView] Checking occupation for Bien {instance.id}...")
+        
+        # Locataire actuel (bail en cours OU en attente de signature)
+        bail_en_cours = Bail.objects.filter(
+            bien=instance,
+            statut__in=[StatutBailEnum.EN_COURS, StatutBailEnum.EN_ATTENTE_SIGNATURE]
+        ).select_related('client_info__utilisateur', 'demande__demandeur').first()
+        
+        print(f"[BienDetailView] Bail trouvé: {bail_en_cours is not None}")
+        if bail_en_cours:
+            print(f"[BienDetailView] Bail statut: {bail_en_cours.statut}, client_info: {bail_en_cours.client_info}")
+            if bail_en_cours.client_info:
+                print(f"[BienDetailView] Client user: {bail_en_cours.client_info.utilisateur}")
+        
+        if bail_en_cours and bail_en_cours.client_info:
+            data['locataire_actuel'] = {
+                'nom': f"{bail_en_cours.client_info.utilisateur.first_name or ''} {bail_en_cours.client_info.utilisateur.last_name or ''}".strip() or 'Nom non renseigné',
+                'email': bail_en_cours.client_info.utilisateur.email or 'Email non renseigné',
+                'telephone': bail_en_cours.client_info.utilisateur.telephone or '',
+                'date_entree': bail_en_cours.date_entree.isoformat() if bail_en_cours.date_entree else None,
+                'date_sortie': bail_en_cours.date_sortie.isoformat() if bail_en_cours.date_sortie else None,
+                'loyer': str(bail_en_cours.loyer_actuel or 0),
+                'statut_bail': bail_en_cours.statut,
+            }
+            print(f"[BienDetailView] Locataire actuel: {data['locataire_actuel']['nom']}")
+        elif bail_en_cours and bail_en_cours.demande:
+            # Fallback: utiliser les infos de la demande si client_info est None
+            demandeur = bail_en_cours.demande.demandeur
+            data['locataire_actuel'] = {
+                'nom': f"{demandeur.first_name or ''} {demandeur.last_name or ''}".strip() or 'Nom non renseigné',
+                'email': demandeur.email or 'Email non renseigné',
+                'telephone': demandeur.telephone or '',
+                'date_entree': bail_en_cours.date_entree.isoformat() if bail_en_cours.date_entree else None,
+                'date_sortie': bail_en_cours.date_sortie.isoformat() if bail_en_cours.date_sortie else None,
+                'loyer': str(bail_en_cours.loyer_actuel or 0),
+                'statut_bail': bail_en_cours.statut,
+            }
+            print(f"[BienDetailView] Locataire actuel (depuis demande): {data['locataire_actuel']['nom']}")
+        else:
+            data['locataire_actuel'] = None
+            print(f"[BienDetailView] Aucun locataire trouvé")
+        
+        # Nombre de demandes en attente
+        demandes_en_attente = DemandeAction.objects.filter(
+            bien=instance,
+            statut=StatutDemandeEnum.EN_ATTENTE
+        ).count()
+        
+        data['demandes_en_attente'] = demandes_en_attente
+        
+        # Visites à venir
+        visites_a_venir = DemandeAction.objects.filter(
+            bien=instance,
+            type_demande=TypeDemandeEnum.VISITE,
+            statut=StatutDemandeEnum.ACCEPTEE,
+            date_visite__gte=timezone.now()
+        ).count()
+        
+        data['visites_a_venir'] = visites_a_venir
+        
+        # Privatisations actives
+        privatisations_actives = DemandeAction.objects.filter(
+            bien=instance,
+            type_demande=TypeDemandeEnum.PRIVATISATION,
+            statut=StatutDemandeEnum.ACCEPTEE,
+            date_fin__gte=timezone.now().date()
+        ).count()
+        
+        data['privatisations_actives'] = privatisations_actives
+        
+        locataire_statut = None
+        if data.get('locataire_actuel'):
+            locataire_statut = data['locataire_actuel'].get('statut_bail') if isinstance(data['locataire_actuel'], dict) else None
+        
+        print(f"[BienDetailView] Bien {instance.id}: locataire={data['locataire_actuel'] is not None}, statut_bail={locataire_statut}, demandes={data['demandes_en_attente']}")
+        print(f"[BienDetailView] Response data keys: {data.keys()}")
+        
+        return Response(data)
 
 
 class BienStatutUpdateView(APIView):
@@ -289,3 +386,156 @@ class BienRefusView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class BienDepenseCreateView(APIView):
+    """
+    Permet d'ajouter une dépense liée à un bien (admin ou propriétaire).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        bien = get_object_or_404(Bien.objects.select_related('proprietaire_info__utilisateur'), pk=pk)
+        
+        # Vérifier les permissions
+        if not (request.user.is_staff or request.user.is_superuser):
+            owner_id = getattr(getattr(bien, 'proprietaire_info', None), 'utilisateur_id', None)
+            if request.user.id != owner_id:
+                raise PermissionDenied("Seul le propriétaire ou un admin peut ajouter des dépenses à ce bien.")
+        
+        # Valider les données
+        montant = request.data.get('montant')
+        categorie = request.data.get('categorie', 'Autre')
+        description = request.data.get('description', '')
+        date_depense = request.data.get('date_depense', timezone.now().date().isoformat())
+        
+        if not montant:
+            raise ValidationError({'montant': 'Le montant est obligatoire.'})
+        
+        try:
+            montant_decimal = Decimal(str(montant))
+            if montant_decimal <= 0:
+                raise ValidationError({'montant': 'Le montant doit être positif.'})
+        except:
+            raise ValidationError({'montant': 'Montant invalide.'})
+        
+        # Créer la dépense
+        depense = Depense.objects.create(
+            montant=montant_decimal,
+            categorie=categorie,
+            description=description,
+            date_depense=date_depense,
+            bien=bien,
+            ajoute_par=request.user
+        )
+        
+        return Response({
+            'message': 'Dépense ajoutée avec succès.',
+            'depense': {
+                'id': depense.id,
+                'montant': str(depense.montant),
+                'categorie': depense.categorie,
+                'description': depense.description,
+                'date_depense': depense.date_depense.isoformat() if depense.date_depense else None,
+            }
+        }, status=status.HTTP_201_CREATED)
+
+
+class BienDetailFinancierView(APIView):
+    """
+    Retourne les informations financières complètes d'un bien (pour propriétaire et admin).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        bien = get_object_or_404(
+            Bien.objects.select_related('proprietaire_info__utilisateur').prefetch_related('photos'),
+            pk=pk
+        )
+        
+        # Vérifier les permissions
+        if not (request.user.is_staff or request.user.is_superuser):
+            owner_id = getattr(getattr(bien, 'proprietaire_info', None), 'utilisateur_id', None)
+            if request.user.id != owner_id:
+                raise PermissionDenied("Vous n'avez pas accès aux informations financières de ce bien.")
+        
+        # Bail actif
+        bail_actif = Bail.objects.filter(
+            bien=bien,
+            statut__in=[StatutBailEnum.EN_COURS, StatutBailEnum.EN_ATTENTE_SIGNATURE]
+        ).select_related('client_info__utilisateur').first()
+        
+        bail_data = None
+        if bail_actif:
+            bail_data = {
+                'id': bail_actif.id,
+                'numero_bail': bail_actif.numero_bail,
+                'statut': bail_actif.statut,
+                'date_entree': bail_actif.date_entree.isoformat() if bail_actif.date_entree else None,
+                'date_sortie': bail_actif.date_sortie.isoformat() if bail_actif.date_sortie else None,
+                'loyer_actuel': str(bail_actif.loyer_actuel or 0),
+                'depot_garantie': str(bail_actif.depot_garantie or 0),
+                'locataire': {
+                    'nom': f"{bail_actif.client_info.utilisateur.first_name or ''} {bail_actif.client_info.utilisateur.last_name or ''}".strip() if bail_actif.client_info else 'N/A',
+                    'email': bail_actif.client_info.utilisateur.email if bail_actif.client_info else 'N/A',
+                    'telephone': bail_actif.client_info.utilisateur.telephone if bail_actif.client_info else '',
+                }
+            }
+        
+        # Historique des paiements liés à ce bien
+        paiements = Paiement.objects.filter(
+            bail__bien=bien
+        ).order_by('-date_paiement')[:10]
+        
+        paiements_data = [
+            {
+                'id': p.id,
+                'reference': p.reference,
+                'montant': str(p.montant or 0),
+                'statut': p.statut,
+                'date_paiement': p.date_paiement.isoformat() if p.date_paiement else None,
+                'mode_paiement': p.mode_paiement or '',
+            }
+            for p in paiements
+        ]
+        
+        # Total des paiements encaissés
+        total_encaisse = Paiement.objects.filter(
+            bail__bien=bien,
+            statut__in=[StatutPaiementEnum.PAYE, StatutPaiementEnum.PAYE_A_L_ADMIN, StatutPaiementEnum.REVERSE_AU_PROPRIETAIRE]
+        ).aggregate(total=Sum('montant'))['total'] or 0
+        
+        # Dépenses liées au bien
+        depenses = Depense.objects.filter(bien=bien).order_by('-date_depense')[:10]
+        
+        depenses_data = [
+            {
+                'id': d.id,
+                'montant': str(d.montant or 0),
+                'categorie': d.categorie,
+                'description': d.description or '',
+                'date_depense': d.date_depense.isoformat() if d.date_depense else None,
+            }
+            for d in depenses
+        ]
+        
+        # Total des dépenses
+        total_depenses = Depense.objects.filter(bien=bien).aggregate(total=Sum('montant'))['total'] or 0
+        
+        # Revenu net
+        revenu_net = Decimal(str(total_encaisse)) - Decimal(str(total_depenses))
+        
+        return Response({
+            'bien': {
+                'id': bien.id,
+                'reference': bien.reference,
+                'ville': bien.ville,
+                'adresse': bien.adresse,
+            },
+            'bail_actif': bail_data,
+            'paiements_recents': paiements_data,
+            'total_encaisse': str(total_encaisse),
+            'depenses_recentes': depenses_data,
+            'total_depenses': str(total_depenses),
+            'revenu_net': str(revenu_net),
+        }, status=status.HTTP_200_OK)

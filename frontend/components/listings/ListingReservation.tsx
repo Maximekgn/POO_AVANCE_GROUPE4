@@ -12,7 +12,7 @@ interface IListingReservationProps {
   nightCount: number;
   onChangeDate: (value: Range) => void;
   onBookVisit: () => void;
-  onDirectRent: () => void;
+  onAskBail: () => void;
   onPrivatize: () => void;
   disabled?: boolean;
   disabledDates?: Date[];
@@ -27,7 +27,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
   nightCount,
   onChangeDate,
   onBookVisit,
-  onDirectRent,
+  onAskBail,
   onPrivatize,
   disabled,
   disabledDates = [],
@@ -132,7 +132,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
         {/* Primary CTA */}
         <button
           disabled={disabled}
-          onClick={onDirectRent}
+          onClick={onAskBail}
           className="
             w-full rounded-xl py-3.5 px-4
             bg-blue-500
@@ -144,7 +144,7 @@ const ListingReservation: React.FC<IListingReservationProps> = ({
             transition-all duration-200
           "
         >
-          {isOwner ? "Votre annonce" : "Réserver maintenant"}
+          {isOwner ? "Votre annonce" : "Demander un Bail"}
         </button>
 
         {isOwner && (

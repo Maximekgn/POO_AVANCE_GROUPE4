@@ -1,24 +1,26 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %}Bienvenue chez ImmoPlus{% endblock %}
+{% extends "emails/base_email.html" %} {% block title %}Bienvenue chez Miabe -
+Immo{% endblock %}
 
 {% block body %}
 <div class="greeting">Bienvenue, {{ prenom }} !</div>
 <p>
-  Nous sommes ravis de vous compter parmi nos membres. Votre compte est désormais actif et vous pouvez commencer à explorer nos opportunités immobilières d'exception.
+  Nous sommes ravis de vous compter parmi nos membres. Votre compte est
+  désormais actif et vous pouvez commencer à explorer nos opportunités
+  immobilières d'exception.
 </p>
 <p>
-  Chez <strong>ImmoPlus</strong>, nous nous engageons à vous offrir une expérience de gestion et d'investissement fluide, sécurisée et transparente.
+  Chez <strong>Miabe - Immo</strong>, nous nous engageons à vous offrir une
+  expérience de gestion et d'investissement fluide, sécurisée et transparente.
 </p>
 
 <div class="divider"></div>
 
-<div style="text-align: center; margin: 32px 0;">
+<div style="text-align: center; margin: 32px 0">
   <a href="{{ url_connexion }}" class="cta-button">Accéder à mon espace</a>
 </div>
 
-<p style="margin-top: 32px; font-size: 14px; color: #64748b;">
-  Si vous avez des questions, notre équipe support est à votre entière disposition.
+<p style="margin-top: 32px; font-size: 14px; color: #64748b">
+  Si vous avez des questions, notre équipe support est à votre entière
+  disposition.
 </p>
 {% endblock %}
-

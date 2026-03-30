@@ -1,43 +1,62 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %} Mise à jour de votre dossier - ImmoPlus {% endblock %}
+{% extends "emails/base_email.html" %} {% block title %} Mise à jour de votre
+dossier - Miabe - Immo {% endblock %}
 
 {% block body %}
 <div class="greeting">
-  {% if statut == 'VALIDE' %} ✅ Votre dossier est accepté {% elif statut == 'REFUSE' %} ✖️ Information sur votre dossier {% elif statut == 'EN_ETUDE' %} 🔍 Dossier en cours d'examen {% else %} 📄 Mise à jour de votre dossier {% endif %}
+  {% if statut == 'VALIDE' %} ✅ Votre dossier est accepté {% elif statut ==
+  'REFUSE' %} ✖️ Information sur votre dossier {% elif statut == 'EN_ETUDE' %}
+  🔍 Dossier en cours d'examen {% else %} 📄 Mise à jour de votre dossier {%
+  endif %}
 </div>
 
 <p>Bonjour {{ prenom }},</p>
 <p>
-  Nous vous informons que votre dossier de candidature (<strong>#{{ id_dossier }}</strong>) pour le bien <strong>{{ reference_bien }}</strong> a été mis à jour.
+  Nous vous informons que votre dossier de candidature (<strong
+    >#{{ id_dossier }}</strong
+  >) pour le bien <strong>{{ reference_bien }}</strong> a été mis à jour.
 </p>
 
-<div style="background-color: {% if statut == 'VALIDE' %} #f0fdf4 {% elif statut == 'REFUSE' %} #fef2f2 {% else %} #f8fafc {% endif %}; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid {% if statut == 'VALIDE' %} #dcfce7 {% elif statut == 'REFUSE' %} #fee2e2 {% else %} #e2e8f0 {% endif %};">
-  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">État actuel du dossier</p>
-  <p style="margin: 12px 0 0; font-size: 20px; font-weight: 800; color: {% if statut == 'VALIDE' %} #166534 {% elif statut == 'REFUSE' %} #991b1b {% else %} #0f172a {% endif %};">
+<div
+  style="background-color: {% if statut == 'VALIDE' %} #f0fdf4 {% elif statut == 'REFUSE' %} #fef2f2 {% else %} #f8fafc {% endif %}; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid {% if statut == 'VALIDE' %} #dcfce7 {% elif statut == 'REFUSE' %} #fee2e2 {% else %} #e2e8f0 {% endif %};"
+>
+  <p
+    style="
+      margin: 0;
+      font-size: 14px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    "
+  >
+    État actuel du dossier
+  </p>
+  <p
+    style="margin: 12px 0 0; font-size: 20px; font-weight: 800; color: {% if statut == 'VALIDE' %} #166534 {% elif statut == 'REFUSE' %} #991b1b {% else %} #0f172a {% endif %};"
+  >
     {{ statut|upper }}
   </p>
 </div>
 
 <p>
-  {% if statut == 'VALIDE' %}
-    Félicitations ! Votre dossier a été validé. Le propriétaire reviendra vers vous très prochainement pour l'étape de signature du bail.
-  {% elif statut == 'REFUSE' %}
-    Malheureusement, votre candidature n'a pas pu être retenue pour ce bien. 
-    {% if motif_refus %}<br/><strong>Motif indiqué :</strong> {{ motif_refus }}{% endif %}
-  {% elif statut == 'EN_ETUDE' %}
-    Votre dossier est actuellement entre les mains du propriétaire. Nous vous notifierons dès qu'une décision sera prise.
-  {% endif %}
+  {% if statut == 'VALIDE' %} Félicitations ! Votre dossier a été validé. Le
+  propriétaire reviendra vers vous très prochainement pour l'étape de signature
+  du bail. {% elif statut == 'REFUSE' %} Malheureusement, votre candidature n'a
+  pas pu être retenue pour ce bien. {% if motif_refus %}<br /><strong
+    >Motif indiqué :</strong
+  >
+  {{ motif_refus }}{% endif %} {% elif statut == 'EN_ETUDE' %} Votre dossier est
+  actuellement entre les mains du propriétaire. Nous vous notifierons dès qu'une
+  décision sera prise. {% endif %}
 </p>
 
 <div class="divider"></div>
 
-<div style="text-align: center; margin: 32px 0;">
+<div style="text-align: center; margin: 32px 0">
   <a href="{{ url_mes_dossiers }}" class="cta-button">Suivre mon dossier</a>
 </div>
 
-<p style="font-size: 14px; color: #64748b; text-align: center;">
-  Merci de votre patience,<br/>L'équipe <strong>ImmoPlus</strong>
+<p style="font-size: 14px; color: #64748b; text-align: center">
+  Merci de votre patience,<br />L'équipe <strong>Miabe - Immo</strong>
 </p>
 {% endblock %}
-

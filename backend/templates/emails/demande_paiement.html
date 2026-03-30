@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement requis - Miabe Immo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3b82f6;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            color: #1e40af;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .info-box h3 {
+            margin: 0 0 10px 0;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dbeafe;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .info-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        .total-row {
+            background-color: #3b82f6;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin: 25px 0;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background-color: #059669;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .details-table th {
+            background-color: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .warning-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Miabe Immo</h1>
+            <div class="subtitle">Votre plateforme de gestion immobilière</div>
+        </div>
+
+        <div class="greeting">
+            Bonjour <strong>{{ prenom }}</strong>,
+        </div>
+
+        <p>
+            Félicitations ! Votre demande de location a été <strong>acceptée</strong> par le propriétaire.
+        </p>
+
+        <div class="info-box">
+            <h3>📍 Bien concerné</h3>
+            <div class="info-row">
+                <span class="info-label">Référence</span>
+                <span class="info-value">{{ reference_bien }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Adresse</span>
+                <span class="info-value">{{ adresse_bien }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Période</span>
+                <span class="info-value">Du {{ date_debut }} au {{ date_fin }}</span>
+            </div>
+        </div>
+
+        <h3 style="color: #1e40af; margin-top: 25px;">📄 Détail de la facturation</h3>
+        <table class="details-table">
+            <thead>
+                <tr>
+                    <th>Désignation</th>
+                    <th style="text-align: right;">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Caution</td>
+                    <td style="text-align: right;">{{ detail_caution }} FCFA</td>
+                </tr>
+                <tr>
+                    <td>Avance sur loyer</td>
+                    <td style="text-align: right;">{{ detail_avance }} FCFA</td>
+                </tr>
+                <tr>
+                    <td>Premier mois (HC + Charges)</td>
+                    <td style="text-align: right;">{{ detail_loyer }} FCFA</td>
+                </tr>
+                <tr>
+                    <td>Frais d'assistance</td>
+                    <td style="text-align: right;">{{ detail_frais }} FCFA</td>
+                </tr>
+                <tr style="background-color: #eff6ff;">
+                    <td><strong>TOTAL À PAYER</strong></td>
+                    <td style="text-align: right;"><strong>{{ montant_total }} FCFA</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-row">
+            <span>Total à payer</span>
+            <span>{{ montant_total }} FCFA</span>
+        </div>
+
+        <div class="warning-box">
+            ⚠️ <strong>Important :</strong> Une fois le paiement effectué, le contrat de bail sera généré automatiquement et envoyé aux deux parties.
+        </div>
+
+        <p style="text-align: center; color: #6b7280; font-size: 14px;">
+            Cliquez sur le bouton ci-dessous pour effectuer votre paiement en toute sécurité :
+        </p>
+
+        <a href="{{ url_paiement }}" class="cta-button">
+            💳 Payer maintenant
+        </a>
+
+        <p style="text-align: center; color: #9ca3af; font-size: 12px;">
+            Ou copiez ce lien dans votre navigateur :<br>
+            <a href="{{ url_paiement }}" style="color: #3b82f6; word-break: break-all;">{{ url_paiement }}</a>
+        </p>
+
+        <div class="info-box" style="background-color: #f0fdf4; border-left-color: #10b981;">
+            <h3 style="color: #065f46;">📎 Pièce jointe</h3>
+            <p style="margin: 0; color: #065f46;">
+                Vous trouverez votre <strong>facture détaillée en PDF</strong> en pièce jointe de cet email.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                Besoin d'aide ? <a href="{{ url_dashboard }}">Accéder à votre espace</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 12px;">
+                © {{ year }} Miabe Immo. Tous droits réservés.<br>
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

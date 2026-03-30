@@ -1,34 +1,45 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %}Réinitialisation de votre mot de passe{% endblock %}
+{% extends "emails/base_email.html" %} {% block title %}Réinitialisation de
+votre mot de passe{% endblock %}
 
 {% block body %}
 <div class="greeting">Réinitialisation de mot de passe</div>
 
 <p>Bonjour {{ prenom }},</p>
 <p>
-  Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte <strong>ImmoPlus</strong>. 
-  Si vous êtes bien à l'origine de cette demande, vous pouvez cliquer sur le bouton ci-dessous :
+  Nous avons reçu une demande de réinitialisation de mot de passe pour votre
+  compte <strong>Miabe - Immo</strong>. Si vous êtes bien à l'origine de cette
+  demande, vous pouvez cliquer sur le bouton ci-dessous :
 </p>
 
-<div style="text-align: center; margin: 32px 0;">
-  <a href="{{ url_reset }}" class="cta-button">Définir un nouveau mot de passe</a>
+<div style="text-align: center; margin: 32px 0">
+  <a href="{{ url_reset }}" class="cta-button"
+    >Définir un nouveau mot de passe</a
+  >
 </div>
 
-<div style="background-color: #fff7ed; border-radius: 8px; padding: 16px; margin: 24px 0; border: 1px solid #ffedd5;">
-  <p style="color: #9a3412; font-size: 14px; margin: 0;">
-    <strong>Attention :</strong> Ce lien est temporaire et expirera dans {{ validite_heures }} heure(s).
+<div
+  style="
+    background-color: #fff7ed;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 24px 0;
+    border: 1px solid #ffedd5;
+  "
+>
+  <p style="color: #9a3412; font-size: 14px; margin: 0">
+    <strong>Attention :</strong> Ce lien est temporaire et expirera dans {{
+    validite_heures }} heure(s).
   </p>
 </div>
 
 <div class="divider"></div>
 
-<p style="font-size: 14px; color: #64748b;">
-  Si vous n'avez pas demandé ce changement, vous pouvez ignorer cet e-mail en toute sécurité. Votre mot de passe restera inchangé.
+<p style="font-size: 14px; color: #64748b">
+  Si vous n'avez pas demandé ce changement, vous pouvez ignorer cet e-mail en
+  toute sécurité. Votre mot de passe restera inchangé.
 </p>
 
-<p style="font-size: 14px; color: #64748b; margin-top: 24px;">
-  Cordialement,<br/>L'équipe <strong>ImmoPlus</strong>
+<p style="font-size: 14px; color: #64748b; margin-top: 24px">
+  Cordialement,<br />L'équipe <strong>Miabe - Immo</strong>
 </p>
 {% endblock %}
-

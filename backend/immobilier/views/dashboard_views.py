@@ -1,5 +1,5 @@
-from django.db.models import Count, Sum
-from django.db.models.functions import TruncMonth, TruncDay, TruncYear
+from django.db.models import Count, Sum, Q, DecimalField
+from django.db.models.functions import TruncMonth, TruncDay, TruncYear, Coalesce
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import status
@@ -9,10 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from immobilier.models import (
-    Bien, 
-    Utilisateur, 
-    Bail, 
-    Paiement, 
+    Bien,
+    Utilisateur,
+    Bail,
+    Paiement,
     CategorieBien,
     DemandeAction
 )
@@ -24,6 +24,7 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
 
     def get(self, request: Request) -> Response:
         self.check_admin(request)
+        # Statuts de paiement considérés comme "payés"
         paid_statuses = [
             StatutPaiementEnum.PAYE,
             StatutPaiementEnum.PAYE_A_L_ADMIN,
@@ -38,45 +39,52 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
 
         # 2. Status Distribution (Biens)
         status_distribution = Bien.objects.values('statut').annotate(count=Count('id'))
-        
+
         # 3. Category Distribution (Biens)
         category_distribution = Bien.objects.values('categorie__nom').annotate(count=Count('id'))
 
         # 4. Revenue Aggregation (Daily, Monthly, Yearly)
-        one_year_ago = timezone.now() - timedelta(days=365)
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        ten_years_ago = timezone.now() - timedelta(days=365*10)
+        now = timezone.now()
+        one_year_ago = now - timedelta(days=365)
+        thirty_days_ago = now - timedelta(days=30)
+        ten_years_ago = now - timedelta(days=365*10)
 
+        # Revenus journaliers (30 derniers jours)
         daily_revenue = (
             Paiement.objects.filter(
                 statut__in=paid_statuses,
-                date_paiement__gte=thirty_days_ago
+                date_paiement__gte=thirty_days_ago,
+                date_paiement__isnull=False
             )
             .annotate(day=TruncDay('date_paiement'))
             .values('day')
-            .annotate(total=Sum('montant'))
+            .annotate(total=Coalesce(Sum('montant'), 0, output_field=DecimalField()))
             .order_by('day')
         )
 
+        # Revenus mensuels (12 derniers mois)
         monthly_revenue = (
             Paiement.objects.filter(
                 statut__in=paid_statuses,
-                date_paiement__gte=one_year_ago
+                date_paiement__gte=one_year_ago,
+                date_paiement__isnull=False
             )
             .annotate(month=TruncMonth('date_paiement'))
             .values('month')
-            .annotate(total=Sum('montant'))
+            .annotate(total=Coalesce(Sum('montant'), 0, output_field=DecimalField()))
             .order_by('month')
         )
 
+        # Revenus annuels (10 dernières années)
         yearly_revenue = (
             Paiement.objects.filter(
                 statut__in=paid_statuses,
-                date_paiement__gte=ten_years_ago
+                date_paiement__gte=ten_years_ago,
+                date_paiement__isnull=False
             )
             .annotate(year=TruncYear('date_paiement'))
             .values('year')
-            .annotate(total=Sum('montant'))
+            .annotate(total=Coalesce(Sum('montant'), 0, output_field=DecimalField()))
             .order_by('year')
         )
 
@@ -88,10 +96,20 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
                 'numero': b.numero_bail,
                 'bien': b.bien.reference,
                 'client': f"{b.client_info.utilisateur.first_name} {b.client_info.utilisateur.last_name}" if b.client_info else "N/A",
-                'date': b.date_entree,
+                'date': b.date_entree.isoformat() if b.date_entree else None,
                 'statut': b.statut
             } for b in recent_bails
         ]
+
+        # Calcul du revenu total
+        total_revenue_result = Paiement.objects.filter(
+            statut__in=paid_statuses
+        ).aggregate(total=Coalesce(Sum('montant'), 0, output_field=DecimalField()))
+        total_revenue = float(total_revenue_result['total'] or 0)
+
+        print(f"[Dashboard] Daily revenue count: {daily_revenue.count()}")
+        print(f"[Dashboard] Monthly revenue count: {monthly_revenue.count()}")
+        print(f"[Dashboard] Total revenue: {total_revenue}")
 
         return Response({
             'kpis': {
@@ -99,7 +117,7 @@ class AdminDashboardStatsView(AdminFinancePermissionMixin, APIView):
                 'total_users': total_users,
                 'total_baux': total_baux,
                 'pending_demands': pending_demands,
-                'total_revenue': Paiement.objects.filter(statut__in=paid_statuses).aggregate(total=Sum('montant'))['total'] or 0,
+                'total_revenue': total_revenue,
             },
             'status_stats': {s['statut']: s['count'] for s in status_distribution},
             'category_stats': [{'name': c['categorie__nom'] or 'Inconnu', 'value': c['count']} for c in category_distribution],

@@ -151,10 +151,14 @@ const LoginModal = () => {
 
     await refreshUser();
 
-    if (result.is_admin) {
-      router.push("/admin/dashboard");
+    // Rediriger les admins vers le dashboard avec un rechargement complet
+    // pour que les cookies soient disponibles côté serveur
+    const isAdmin =
+      result.is_admin || result.isAdmin || result.role === "ADMIN";
+    if (isAdmin) {
+      window.location.href = "/admin/dashboard";
     } else {
-      router.refresh();
+      window.location.href = "/";
     }
   };
 

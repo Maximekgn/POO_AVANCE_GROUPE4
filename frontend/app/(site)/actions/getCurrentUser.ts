@@ -37,6 +37,11 @@ export default async function getCurrentUser(): Promise<CurrentUser | null> {
 
     const user = await response.json();
 
+    // Déterminer si l'utilisateur est admin
+    // Le backend peut retourner soit 'role', soit 'is_staff'/'is_superuser'
+    const isAdmin =
+      user.role === "ADMIN" || Boolean(user.is_staff || user.is_superuser);
+
     return {
       id: user.id?.toString() || "",
       name:
@@ -45,8 +50,8 @@ export default async function getCurrentUser(): Promise<CurrentUser | null> {
           : user.email,
       email: user.email,
       image: user.photo_profil || user.image,
-      role: user.is_staff || user.is_superuser ? "ADMIN" : "USER",
-      isAdmin: Boolean(user.is_staff || user.is_superuser),
+      role: user.role || (isAdmin ? "ADMIN" : "USER"),
+      isAdmin,
       emailVerified: Boolean(user.email_verified || user.email_verifie),
       documentsCompleted: Boolean(user.documents_complets),
       accessToken,

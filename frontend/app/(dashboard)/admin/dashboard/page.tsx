@@ -5,14 +5,17 @@ import {
   FiFileText,
   FiTrendingUp,
   FiClock,
-  FiActivity
+  FiActivity,
 } from "react-icons/fi";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 import Heading from "@/components/Heading";
 
 import { getAdminDashboardStats } from "./lib/adminApi";
-import { RevenueHistoryChart, CategoryPieChart } from "./components/DashboardCharts";
+import {
+  RevenueHistoryChart,
+  CategoryPieChart,
+} from "./components/DashboardCharts";
 
 export const dynamic = "force-dynamic";
 
@@ -23,17 +26,49 @@ export default async function AdminDashboardHomePage() {
   if (!stats) {
     return (
       <div className="flex h-[400px] items-center justify-center rounded-2xl border border-dashed border-neutral-300">
-        <p className="text-neutral-500">Impossible de charger les statistiques.</p>
+        <p className="text-neutral-500">
+          Impossible de charger les statistiques.
+        </p>
       </div>
     );
   }
 
   const kpis = [
-    { label: "Total Biens", value: stats.kpis.total_biens, icon: FiHome, color: "text-blue-500", bg: "bg-blue-50" },
-    { label: "Utilisateurs", value: stats.kpis.total_users, icon: FiUsers, color: "text-purple-600", bg: "bg-purple-50" },
-    { label: "Contrats Actifs", value: stats.kpis.total_baux, icon: FiFileText, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Dossiers en attente", value: stats.kpis.pending_demands, icon: FiClock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Revenus Totaux", value: `${stats.kpis.total_revenue.toLocaleString()} FCFA`, icon: FiTrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
+    {
+      label: "Total Biens",
+      value: stats.kpis.total_biens,
+      icon: FiHome,
+      color: "text-blue-500",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Utilisateurs",
+      value: stats.kpis.total_users,
+      icon: FiUsers,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      label: "Contrats Actifs",
+      value: stats.kpis.total_baux,
+      icon: FiFileText,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      label: "Dossiers en attente",
+      value: stats.kpis.pending_demands,
+      icon: FiClock,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+    {
+      label: "Revenus Totaux",
+      value: `${stats.kpis.total_revenue.toLocaleString()} FCFA`,
+      icon: FiTrendingUp,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
   ];
 
   return (
@@ -59,13 +94,22 @@ export default async function AdminDashboardHomePage() {
       {/* KPI Section */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {kpis.map((kpi, index) => (
-          <article key={index} className="flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${kpi.bg} ${kpi.color}`}>
+          <article
+            key={index}
+            className="flex items-center gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+          >
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-xl ${kpi.bg} ${kpi.color}`}
+            >
               <kpi.icon size={22} />
             </div>
             <div>
-              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{kpi.label}</p>
-              <p className="mt-1 text-xl font-bold text-neutral-900">{kpi.value}</p>
+              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                {kpi.label}
+              </p>
+              <p className="mt-1 text-xl font-bold text-neutral-900">
+                {kpi.value}
+              </p>
             </div>
           </article>
         ))}
@@ -75,10 +119,18 @@ export default async function AdminDashboardHomePage() {
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <article className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <FiTrendingUp className="text-blue-500" /> Evolution des revenus (payés)
-            </h2>
-            <span className="text-xs text-neutral-500">Derniers 12 mois</span>
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <FiTrendingUp className="text-emerald-600" />
+                Encaissements (Loyers payés)
+              </h2>
+              <p className="text-xs text-neutral-500 mt-1">
+                Flux de trésorerie - Loyers effectivement encaissés
+              </p>
+            </div>
+            <span className="text-xs text-neutral-500 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+              Derniers 12 mois
+            </span>
           </div>
           <RevenueHistoryChart data={stats.revenue_history} />
         </article>
@@ -97,8 +149,13 @@ export default async function AdminDashboardHomePage() {
         {/* Recent Activity Table */}
         <article className="lg:col-span-2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Récentes signatures de baux</h2>
-            <Link href="/admin/dashboard/baux" className="text-sm font-medium text-blue-500 hover:underline">
+            <h2 className="text-lg font-semibold">
+              Récentes signatures de baux
+            </h2>
+            <Link
+              href="/admin/dashboard/baux"
+              className="text-sm font-medium text-blue-500 hover:underline"
+            >
               Tout voir
             </Link>
           </div>
@@ -116,17 +173,28 @@ export default async function AdminDashboardHomePage() {
               <tbody className="divide-y divide-neutral-50">
                 {stats.recent_activity.map((item) => (
                   <tr key={item.id} className="group hover:bg-neutral-50/50">
-                    <td className="py-4 pr-4 text-sm font-medium text-neutral-900">{item.numero}</td>
-                    <td className="py-4 pr-4 text-sm text-neutral-600">{item.client}</td>
-                    <td className="py-4 pr-4 text-sm text-neutral-600">{item.bien}</td>
+                    <td className="py-4 pr-4 text-sm font-medium text-neutral-900">
+                      {item.numero}
+                    </td>
+                    <td className="py-4 pr-4 text-sm text-neutral-600">
+                      {item.client}
+                    </td>
+                    <td className="py-4 pr-4 text-sm text-neutral-600">
+                      {item.bien}
+                    </td>
                     <td className="py-4 pr-4 text-sm text-neutral-500">
                       {new Date(item.date).toLocaleDateString()}
                     </td>
                     <td className="py-4 text-right">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${item.statut === 'EN_COURS' ? 'bg-green-100 text-green-800' :
-                        item.statut === 'EN_ATTENTE_SIGNATURE' ? 'bg-amber-100 text-amber-800' :
-                          'bg-neutral-100 text-neutral-800'
-                        }`}>
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          item.statut === "EN_COURS"
+                            ? "bg-green-100 text-green-800"
+                            : item.statut === "EN_ATTENTE_SIGNATURE"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-neutral-100 text-neutral-800"
+                        }`}
+                      >
                         {item.statut}
                       </span>
                     </td>
@@ -135,7 +203,9 @@ export default async function AdminDashboardHomePage() {
               </tbody>
             </table>
             {stats.recent_activity.length === 0 && (
-              <p className="py-10 text-center text-sm text-black">Aucune activité récente.</p>
+              <p className="py-10 text-center text-sm text-black">
+                Aucune activité récente.
+              </p>
             )}
           </div>
         </article>
@@ -145,10 +215,17 @@ export default async function AdminDashboardHomePage() {
           <h2 className="mb-6 text-lg font-semibold">Actions rapides</h2>
           <div className="space-y-3">
             {[
-              { label: "Validations en attente", href: "/admin/dashboard/biens", count: stats.kpis.pending_demands },
+              {
+                label: "Validations en attente",
+                href: "/admin/dashboard/biens",
+                count: stats.kpis.pending_demands,
+              },
               { label: "Finances & Loyers", href: "/admin/dashboard/finances" },
               { label: "Utilisateurs", href: "/admin/dashboard/utilisateurs" },
-              { label: "Demandes d'action", href: "/admin/dashboard/demandes-actions" },
+              {
+                label: "Demandes d'action",
+                href: "/admin/dashboard/demandes-actions",
+              },
               { label: "Messagerie", href: "/admin/dashboard/messages" },
             ].map((action, i) => (
               <Link
@@ -162,8 +239,18 @@ export default async function AdminDashboardHomePage() {
                     {action.count}
                   </span>
                 ) : (
-                  <svg className="h-4 w-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="h-4 w-4 opacity-30"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 )}
               </Link>

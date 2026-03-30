@@ -30,6 +30,8 @@ from immobilier.views import (
     BienPhotoListCreateView,
     BienPhotoReorderView,
     PhotoDetailView,
+    BienDepenseCreateView,
+    BienDetailFinancierView,
     ConversationListView,
     ConversationMessagesView,
     MarkConversationReadView,
@@ -61,10 +63,16 @@ from immobilier.views import (
     DemandeActionFinaliserLocationView,
     DemandeActionRequestPaymentView,
     DemandeActionConfirmPaymentView,
+    DemandeActionConfirmPaymentPublicView,
     DemandeActionActionableListView,
+    DemandeActionUpdateTarifsView,
+    DemandeActionSignerBailView,
     BailListView,
     BailDetailView,
     BailSignView,
+    BailSignPublicView,
+    BailRelancerSignatureView,
+    BailEnvoyerBailView,
     AdminDashboardStatsView,
 )
 
@@ -72,7 +80,10 @@ from immobilier.views.billing_views import (
     SimulationPaiementMobileMoneyView,
     DownloadFactureView,
     LocatairePaiementsListView,
-    AdminPaiementReversementView
+    AdminPaiementReversementView,
+    DemandeActionFactureView,
+    DemandeActionPaiementLinkView,
+    DemandeActionPaiementPublicView,
 )
 
 app_name = 'immobilier'
@@ -225,6 +236,10 @@ urlpatterns = [
     path('biens/<int:pk>/activation', BienActivationUpdateView.as_view(), name='biens-activation-update'),
     # PATCH /api/biens/{id}/refus
     path('biens/<int:pk>/refus', BienRefusView.as_view(), name='biens-refus-update'),
+    # POST /api/biens/{id}/depenses
+    path('biens/<int:pk>/depenses', BienDepenseCreateView.as_view(), name='biens-depenses-create'),
+    # GET /api/biens/{id}/financier
+    path('biens/<int:pk>/financier', BienDetailFinancierView.as_view(), name='biens-detail-financier'),
 
     # ── Photos de biens (Sprint 3) ───────────────────────────────────────────
     # GET/POST /api/biens/{id}/photos
@@ -270,18 +285,29 @@ urlpatterns = [
     path('demandes-actions/recues', DemandeActionIncomingListView.as_view(), name='demandes-actions-incoming-list'),
     path('demandes-actions/<int:pk>', DemandeActionDetailView.as_view(), name='demandes-actions-detail'),
     path('demandes-actions/<int:pk>/decision', DemandeActionDecisionView.as_view(), name='demandes-actions-decision'),
+    path('demandes-actions/<int:pk>/tarifs', DemandeActionUpdateTarifsView.as_view(), name='demandes-actions-tarifs'),
+    path('demandes-actions/<int:pk>/signer', DemandeActionSignerBailView.as_view(), name='demandes-actions-signer'),
     path('demandes-actions/<int:pk>/finaliser', DemandeActionFinaliserLocationView.as_view(), name='demandes-actions-finaliser'),
     path('demandes-actions/<int:pk>/request-payment', DemandeActionRequestPaymentView.as_view(), name='demandes-actions-request-payment'),
     path('demandes-actions/<int:pk>/confirm-payment', DemandeActionConfirmPaymentView.as_view(), name='demandes-actions-confirm-payment'),
+    path('paiement-public/<int:pk>/<str:token>/confirm', DemandeActionConfirmPaymentPublicView.as_view(), name='demandes-actions-confirm-payment-public'),
     path('demandes-actions/actionable', DemandeActionActionableListView.as_view(), name='demandes-actions-actionable'),
 
     # ── Baux & signatures (Sprint 7 backend) ───────────────────────────────
     path('baux', BailListView.as_view(), name='baux-list'),
     path('baux/<int:pk>', BailDetailView.as_view(), name='baux-detail'),
     path('baux/<int:pk>/signer', BailSignView.as_view(), name='baux-signer'),
+    path('baux/signer/<int:pk>/<str:token>', BailSignPublicView.as_view(), name='baux-signer-public'),
+    path('baux/<int:pk>/relancer-signature', BailRelancerSignatureView.as_view(), name='baux-relancer-signature'),
+    path('baux/<int:pk>/envoyer-bail', BailEnvoyerBailView.as_view(), name='baux-envoyer-bail'),
 
     # ── Facturation & Paiements Mobile Money (Sprint 8) ────────────────────
     path('paiements/mes-loyers', LocatairePaiementsListView.as_view(), name='paiements-mes-loyers'),
     path('paiements/<int:pk>/simulate-mobile-money', SimulationPaiementMobileMoneyView.as_view(), name='paiements-simulate-mobile-money'),
     path('paiements/<int:pk>/facture/download', DownloadFactureView.as_view(), name='paiements-facture-download'),
+    
+    # ── Facturation pour demandes de location ──────────────────────────────
+    path('demandes-actions/<int:pk>/facture', DemandeActionFactureView.as_view(), name='demandes-actions-facture'),
+    path('demandes-actions/<int:pk>/payment-link', DemandeActionPaiementLinkView.as_view(), name='demandes-actions-payment-link'),
+    path('paiement-public/<int:pk>/<str:token>', DemandeActionPaiementPublicView.as_view(), name='demandes-actions-paiement-public'),
 ]

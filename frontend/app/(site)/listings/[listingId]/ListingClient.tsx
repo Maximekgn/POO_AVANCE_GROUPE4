@@ -7,6 +7,7 @@ import ListingReservation from "@/components/listings/ListingReservation";
 import getCategories, { Category } from "@/app/(site)/actions/getCategories";
 import { TbBeach } from "react-icons/tb";
 import useLoginModal from "@/app/(site)/hooks/useLoginModal";
+import useBailModal from "@/app/(site)/hooks/useBailModal";
 import axios from "axios";
 import { differenceInCalendarDays, eachDayOfInterval } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -15,7 +16,7 @@ import { Range } from "react-date-range";
 import toast from "react-hot-toast";
 import BackButton from "@/components/BackButton";
 
-type ReservationAction = "VISIT" | "DIRECT_RENT" | "PRIVATIZE";
+type ReservationAction = "VISIT" | "DIRECT_RENT" | "PRIVATIZE" | "BAIL";
 
 const initialDateRange = {
   startDate: new Date(),
@@ -46,9 +47,6 @@ interface IListingClientProps {
     nb_salons: number;
     nb_chambres: number;
     nb_douches: number;
-    caution_mois: number;
-    avance_mois: number;
-    frais_assistance: number;
     superficie: number;
     price: number;
     priceMonthly?: number;
@@ -69,6 +67,7 @@ const ListingClient: React.FC<IListingClientProps> = ({
     getCategories().then(setCategories);
   }, []);
   const loginModal = useLoginModal();
+  const bailModal = useBailModal();
   const router = useRouter();
 
   const [localReservations, setLocalReservations] = useState(reservations);
@@ -99,20 +98,28 @@ const ListingClient: React.FC<IListingClientProps> = ({
         return loginModal.onOpen();
       }
 
+      if (action === "BAIL") {
+        bailModal.onOpen(listing?.id);
+        return;
+      }
+
       const payload: any = {
         listingId: listing?.id,
         action,
       };
 
-      if (action === "DIRECT_RENT" && (!dateRange.startDate || !dateRange.endDate || nightCount < 30)) {
+      if (
+        action === "DIRECT_RENT" &&
+        (!dateRange.startDate || !dateRange.endDate || nightCount < 30)
+      ) {
         // Default to today + 30 days if no dates or too short
         const start = new Date();
         const end = new Date();
         end.setDate(start.getDate() + 30);
-        
+
         payload.startDate = start;
         payload.endDate = end;
-        payload.totalPrice = listing.priceMonthly || (listing.price * 30);
+        payload.totalPrice = listing.priceMonthly || listing.price * 30;
       } else {
         if (!dateRange.startDate || !dateRange.endDate) {
           toast.error("Selectionnez une date avant de continuer.");
@@ -125,7 +132,8 @@ const ListingClient: React.FC<IListingClientProps> = ({
         }
 
         payload.startDate = dateRange.startDate;
-        payload.endDate = action === "VISIT" ? dateRange.startDate : dateRange.endDate;
+        payload.endDate =
+          action === "VISIT" ? dateRange.startDate : dateRange.endDate;
         payload.totalPrice = action === "VISIT" ? 0 : totalPrice;
       }
 
@@ -178,6 +186,7 @@ const ListingClient: React.FC<IListingClientProps> = ({
       dateRange.startDate,
       listing?.id,
       loginModal,
+      bailModal,
       nightCount,
       router,
       totalPrice,
@@ -208,13 +217,16 @@ const ListingClient: React.FC<IListingClientProps> = ({
     return found
       ? { label: found.nom, icon: TbBeach, description: found.slug }
       : {
-        label: listing.category || "",
-        icon: TbBeach,
-        description: "Catégorie du bien",
-      };
+          label: listing.category || "",
+          icon: TbBeach,
+          description: "Catégorie du bien",
+        };
   }, [categories, listing.category]);
 
-  const isOwner = currentUser?.id && listing.ownerId ? String(currentUser.id) === String(listing.ownerId) : false;
+  const isOwner =
+    currentUser?.id && listing.ownerId
+      ? String(currentUser.id) === String(listing.ownerId)
+      : false;
 
   return (
     <Container>
@@ -250,9 +262,6 @@ const ListingClient: React.FC<IListingClientProps> = ({
               nb_salons={listing.nb_salons}
               nb_chambres={listing.nb_chambres}
               nb_douches={listing.nb_douches}
-              caution_mois={listing.caution_mois}
-              avance_mois={listing.avance_mois}
-              frais_assistance={listing.frais_assistance}
               superficie={listing.superficie}
               avance={listing.avance}
               locationValue={listing.locationValue}
@@ -277,7 +286,7 @@ const ListingClient: React.FC<IListingClientProps> = ({
                 onChangeDate={(value: Range) => setDateRange(value)}
                 dateRange={dateRange}
                 onBookVisit={() => onCreateReservation("VISIT")}
-                onDirectRent={() => onCreateReservation("DIRECT_RENT")}
+                onAskBail={() => onCreateReservation("BAIL")}
                 onPrivatize={() => onCreateReservation("PRIVATIZE")}
                 disabled={isLoading || isOwner}
                 disabledDates={disableDates}

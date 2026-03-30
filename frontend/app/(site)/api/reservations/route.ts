@@ -47,16 +47,36 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
-  const { listingId, startDate, endDate, totalPrice, action } = body;
+  const { listingId, startDate, endDate, totalPrice, action, mois } = body;
 
-  if (!listingId || !startDate || !endDate || totalPrice === undefined) {
+  if (!listingId) {
+    return NextResponse.json(
+      { error: "L'identifiant du bien est requis." },
+      { status: 400 },
+    );
+  }
+
+  if (action === "BAIL") {
+    if (!mois || mois < 6) {
+      return NextResponse.json(
+        { error: "Le nombre de mois doit etre au minimum de 6." },
+        { status: 400 },
+      );
+    }
+    if (!startDate) {
+      return NextResponse.json(
+        { error: "La date de debut est requise pour un bail." },
+        { status: 400 },
+      );
+    }
+  } else if (!startDate || !endDate || totalPrice === undefined) {
     return NextResponse.json(
       { error: "Payload reservation incomplet." },
       { status: 400 },
     );
   }
 
-  if (!["VISIT", "DIRECT_RENT", "PRIVATIZE"].includes(action)) {
+  if (!["VISIT", "DIRECT_RENT", "PRIVATIZE", "BAIL"].includes(action)) {
     return NextResponse.json(
       { error: "Type d'action invalide." },
       { status: 400 },
@@ -77,10 +97,27 @@ export async function POST(request: Request) {
     );
   }
 
+  if (action !== "BAIL") {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return NextResponse.json({ error: "Dates invalides." }, { status: 400 });
+    }
+
+    if (end < start) {
+      return NextResponse.json(
+        { error: "La date de fin doit etre apres la date de debut." },
+        { status: 400 },
+      );
+    }
+  }
+
   const actionMap: Record<string, string> = {
     VISIT: "VISITE",
     DIRECT_RENT: "LOCATION_DIRECTE",
     PRIVATIZE: "PRIVATISATION",
+    BAIL: "BAIL",
   };
 
   const mappedAction = actionMap[action];
@@ -91,13 +128,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const backendPayload = {
+  const backendPayload: any = {
     bien: Number(listingId),
     type_demande: mappedAction,
-    date_debut: start.toISOString().slice(0, 10),
-    date_fin: end.toISOString().slice(0, 10),
-    montant_total: totalPrice,
   };
+
+  if (action === "BAIL") {
+    const start = new Date(startDate);
+    backendPayload.date_debut = start.toISOString().slice(0, 10);
+    backendPayload.duree_mois = mois;
+  } else {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    backendPayload.date_debut = start.toISOString().slice(0, 10);
+    backendPayload.date_fin = end.toISOString().slice(0, 10);
+    backendPayload.montant_total = totalPrice;
+  }
 
   const backendResponse = await fetch(`${API_URL}/demandes-actions`, {
     method: "POST",

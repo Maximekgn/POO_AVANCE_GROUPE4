@@ -176,9 +176,7 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
       return;
     }
 
-    setBiens((prev) =>
-      prev.filter((item) => item.id !== refuseModalBienId)
-    );
+    setBiens((prev) => prev.filter((item) => item.id !== refuseModalBienId));
     setMessage("Bien refusé. Le propriétaire a été notifié par email.");
     setBusyIds((prev) => ({ ...prev, [refuseModalBienId]: false }));
     closeRefuseModal();
@@ -200,10 +198,12 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
             </div>
             <div>
               <p className="font-bold text-amber-900">
-                {pendingCount} bien{pendingCount > 1 ? "s" : ""} en attente de validation
+                {pendingCount} bien{pendingCount > 1 ? "s" : ""} en attente de
+                validation
               </p>
               <p className="text-sm text-amber-800/80">
-                Action administrative requise avant la publication sur la plateforme.
+                Action administrative requise avant la publication sur la
+                plateforme.
               </p>
             </div>
           </div>
@@ -219,23 +219,27 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 className="text-lg font-bold text-neutral-900">Filtrer les biens</h3>
+            <h3 className="text-lg font-bold text-neutral-900">
+              Filtrer les biens
+            </h3>
             <div className="flex items-center bg-neutral-100 p-1 rounded-xl">
               <button
                 onClick={() => setViewMode("CARD")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${viewMode === "CARD"
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                  viewMode === "CARD"
                     ? "bg-white text-neutral-900 shadow-sm"
                     : "text-neutral-500 hover:text-neutral-700"
-                  }`}
+                }`}
               >
                 Cards
               </button>
               <button
                 onClick={() => setViewMode("TABLE")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${viewMode === "TABLE"
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                  viewMode === "TABLE"
                     ? "bg-white text-neutral-900 shadow-sm"
                     : "text-neutral-500 hover:text-neutral-700"
-                  }`}
+                }`}
               >
                 Tableau
               </button>
@@ -266,7 +270,9 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
               >
                 {statusValues.map((status) => (
                   <option key={status} value={status}>
-                    {status === "ALL" ? "Tous les statuts" : status.replace(/_/g, " ")}
+                    {status === "ALL"
+                      ? "Tous les statuts"
+                      : status.replace(/_/g, " ")}
                   </option>
                 ))}
               </select>
@@ -322,12 +328,27 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
           {filteredBiens.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
               <div className="rounded-full bg-neutral-100 p-6 text-black mb-4">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                <svg
+                  className="w-12 h-12"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-neutral-900">Aucun bien trouvé</h3>
-              <p className="mt-1 text-neutral-500">Essayez de modifier vos filtres ou de réinitialiser la recherche.</p>
+              <h3 className="text-xl font-bold text-neutral-900">
+                Aucun bien trouvé
+              </h3>
+              <p className="mt-1 text-neutral-500">
+                Essayez de modifier vos filtres ou de réinitialiser la
+                recherche.
+              </p>
             </div>
           )}
         </div>
@@ -351,7 +372,10 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
                 const canValidate = bien.statut === "EN_ATTENTE_VALIDATION";
 
                 return (
-                  <tr key={bien.id} className="group hover:bg-neutral-50/50 transition">
+                  <tr
+                    key={bien.id}
+                    className="group hover:bg-neutral-50/50 transition"
+                  >
                     <td className="px-6 py-4">
                       <Link
                         href={`/admin/dashboard/biens/${bien.id}`}
@@ -362,30 +386,48 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-neutral-800">{bien.ville}</span>
-                        <span className="text-xs text-neutral-500">{bien.quartier || bien.adresse}</span>
+                        <span className="font-semibold text-neutral-800">
+                          {bien.ville}
+                        </span>
+                        <span className="text-xs text-neutral-500">
+                          {bien.quartier || bien.adresse}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-neutral-600">
                       {bien.sous_type_nom || bien.categorie_nom || "-"}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${bien.statut === "VACANT" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-                          bien.statut === "LOUE" ? "bg-blue-50 text-blue-700 border-blue-100" :
-                            bien.statut === "EN_ATTENTE_VALIDATION" ? "bg-amber-50 text-amber-700 border-amber-100" :
-                              "bg-neutral-50 text-neutral-600 border-neutral-100"
-                        }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          bien.statut === "VACANT"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : bien.statut === "LOUE"
+                              ? "bg-blue-50 text-blue-700 border-blue-100"
+                              : bien.statut === "EN_ATTENTE_VALIDATION"
+                                ? "bg-amber-50 text-amber-700 border-amber-100"
+                                : "bg-neutral-50 text-neutral-600 border-neutral-100"
+                        }`}
+                      >
                         {bien.statut.replace(/_/g, " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${bien.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-rose-50 text-rose-700 border-rose-100"
-                        }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          bien.is_active
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : "bg-rose-50 text-rose-700 border-rose-100"
+                        }`}
+                      >
                         {bien.is_active ? "Actif" : "Désactivé"}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-bold text-neutral-900">
-                      FCFA {Number(bien.loyer_hc).toLocaleString()}
+                      FCFA{" "}
+                      {Number(
+                        bien.loyer_hc || bien.prix_mois || 0,
+                      ).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
@@ -397,7 +439,19 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
                               className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition disabled:opacity-30"
                               title="Valider"
                             >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
                             </button>
                             <button
                               onClick={() => openRefuseModal(bien.id)}
@@ -405,7 +459,19 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
                               className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition disabled:opacity-30"
                               title="Refuser"
                             >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
                             </button>
                           </>
                         ) : (
@@ -416,9 +482,33 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
                             title={bien.is_active ? "Désactiver" : "Activer"}
                           >
                             {bien.is_active ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"
+                                />
+                              </svg>
                             ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
                             )}
                           </button>
                         )}
@@ -427,7 +517,25 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
                           className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition"
                           title="Voir profil"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
                         </Link>
                       </div>
                     </td>
@@ -449,7 +557,19 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
           <div className="w-full max-w-xl scale-in-center rounded-3xl border border-neutral-200 bg-white p-8 shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </div>
               <div>
                 <h3 className="text-xl font-bold text-neutral-900">
@@ -470,7 +590,9 @@ export default function BiensTableClient({ initialBiens, accessToken }: Props) {
             />
 
             {motifError ? (
-              <p className="mt-2 text-sm font-medium text-rose-600">{motifError}</p>
+              <p className="mt-2 text-sm font-medium text-rose-600">
+                {motifError}
+              </p>
             ) : null}
 
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
