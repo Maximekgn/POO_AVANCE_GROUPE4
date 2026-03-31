@@ -6,9 +6,10 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from immobilier.chat_utils import build_conversation_id, conversation_includes_user
-from immobilier.models import Message
+from immobilier.models import Message, Utilisateur
 from immobilier.presence import mark_offline, mark_online
 from immobilier.serializers.message_serializers import MessageSerializer
+from immobilier.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
@@ -216,6 +217,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_send(
                 f"user_{int(recipient_id)}", update_event
             )
+
+            # Envoyer notification email au destinataire
+            await self._send_email_notification(
+                expediteur_id=self.user.id,
+                destinataire_id=int(recipient_id),
+                contenu=text,
+            )
         except Exception as e:
             logger.error(f"Error sending message: {e}", exc_info=True)
             try:
@@ -327,3 +335,29 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             destinataire_id=user_id,
             lu=False,
         ).update(lu=True)
+
+    @database_sync_to_async
+    def _send_email_notification(self, expediteur_id: int, destinataire_id: int, contenu: str):
+        """Envoie une notification email au destinataire d'un nouveau message."""
+        try:
+            expediteur = Utilisateur.objects.filter(id=expediteur_id).first()
+            destinataire = Utilisateur.objects.filter(id=destinataire_id).first()
+
+            if not expediteur or not destinataire or not destinataire.email:
+                return
+
+            # Vérifier si le destinataire est en ligne (pas besoin d'email s'il est connecté)
+            from immobilier.presence import is_online
+            if is_online(destinataire.id):
+                return
+
+            # Envoyer l'email
+            frontend_url = "http://localhost:3000"  # Ou settings.FRONTEND_URL
+            EmailService.envoyer_nouveau_message_chat(
+                destinataire=destinataire,
+                expediteur=expediteur,
+                contenu=contenu,
+                url_chat=f"{frontend_url}/",
+            )
+        except Exception as e:
+            logger.error(f"Error sending email notification: {e}", exc_info=True)

@@ -46,18 +46,21 @@ const BailModal = () => {
     setIsLoading(true);
 
     try {
+      // Calculer la date de fin correctement en ajoutant les mois
+      const startDate = new Date(data.dateDebut);
+      const endDate = new Date(startDate);
+      endDate.setMonth(startDate.getMonth() + parseInt(data.mois, 10));
+      // Gérer le cas où le jour n'existe pas dans le mois d'arrivée (ex: 31 -> 28/29/30)
+      if (endDate.getDate() !== startDate.getDate()) {
+        endDate.setDate(0); // Dernier jour du mois précédent
+      }
+
       await axios.post("/api/reservations", {
         listingId: bailModal.listingId,
         action: "BAIL",
-        mois: data.mois,
+        mois: parseInt(data.mois, 10),
         startDate: data.dateDebut,
-        endDate: new Date(
-          new Date(data.dateDebut).setMonth(
-            new Date(data.dateDebut).getMonth() + data.mois,
-          ),
-        )
-          .toISOString()
-          .split("T")[0],
+        endDate: endDate.toISOString().split("T")[0],
       });
 
       toast.success("Demande de bail envoyée avec succès");
@@ -120,11 +123,15 @@ const BailModal = () => {
               </p>
               <p>
                 <span className="font-semibold">Fin estimée:</span>{" "}
-                {new Date(
-                  new Date(dateDebut).setMonth(
-                    new Date(dateDebut).getMonth() + mois,
-                  ),
-                ).toLocaleDateString("fr-FR")}
+                {(() => {
+                  const start = new Date(dateDebut);
+                  const end = new Date(start);
+                  end.setMonth(start.getMonth() + parseInt(mois, 10));
+                  if (end.getDate() !== start.getDate()) {
+                    end.setDate(0);
+                  }
+                  return end.toLocaleDateString("fr-FR");
+                })()}
               </p>
             </>
           )}

@@ -34,11 +34,31 @@ class AdminPaiementSerializer(serializers.ModelSerializer):
         ]
 
     def get_locataire_nom(self, obj: Paiement):
-        owner = getattr(getattr(getattr(obj, 'bail', None), 'client_info', None), 'utilisateur', None)
-        if not owner:
-            return None
-        full_name = f"{owner.first_name or ''} {owner.last_name or ''}".strip()
-        return full_name or owner.email
+        # Essayer d'abord via bail
+        bail = getattr(obj, 'bail', None)
+        if bail:
+            owner = getattr(getattr(bail, 'client_info', None), 'utilisateur', None)
+            if owner:
+                full_name = f"{owner.first_name or ''} {owner.last_name or ''}".strip()
+                return full_name or owner.email
+        # Fallback: utiliser la demande via bail
+        if bail and hasattr(bail, 'demande') and bail.demande:
+            demande = bail.demande
+            user = getattr(demande, 'demandeur', None)
+            if user:
+                full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+                return full_name or user.email
+        return None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Gérer les champs qui peuvent être None si bail n'est pas défini
+        if not instance.bail:
+            representation['bien_id'] = None
+            representation['bien_reference'] = None
+            representation['locataire_id'] = None
+            representation['locataire_email'] = None
+        return representation
 
 
 class AdminDepenseSerializer(serializers.ModelSerializer):

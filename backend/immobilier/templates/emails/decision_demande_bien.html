@@ -1,31 +1,60 @@
-{% extends "emails/base_email.html" %}
-
-{% block title %}Mise à jour de votre demande{% endblock %}
-
-{% block body %}
+{% extends "emails/base_email.html" %} {% block title %}Mise à jour de votre
+demande{% endblock %} {% block body %}
 <div class="greeting">
-  {% if est_acceptee %} Félicitations ! {% else %} Information sur votre demande {% endif %}
+  {% if est_acceptee %} Félicitations ! {% else %} Information sur votre demande
+  {% endif %}
 </div>
 
 <p>Bonjour {{ prenom }},</p>
 <p>
-  Nous vous informons que le traitement de votre demande concernant le bien <strong>{{ reference_bien }}</strong> est terminé.
+  Nous vous informons que le traitement de votre demande concernant le bien
+  <strong>{{ reference_bien }}</strong> est terminé.
 </p>
 
-<div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0;">
-  <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Récapitulatif</p>
-  <table style="width: 100%; margin-top: 12px; border-collapse: collapse;">
+<div
+  style="
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    border: 1px solid #e2e8f0;
+  "
+>
+  <p
+    style="
+      margin: 0;
+      font-size: 14px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    "
+  >
+    Récapitulatif
+  </p>
+  <table style="width: 100%; margin-top: 12px; border-collapse: collapse">
     <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Bien</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ reference_bien }}</td>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px">Bien</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600">
+        {{ reference_bien }}
+      </td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Type</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 600;">{{ type_demande }}</td>
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px">Type</td>
+      <td style="padding: 8px 0; text-align: right; font-weight: 600">
+        {{ type_demande }}
+      </td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Statut</td>
-      <td style="padding: 8px 0; text-align: right; font-weight: 700; color: {% if est_acceptee %} #10b981 {% else %} #ef4444 {% endif %};">
+      <td style="padding: 8px 0; color: #64748b; font-size: 14px">Statut</td>
+      <td
+        style="
+          padding: 8px 0;
+          text-align: right;
+          font-weight: 700;
+          color: {% if est_acceptee %} #10b981 {% else %} #ef4444 {% endif %};
+        "
+      >
         {{ statut|upper }}
       </td>
     </tr>
@@ -33,26 +62,75 @@
 </div>
 
 {% if note_proprietaire %}
-<div style="border-left: 4px solid #6366f1; padding-left: 16px; margin: 24px 0;">
-  <p style="font-size: 14px; color: #64748b; margin-bottom: 4px;">Note du propriétaire :</p>
-  <p style="font-style: italic; color: #1e293b;">"{{ note_proprietaire }}"</p>
+<div style="border-left: 4px solid #6366f1; padding-left: 16px; margin: 24px 0">
+  <p style="font-size: 14px; color: #64748b; margin-bottom: 4px">
+    Note du propriétaire :
+  </p>
+  <p style="font-style: italic; color: #1e293b">"{{ note_proprietaire }}"</p>
 </div>
-{% endif %}
-
-{% if not est_acceptee and motif_refus %}
-<div style="background-color: #fef2f2; border-radius: 8px; padding: 16px; margin-top: 24px;">
-  <p style="color: #991b1b; font-size: 14px; margin: 0;"><strong>Motif du refus :</strong> {{ motif_refus }}</p>
+{% endif %} {% if not est_acceptee and motif_refus %}
+<div
+  style="
+    background-color: #fef2f2;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 24px;
+  "
+>
+  <p style="color: #991b1b; font-size: 14px; margin: 0">
+    <strong>Motif du refus :</strong> {{ motif_refus }}
+  </p>
+</div>
+{% endif %} {% if est_acceptee and type_demande == "BAIL" %}
+<div
+  style="
+    background-color: #eff6ff;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    border: 1px solid #dbeafe;
+  "
+>
+  <p
+    style="
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      color: #1e40af;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    "
+  >
+    📋 Prochaines étapes
+  </p>
+  <ol
+    style="
+      margin: 0;
+      padding-left: 20px;
+      color: #1e3a8a;
+      font-size: 14px;
+      line-height: 1.8;
+    "
+  >
+    <li>
+      Le propriétaire va configurer les conditions financières (caution, avance)
+    </li>
+    <li>Vous recevrez une demande de paiement sécurisée par email</li>
+    <li>Après paiement, le contrat de bail sera généré automatiquement</li>
+    <li>Vous pourrez signer électroniquement votre bail</li>
+  </ol>
 </div>
 {% endif %}
 
 <div class="divider"></div>
 
-<div style="text-align: center; margin: 32px 0;">
-  <a href="{{ url_dashboard }}" class="cta-button">Consulter mon tableau de bord</a>
+<div style="text-align: center; margin: 32px 0">
+  <a href="{{ url_dashboard }}" class="cta-button"
+    >Consulter mon tableau de bord</a
+  >
 </div>
 
-<p style="font-size: 14px; color: #64748b; text-align: center;">
-  Besoin d'aide ? <a href="#" style="color: #6366f1;">Contactez-nous</a>
+<p style="font-size: 14px; color: #64748b; text-align: center">
+  Besoin d'aide ? <a href="#" style="color: #6366f1">Contactez-nous</a>
 </p>
 {% endblock %}
-

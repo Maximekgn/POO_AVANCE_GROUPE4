@@ -751,6 +751,36 @@ class EmailService:
             return False
 
     @classmethod
+    def envoyer_nouveau_message_chat(cls, destinataire, expediteur, contenu, url_chat: str = "/") -> bool:
+        """
+        Notifie un utilisateur par email lorsqu'il reçoit un nouveau message dans le chat.
+
+        Paramètres
+        ----------
+        destinataire : Email du destinataire du message.
+        expediteur   : Instance du modèle Utilisateur (l'expéditeur du message).
+        contenu      : Contenu du message (extrait pour l'email).
+        url_chat     : Lien vers le chat.
+        """
+        if not destinataire or not expediteur:
+            return False
+
+        # Tronquer le contenu si trop long
+        contenu_apercu = contenu[:100] + "..." if len(contenu) > 100 else contenu
+
+        return cls._envoyer(
+            sujet=f"💬 Nouveau message de {expediteur.get_full_name() or expediteur.username} — Miabe Immo",
+            template="emails/nouveau_message_chat.html",
+            contexte={
+                "prenom": destinataire.first_name or destinataire.username,
+                "expediteur_nom": expediteur.get_full_name() or expediteur.username,
+                "contenu_apercu": contenu_apercu,
+                "url_chat": url_chat,
+            },
+            destinataire=destinataire,
+        )
+
+    @classmethod
     def envoyer_bail_signe(cls, destinataire, bail, bien, pdf_buffer, role: str = "locataire") -> bool:
         """
         Envoie le bail signé PDF aux deux parties.

@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { FiChevronLeft, FiSend } from "react-icons/fi";
-import RentAction from "./RentAction";
 import { ChatConversation, ChatMessage, ChatUser } from "./types";
 
 type CurrentUserLite = {
@@ -20,6 +19,7 @@ type ChatWindowProps = {
   autoSelectFirstConversation?: boolean;
   initialConversationId?: string;
   className?: string;
+  onClose?: () => void;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
@@ -57,6 +57,7 @@ export default function ChatWindow({
   autoSelectFirstConversation = true,
   initialConversationId,
   className = "",
+  onClose,
 }: ChatWindowProps) {
   const currentUserId = useMemo(
     () => toNumber(currentUser.id),
@@ -822,14 +823,6 @@ export default function ChatWindow({
               />
             </div>
           </header>
-
-          {activeContact ? (
-            <RentAction
-              otherUserId={activeContact.id}
-              accessToken={accessToken}
-              onSuccess={fetchConversations}
-            />
-          ) : null}
 
           <div className="flex-1 overflow-y-auto bg-neutral-50 px-4 py-3">
             <div className="space-y-2">

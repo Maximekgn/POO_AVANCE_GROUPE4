@@ -131,18 +131,25 @@ class ContractService:
                f"Félicitations ! Votre demande de location a été acceptée et finalisée par le propriétaire.\n" \
                f"Vous trouverez ci-joint votre contrat de bail pour le bien {bail.bien.reference}.\n\n" \
                f"Merci d'utiliser notre plateforme de gestion immobilière."
-        
+
+        # Récupérer l'email du propriétaire via proprietaire_info
+        proprietaire_email = None
+        if bail.bien.proprietaire_info and bail.bien.proprietaire_info.utilisateur:
+            proprietaire_email = bail.bien.proprietaire_info.utilisateur.email
+
+        cc_list = [proprietaire_email] if proprietaire_email else []
+
         email = EmailMessage(
             subject,
             body,
             settings.DEFAULT_FROM_EMAIL,
             [client_email],
-            cc=[bail.bien.proprietaire.email]
+            cc=cc_list
         )
-        
+
         # Attacher le PDF
         email.attach(f"Contrat_Bail_{bail.numero_bail}.pdf", pdf_buffer.getvalue(), "application/pdf")
-        
+
         try:
             return email.send(fail_silently=False)
         except Exception as e:

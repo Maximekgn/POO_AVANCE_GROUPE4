@@ -142,7 +142,7 @@ class DemandeActionDetailView(generics.RetrieveAPIView):
     serializer_class = DemandeActionSerializer
 
     def get_queryset(self):
-        return DemandeAction.objects.select_related('bien', 'demandeur', 'proprietaire').all()
+        return DemandeAction.objects.select_related('bien', 'demandeur', 'proprietaire', 'bail_genere').all()
 
     def delete(self, request, *args, **kwargs):
         demande = self.get_object()
@@ -233,6 +233,133 @@ class DemandeActionDecisionView(APIView):
         return Response(DemandeActionSerializer(demande).data, status=status.HTTP_200_OK)
 
 
+class DemandeActionInitBailView(APIView):
+    """
+    Action pour le propriétaire pour initialiser le workflow de bail après acceptation.
+    Configure les paramètres financiers (caution, avance) et crée le bail en brouillon.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        demande = get_object_or_404(
+            DemandeAction.objects.select_related('demandeur', 'proprietaire', 'bien'),
+            pk=pk,
+        )
+
+        # Vérifications de sécurité
+        if request.user.id != demande.proprietaire_id and not request.user.is_staff:
+            raise PermissionDenied("Seul le propriétaire peut initialiser le bail.")
+
+        if demande.statut != StatutDemandeEnum.ACCEPTEE:
+            raise ValidationError({"detail": "La demande doit être acceptée avant d'initialiser le bail."})
+
+        if demande.type_demande != TypeDemandeEnum.BAIL:
+            raise ValidationError({"detail": "Cette action est uniquement disponible pour les demandes de bail."})
+
+        # Vérifier si un bail existe déjà
+        existing_bail = getattr(demande, 'bail_genere', None)
+        if existing_bail and existing_bail.statut != StatutBailEnum.BROUILLON:
+            raise ValidationError({"detail": "Un bail a déjà été créé pour cette demande."})
+
+        # Récupérer les paramètres financiers depuis la requête
+        caution_mois = request.data.get('caution_mois', demande.bien.caution_mois or 1)
+        avance_mois = request.data.get('avance_mois', demande.bien.avance_mois or 1)
+        frais_assistance = request.data.get('frais_assistance', demande.bien.frais_assistance or 0)
+
+        # Validation des valeurs
+        if caution_mois < 1:
+            raise ValidationError({"caution_mois": "La caution doit être d'au moins 1 mois."})
+        if avance_mois < 0:
+            raise ValidationError({"avance_mois": "L'avance ne peut pas être négative."})
+
+        # Mettre à jour le bien avec les paramètres financiers
+        bien = demande.bien
+        bien.caution_mois = caution_mois
+        bien.avance_mois = avance_mois
+        if frais_assistance:
+            bien.frais_assistance = frais_assistance
+        bien.save(update_fields=['caution_mois', 'avance_mois', 'frais_assistance'])
+
+        # Calculer le montant total
+        loyer_hc = float(bien.loyer_hc or 0)
+        charges = float(bien.charges or 0)
+        frais_assistance_val = float(frais_assistance or 0)
+
+        total_caution = loyer_hc * caution_mois
+        total_avance = loyer_hc * avance_mois
+        total_loyer_charges = loyer_hc + charges  # Premier mois
+        montant_total = total_caution + total_avance + total_loyer_charges + frais_assistance_val
+
+        # Mettre à jour la demande avec le montant total
+        demande.montant_total = montant_total
+        demande.save(update_fields=['montant_total'])
+
+        # 1. Récupérer ou Créer les infos client (locataire)
+        client_info, _ = ClientInfo.objects.get_or_create(utilisateur=demande.demandeur)
+
+        # 2. Créer ou mettre à jour l'objet Bail en brouillon
+        import uuid
+        
+        if existing_bail:
+            # Mettre à jour le bail existant
+            bail = existing_bail
+            bail.numero_bail = existing_bail.numero_bail or f"BAIL-{uuid.uuid4().hex[:8].upper()}"
+            bail.date_entree = demande.date_debut
+            bail.date_sortie = demande.date_fin
+            bail.loyer_actuel = loyer_hc + charges
+            bail.depot_garantie = total_caution
+            bail.statut = StatutBailEnum.BROUILLON
+            bail.save()
+        else:
+            # Créer un nouveau bail
+            num_bail = f"BAIL-{uuid.uuid4().hex[:8].upper()}"
+            bail = Bail.objects.create(
+                bien=bien,
+                client_info=client_info,
+                demande=demande,
+                numero_bail=num_bail,
+                date_entree=demande.date_debut,
+                date_sortie=demande.date_fin,
+                loyer_actuel=loyer_hc + charges,
+                depot_garantie=total_caution,
+                statut=StatutBailEnum.BROUILLON,
+            )
+
+        # 3. Envoyer un email de confirmation au locataire avec les détails financiers
+        from django.conf import settings
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+
+        EmailService.envoyer_demande_paiement(
+            demandeur=demande.demandeur,
+            demande=demande,
+            url_paiement=f"{frontend_url}/reservations/demandes/{demande.id}"
+        )
+
+        # 4. Message automatique dans le chat
+        conversation_id = build_conversation_id(demande.demandeur_id, demande.proprietaire_id)
+        Message.objects.create(
+            expediteur=request.user,
+            destinataire=demande.demandeur,
+            contenu=f"Votre bail a été initialisé. Voici le récapitulatif financier :\n- Caution: {caution_mois} mois ({total_caution:,.0f} FCFA)\n- Avance: {avance_mois} mois ({total_avance:,.0f} FCFA)\n- Premier mois (HC + Charges): {total_loyer_charges:,.0f} FCFA\n- Frais d'assistance: {frais_assistance:,.0f} FCFA\n\nTotal à payer: {montant_total:,.0f} FCFA\n\nLe propriétaire va maintenant vous envoyer la demande de paiement.",
+            conversation_id=conversation_id
+        )
+
+        return Response({
+            "message": "Bail initialisé avec succès. Les paramètres financiers ont été configurés.",
+            "bail_id": bail.id,
+            "numero_bail": bail.numero_bail,
+            "montant_total": montant_total,
+            "detail": {
+                "caution_mois": caution_mois,
+                "avance_mois": avance_mois,
+                "total_caution": total_caution,
+                "total_avance": total_avance,
+                "total_loyer_charges": total_loyer_charges,
+                "frais_assistance": frais_assistance,
+            }
+        }, status=status.HTTP_200_OK)
+
+
 class DemandeActionFinaliserLocationView(APIView):
     """
     Action déclenchée par le bouton "Faire louer".
@@ -242,7 +369,7 @@ class DemandeActionFinaliserLocationView(APIView):
 
     def post(self, request, pk):
         demande = get_object_or_404(
-            DemandeAction.objects.select_related('demandeur', 'proprietaire', 'bien'),
+            DemandeAction.objects.select_related('demandeur', 'proprietaire', 'bien', 'bail_genere'),
             pk=pk,
         )
 
@@ -260,22 +387,34 @@ class DemandeActionFinaliserLocationView(APIView):
         # 1. Récupérer ou Créer les infos client (locataire)
         client_info, _ = ClientInfo.objects.get_or_create(utilisateur=demande.demandeur)
 
-        # 2. Créer l'objet Bail
-        import uuid
-        num_bail = f"BAIL-{uuid.uuid4().hex[:8].upper()}"
-
-        bail = Bail.objects.create(
-            bien=demande.bien,
-            client_info=client_info,
-            demande=demande,
-            numero_bail=num_bail,
-            date_entree=demande.date_debut,
-            date_sortie=demande.date_fin,
-            loyer_actuel=demande.bien.loyer_total or demande.montant_total,
-            depot_garantie=demande.bien.loyer_total or 0, # Par défaut un mois ou valeur du bien
-            statut=StatutBailEnum.EN_COURS,
-            date_signature_proprietaire=timezone.now()
-        )
+        # 2. Récupérer le bail existant ou en créer un nouveau
+        bail = getattr(demande, 'bail_genere', None)
+        
+        if bail:
+            # Mettre à jour le bail existant
+            bail.statut = StatutBailEnum.EN_COURS
+            bail.date_signature_proprietaire = timezone.now()
+            bail.save()
+        else:
+            # Créer un nouveau bail
+            import uuid
+            num_bail = f"BAIL-{uuid.uuid4().hex[:8].upper()}"
+            
+            # Calculer le loyer total (loyer_hc + charges)
+            loyer_total = float(demande.bien.loyer_hc or 0) + float(demande.bien.charges or 0)
+            
+            bail = Bail.objects.create(
+                bien=demande.bien,
+                client_info=client_info,
+                demande=demande,
+                numero_bail=num_bail,
+                date_entree=demande.date_debut,
+                date_sortie=demande.date_fin,
+                loyer_actuel=loyer_total if loyer_total > 0 else float(demande.montant_total or 0),
+                depot_garantie=loyer_total if loyer_total > 0 else 0,
+                statut=StatutBailEnum.EN_COURS,
+                date_signature_proprietaire=timezone.now()
+            )
 
         # 3. Mettre à jour le Bien
         bien = demande.bien
@@ -293,13 +432,13 @@ class DemandeActionFinaliserLocationView(APIView):
         Message.objects.create(
             expediteur=request.user,
             destinataire=demande.demandeur,
-            contenu=f"Le contrat de bail #{num_bail} a été généré et vous a été envoyé par e-mail. Bienvenue dans votre nouveau logement !",
+            contenu=f"Le contrat de bail #{bail.numero_bail} a été généré et vous a été envoyé par e-mail. Bienvenue dans votre nouveau logement !",
             conversation_id=conversation_id
         )
 
         return Response({
             "message": "Location finalisée avec succès. Le contrat a été envoyé par e-mail.",
-            "numero_bail": num_bail,
+            "numero_bail": bail.numero_bail,
             "email_sent": email_sent
         }, status=status.HTTP_200_OK)
 
@@ -393,17 +532,37 @@ class DemandeActionConfirmPaymentView(APIView):
         demande.paiement_effectue = True
         demande.save(update_fields=['paiement_effectue'])
 
-        # Notification au propriétaire
+        # Générer le reçu PDF
+        from immobilier.services.billing_service import BillingService
+        receipt_buffer = BillingService.generate_payment_receipt_pdf(demande, demande.montant_total)
+
+        # Envoyer l'email de confirmation avec le reçu au locataire
+        EmailService.envoyer_confirmation_paiement(
+            destinataire=demande.demandeur.email,
+            demande=demande,
+            total_a_payer=demande.montant_total,
+            receipt_pdf_buffer=receipt_buffer
+        )
+
+        # Envoyer une notification au propriétaire avec le reçu
+        EmailService.envoyer_confirmation_paiement(
+            destinataire=demande.proprietaire.email,
+            demande=demande,
+            total_a_payer=demande.montant_total,
+            receipt_pdf_buffer=receipt_buffer
+        )
+
+        # Notification au propriétaire dans le chat
         conversation_id = build_conversation_id(demande.demandeur_id, demande.proprietaire_id)
         Message.objects.create(
             expediteur=request.user,
             destinataire=demande.proprietaire,
-            contenu=f"Le locataire a confirmé le paiement pour le bien {demande.bien.reference}. Vous pouvez maintenant finaliser la location et générer le contrat de bail.",
+            contenu=f"Le locataire a confirmé le paiement pour le bien {demande.bien.reference}. Un reçu a été généré et envoyé aux deux parties. Vous pouvez maintenant finaliser la location et générer le contrat de bail.",
             conversation_id=conversation_id
         )
 
         return Response({
-            "message": "Paiement confirmé avec succès. Le propriétaire peut maintenant finaliser la location."
+            "message": "Paiement confirmé avec succès. Un reçu a été envoyé par email. Le propriétaire peut maintenant finaliser la location."
         }, status=status.HTTP_200_OK)
 
 
@@ -476,18 +635,29 @@ class DemandeActionConfirmPaymentPublicView(APIView):
         from decimal import Decimal
         from immobilier.models import Paiement
         from immobilier.models.enums import StatutPaiementEnum
-        
+
+        # Calculer la commission (5%) et le montant à reverser
+        commission_taux = Decimal('0.05')  # 5%
+        commission_plateforme = Decimal(str(total_a_payer)) * commission_taux
+        montant_reverse = Decimal(str(total_a_payer)) - commission_plateforme
+
         paiement = Paiement.objects.create(
             bail=None,  # Sera lié au bail créé ci-dessous
             demande=demande,
             reference=f"PAIEMENT-{demande.id}-{uuid.uuid4().hex[:6].upper()}",
             montant=Decimal(str(total_a_payer)),
+            commission_plateforme=commission_plateforme,  # Commission de 5%
+            montant_reverse=montant_reverse,  # Montant à reverser au propriétaire
             statut=StatutPaiementEnum.PAYE_A_L_ADMIN,  # Paiement confirmé
             date_paiement=timezone.now(),
+            date_echeance=timezone.now().date(),  # Important pour l'affichage admin
             mode_paiement="Mobile Money",
             commentaire=f"Paiement confirmé pour la demande {demande.id} - {bien.reference}"
         )
-        print(f"[Payment] Objet Paiement créé: {paiement.reference} - Montant: {total_a_payer} FCFA")
+        print(f"[Payment] Objet Paiement créé: {paiement.reference}")
+        print(f"[Payment]   Montant total: {total_a_payer} FCFA")
+        print(f"[Payment]   Commission plateforme (5%): {commission_plateforme} FCFA")
+        print(f"[Payment]   Montant à reverser: {montant_reverse} FCFA")
 
         # Créer automatiquement le bail
         bail = None

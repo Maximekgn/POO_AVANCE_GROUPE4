@@ -98,16 +98,16 @@ const UserMenu: React.FC = () => {
                     label="Mon profil"
                   />
                   <MenuItem
-                    onClick={() => router.push("/trips")}
-                    label="Demandes faites"
-                  />
-                  <MenuItem
                     onClick={() => router.push("/reservations")}
-                    label="Demandes reçues"
+                    label="Mes demandes"
                   />
                   <MenuItem
                     onClick={() => router.push("/locations")}
                     label="Mes locations"
+                  />
+                  <MenuItem
+                    onClick={() => router.push("/mes-baux")}
+                    label="Mes baux"
                   />
                   <MenuItem
                     onClick={() => router.push("/properties")}

@@ -84,9 +84,9 @@ class AdminPaiementListView(AdminFinancePermissionMixin, generics.ListAPIView):
 
         queryset = (
             Paiement.objects
-            .select_related('bail__bien', 'bail__client_info__utilisateur')
+            .select_related('bail__bien', 'bail__client_info__utilisateur', 'bail__demande__demandeur')
             .all()
-            .order_by('-date_echeance', '-id')
+            .order_by('-date_echeance', '-date_paiement', '-id')
         )
 
         statut = self.request.query_params.get('statut')

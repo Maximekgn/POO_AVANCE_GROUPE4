@@ -19,10 +19,20 @@ class BailListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
-        queryset = Bail.objects.select_related('bien__proprietaire_info__utilisateur', 'client_info__utilisateur').all()
+        scope = request.query_params.get('scope', 'all')  # all, locataire, proprietaire
+        
+        queryset = Bail.objects.select_related(
+            'bien__proprietaire_info__utilisateur',
+            'client_info__utilisateur',
+            'demande'
+        )
 
         if request.user.is_staff or request.user.is_superuser:
             pass
+        elif scope == 'locataire':
+            queryset = queryset.filter(client_info__utilisateur_id=request.user.id)
+        elif scope == 'proprietaire':
+            queryset = queryset.filter(bien__proprietaire_info__utilisateur_id=request.user.id)
         else:
             queryset = queryset.filter(
                 Q(bien__proprietaire_info__utilisateur_id=request.user.id)
@@ -32,6 +42,38 @@ class BailListView(APIView):
         queryset = queryset.order_by('-date_entree', '-id')
         serializer = BailSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BailMesBauxView(APIView):
+    """
+    Endpoint pour récupérer les baux de l'utilisateur connecté.
+    Sépare les baux en tant que locataire et propriétaire.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        # Baux en tant que locataire
+        locataire_queryset = Bail.objects.select_related(
+            'bien__proprietaire_info__utilisateur',
+            'client_info__utilisateur',
+            'demande'
+        ).filter(
+            client_info__utilisateur_id=request.user.id
+        ).order_by('-date_entree', '-id')
+
+        # Baux en tant que propriétaire
+        proprietaire_queryset = Bail.objects.select_related(
+            'bien__proprietaire_info__utilisateur',
+            'client_info__utilisateur',
+            'demande'
+        ).filter(
+            bien__proprietaire_info__utilisateur_id=request.user.id
+        ).order_by('-date_entree', '-id')
+
+        return Response({
+            'locataire': BailSerializer(locataire_queryset, many=True).data,
+            'proprietaire': BailSerializer(proprietaire_queryset, many=True).data,
+        }, status=status.HTTP_200_OK)
 
 
 class BailDetailView(APIView):

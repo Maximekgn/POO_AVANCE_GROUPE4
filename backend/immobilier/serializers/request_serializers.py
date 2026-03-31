@@ -20,6 +20,7 @@ class DemandeActionSerializer(serializers.ModelSerializer):
     demandeur_telephone = serializers.CharField(source='demandeur.telephone', read_only=True)
 
     has_lease = serializers.SerializerMethodField()
+    bail_details = serializers.SerializerMethodField()
     paiement_demande_envoyee = serializers.BooleanField(read_only=True)
     paiement_effectue = serializers.BooleanField(read_only=True)
 
@@ -52,6 +53,7 @@ class DemandeActionSerializer(serializers.ModelSerializer):
             'note_proprietaire',
             'motif_refus',
             'has_lease',
+            'bail_details',
             'paiement_demande_envoyee',
             'paiement_effectue',
             'date_creation',
@@ -112,7 +114,19 @@ class DemandeActionSerializer(serializers.ModelSerializer):
         }
 
     def get_has_lease(self, obj):
-        return hasattr(obj, 'bail_genere') and obj.bail_genere is not None
+        return hasattr(obj, 'bail_genere') and obj.bail_genere is not None and obj.bail_genere.statut in ['SIGNE', 'ACTIF']
+
+    def get_bail_details(self, obj):
+        if not hasattr(obj, 'bail_genere') or not obj.bail_genere:
+            return None
+        bail = obj.bail_genere
+        return {
+            'id': bail.id,
+            'numero_bail': bail.numero_bail,
+            'statut': bail.statut,
+            'date_signature_proprietaire': bail.date_signature_proprietaire.isoformat() if bail.date_signature_proprietaire else None,
+            'date_signature_client': bail.date_signature_client.isoformat() if bail.date_signature_client else None,
+        }
 
     def get_proprietaire_nom(self, obj):
         full_name = f"{obj.proprietaire.first_name or ''} {obj.proprietaire.last_name or ''}".strip()

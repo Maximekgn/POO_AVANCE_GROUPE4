@@ -20,6 +20,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 type ListingItem = {
   id: string;
   imageSrc?: string;
@@ -114,6 +116,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
   const [finalisingLocation, setFinalisingLocation] = useState<number | null>(
     null,
   );
+  const [initialisingBail, setInitialisingBail] = useState<number | null>(null);
 
   // Filtres
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -123,8 +126,12 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
     setLoadingDemandes(true);
     try {
       const [envoyeesRes, recuesRes] = await Promise.all([
-        axios.get("/api/demandes-actions?scope=sent"),
-        axios.get("/api/demandes-actions?scope=incoming"),
+        axios.get(`${API_URL}/demandes-actions?scope=sent`, {
+          headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+        }),
+        axios.get(`${API_URL}/demandes-actions?scope=incoming`, {
+          headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+        }),
       ]);
       setDemandesEnvoyees(
         Array.isArray(envoyeesRes.data) ? envoyeesRes.data : [],
@@ -229,7 +236,13 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
   const handleRequestPayment = useCallback(async (demandeId: number) => {
     setRequestingPayment(demandeId);
     try {
-      await axios.post(`/api/demandes-actions/${demandeId}/request-payment`);
+      await axios.post(
+        `${API_URL}/demandes-actions/${demandeId}/request-payment`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+        },
+      );
       toast.success("Demande de paiement envoyée au locataire.");
       setDemandesRecues((prev) =>
         prev.map((d) =>
@@ -249,7 +262,13 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
   const handleConfirmPayment = useCallback(async (demandeId: number) => {
     setConfirmingPayment(demandeId);
     try {
-      await axios.post(`/api/demandes-actions/${demandeId}/confirm-payment`);
+      await axios.post(
+        `${API_URL}/demandes-actions/${demandeId}/confirm-payment`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+        },
+      );
       toast.success(
         "Paiement confirmé. Le propriétaire peut finaliser la location.",
       );
@@ -272,7 +291,13 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
     async (demandeId: number) => {
       setFinalisingLocation(demandeId);
       try {
-        await axios.post(`/api/demandes-actions/${demandeId}/finaliser`);
+        await axios.post(
+          `${API_URL}/demandes-actions/${demandeId}/finaliser`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+          },
+        );
         toast.success(
           "Location finalisée. Le contrat de bail a été envoyé par email.",
         );
@@ -286,7 +311,37 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         setFinalisingLocation(null);
       }
     },
-    [fetchDemandes],
+    [fetchDemandes, currentUser?.accessToken],
+  );
+
+  const handleInitBail = useCallback(
+    async (demandeId: number) => {
+      setInitialisingBail(demandeId);
+      try {
+        await axios.post(
+          `${API_URL}/demandes-actions/${demandeId}/init-bail`,
+          {
+            caution_mois: 2,
+            avance_mois: 1,
+          },
+          {
+            headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+          },
+        );
+        toast.success(
+          "Bail initialisé. Vous pouvez maintenant demander le paiement au locataire.",
+        );
+        fetchDemandes();
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.detail ||
+            "Erreur lors de l'initialisation du bail.",
+        );
+      } finally {
+        setInitialisingBail(null);
+      }
+    },
+    [fetchDemandes, currentUser?.accessToken],
   );
 
   const handleCancelDemande = useCallback(
@@ -294,7 +349,9 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
       if (!confirm("Voulez-vous vraiment annuler cette demande ?")) return;
 
       try {
-        await axios.delete(`/api/demandes-actions/${demandeId}`);
+        await axios.delete(`${API_URL}/demandes-actions/${demandeId}`, {
+          headers: { Authorization: `Bearer ${currentUser?.accessToken}` },
+        });
         toast.success("Demande annulée avec succès.");
         fetchDemandes();
       } catch (error: any) {
@@ -303,7 +360,7 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
         );
       }
     },
-    [fetchDemandes],
+    [fetchDemandes, currentUser?.accessToken],
   );
 
   const onCancel = useCallback(
@@ -676,6 +733,56 @@ const ReservationsClient: React.FC<ReservationsClientProps> = ({
                               {finalisingLocation === demande.id
                                 ? "Traitement..."
                                 : "🏠 Finaliser le bail"}
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                    {/* Workflow actions pour bail accepté */}
+                    {demande.statut === "ACCEPTEE" &&
+                      demande.type_demande === "BAIL" && (
+                        <div className="mt-3 space-y-2 pt-3 border-t border-neutral-100">
+                          {!demande.bail_initialized ? (
+                            <button
+                              type="button"
+                              onClick={() => handleInitBail(demande.id)}
+                              disabled={initialisingBail === demande.id}
+                              className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition disabled:opacity-50"
+                            >
+                              <FileText className="w-3 h-3" />
+                              {initialisingBail === demande.id
+                                ? "Initialisation..."
+                                : "📋 Initialiser le bail"}
+                            </button>
+                          ) : !demande.paiement_demande_envoyee ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRequestPayment(demande.id)}
+                              disabled={requestingPayment === demande.id}
+                              className="w-full flex items-center justify-center gap-2 rounded-lg bg-amber-500 py-2 text-xs font-bold text-white hover:bg-amber-600 transition disabled:opacity-50"
+                            >
+                              <CreditCard className="w-3 h-3" />
+                              {requestingPayment === demande.id
+                                ? "Envoi..."
+                                : "💳 Demander le paiement"}
+                            </button>
+                          ) : !demande.paiement_effectue ? (
+                            <div className="text-center text-xs text-amber-600 bg-amber-50 py-2 rounded-lg">
+                              ⏳ En attente du paiement...
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleFinaliserLocation(demande.id)
+                              }
+                              disabled={finalisingLocation === demande.id}
+                              className="w-full flex items-center justify-center gap-2 rounded-lg bg-green-600 py-2 text-xs font-bold text-white hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              {finalisingLocation === demande.id
+                                ? "Traitement..."
+                                : "✍️ Finaliser et signer le bail"}
                             </button>
                           )}
                         </div>
