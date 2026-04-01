@@ -173,8 +173,8 @@ export default async function AdminDemandeActionDetailPage(props: {
     id: demande.demandeur,
     first_name: "",
     last_name: "",
-    email: demande.demandeur_email,
-    telephone: demande.demandeur_telephone,
+    email: "",
+    telephone: "",
   };
   const proprietaire = demande.proprietaire_details || {
     id: demande.proprietaire,
@@ -192,19 +192,7 @@ export default async function AdminDemandeActionDetailPage(props: {
 
       <div className="mb-6">
         <Heading
-          title={
-            <div className="flex items-center gap-2">
-              {(() => {
-                const IconComponent =
-                  typeIcons[demande.type_demande] || FileText;
-                return <IconComponent className="w-6 h-6" />;
-              })()}
-              <span>
-                Demande de{" "}
-                {typeLabels[demande.type_demande] || demande.type_demande}
-              </span>
-            </div>
-          }
+          title={`Demande de ${typeLabels[demande.type_demande] || demande.type_demande}`}
           subtitle={`Référence: ${bien.reference}`}
         />
       </div>

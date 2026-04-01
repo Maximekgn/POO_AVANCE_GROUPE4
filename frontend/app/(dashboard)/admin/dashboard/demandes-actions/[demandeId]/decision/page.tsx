@@ -80,12 +80,7 @@ export default function AdminDemandeDecisionPage(props: PageProps) {
 
       <div className="max-w-2xl mx-auto">
         <Heading
-          title={
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-6 h-6" />
-              <span>Décider de la demande</span>
-            </div>
-          }
+          title="Décider de la demande"
           subtitle="Acceptez ou refusez cette demande"
         />
 

@@ -256,7 +256,7 @@ export default async function AdminBienDetailPage(props: PageProps) {
                         <span className="font-bold text-green-900">
                           {bien.locataire_actuel.loyer
                             ? parseFloat(
-                                bien.locataire_actuel.loyer,
+                                String(bien.locataire_actuel.loyer),
                               ).toLocaleString("fr-FR")
                             : "0"}{" "}
                           FCFA
@@ -348,7 +348,7 @@ export default async function AdminBienDetailPage(props: PageProps) {
                     <span>📄</span>
                     Créer et envoyer un bail
                   </Link>
-                  {bien.demandes_en_attente > 0 && (
+                  {(bien.demandes_en_attente ?? 0) > 0 && (
                     <Link
                       href={`/admin/dashboard/demandes-actions?bien=${bien.id}`}
                       className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition"

@@ -121,7 +121,11 @@ class AdminPaiementReversementView(APIView):
             raise ValidationError("Le paiement n'a pas été payé à l'admin ou est déjà reversé.")
 
         mode_reversement = request.data.get('mode_reversement', 'Virement Bancaire')
-        preuve_reversement = request.data.get('preuve_reversement', 'Ref automatique')
+        
+        # Génération automatique de la référence de reversement
+        from datetime import datetime
+        reference_reversement = f"REV-{datetime.now().strftime('%Y%m%d')}-{paiement.id:04d}"
+        preuve_reversement = request.data.get('preuve_reversement') or reference_reversement
 
         # Calcul automatique de la commission (5%)
         commission_taux = 0.05  # 5%
@@ -132,7 +136,7 @@ class AdminPaiementReversementView(APIView):
         paiement.commission_plateforme = commission_montant
         paiement.montant_reverse = montant_reverse
         paiement.statut = StatutPaiementEnum.REVERSE_AU_PROPRIETAIRE
-        paiement.commentaire = f"Reversé le {timezone.now().strftime('%d/%m/%Y')} via {mode_reversement} (Ref: {preuve_reversement}). Commission: {commission_montant:.2f} FCFA ({commission_taux*100:.0f}%)"
+        paiement.commentaire = f"Reversé le {timezone.now().strftime('%d/%m/%Y')} via {mode_reversement} (Ref: {reference_reversement}). Commission: {commission_montant:.2f} FCFA ({commission_taux*100:.0f}%)"
         paiement.save(update_fields=['commission_plateforme', 'montant_reverse', 'statut', 'commentaire'])
 
         # Envoi e-mail transactionnel via send_mail ou le EmailService
@@ -142,20 +146,24 @@ class AdminPaiementReversementView(APIView):
             try:
                 EmailService._envoyer(
                     sujet=f"💰 Vos fonds pour {paiement.bail.bien.reference} ont été reversés",
-                    template="emails/notification_privatisation_acceptee.html", # Mieux vaudrait un template spécifique mais on réutilise pour la démo
+                    template="emails/reversement_fonds.html",
                     contexte={
                         "prenom": proprietaire.first_name or proprietaire.username,
                         "reference_bien": paiement.bail.bien.reference,
                         "adresse_bien": paiement.bail.bien.ville,
-                        "date_fin": "N/A", 
-                        "url_dashboard": "/admin/dashboard", 
+                        "montant_reverse": f"{montant_reverse:,.0f}",
+                        "commission_plateforme": f"{commission_montant:,.0f}",
+                        "mode_reversement": mode_reversement,
+                        "reference_reversement": reference_reversement,
+                        "date_reversement": timezone.now().strftime("%d/%m/%Y à %H:%M"),
+                        "url_dashboard": "/admin/dashboard/finances",
                     },
                     destinataire=proprietaire.email
                 )
             except Exception as e:
-                print("Failed to send revertion email:", e)
+                print("Failed to send reversion email:", e)
 
-        return Response({"message": "Fonds reversés au propriétaire avec succès.", "statut": paiement.statut}, status=status.HTTP_200_OK)
+        return Response({"message": "Fonds reversés au propriétaire avec succès.", "statut": paiement.statut, "reference_reversement": reference_reversement}, status=status.HTTP_200_OK)
 
 
 class DemandeActionFactureView(APIView):

@@ -45,6 +45,18 @@ export type AdminBien = {
     ordre?: number;
     date_upload?: string;
   }>;
+  locataire_actuel?: {
+    nom: string;
+    email: string;
+    telephone?: string;
+    date_entree?: string;
+    date_sortie?: string;
+    statut_bail: string;
+    loyer?: string | number;
+  } | null;
+  visites_a_venir?: number | null;
+  privatisations_actives?: number | null;
+  demandes_en_attente?: number | null;
 };
 
 export type AdminDocument = {

@@ -302,12 +302,7 @@ export default function AdminDemandeFinaliserPage(props: PageProps) {
 
       <div className="max-w-3xl mx-auto">
         <Heading
-          title={
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-6 h-6" />
-              <span>Finaliser le Bail</span>
-            </div>
-          }
+          title="Finaliser le Bail"
           subtitle="Configurez les tarifs et signez le bail"
         />
 

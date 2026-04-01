@@ -12,6 +12,8 @@ interface InputProps {
   required?: boolean;
   register: UseFormRegister<FieldValues>;
   errors: FieldErrors;
+  min?: number;
+  max?: number;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -23,6 +25,8 @@ const Input: React.FC<InputProps> = ({
   required = false,
   register,
   errors,
+  min,
+  max,
 }) => {
   return (
     <div className="w-full relative">
@@ -36,6 +40,8 @@ const Input: React.FC<InputProps> = ({
         id={id}
         type={type}
         disabled={disabled}
+        min={min}
+        max={max}
         {...register(id, { required })}
         placeholder=" "
         className={`

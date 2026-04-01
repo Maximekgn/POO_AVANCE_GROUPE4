@@ -1,4 +1,5 @@
 from decimal import Decimal
+import random
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -12,6 +13,7 @@ from immobilier.models import (
     ProprietaireInfo,
     ClientInfo,
 )
+from immobilier.models.patrimoine import Photo
 from immobilier.models.enums import StatutBienEnum, TypeDocumentEnum
 
 
@@ -22,12 +24,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING("Démarrage du seeding..."))
 
+        # ==================== ADMIN ====================
         admin, admin_created = Utilisateur.objects.get_or_create(
-            email="kogonmaxime+100@gmail.com",
+            email="kogonmaxime@gmail.com",
             defaults={
                 "username": "admin",
-                "first_name": "Super",
-                "last_name": "Admin",
+                "first_name": "Maxime",
+                "last_name": "Kogon",
                 "is_active": True,
                 "is_staff": True,
                 "is_superuser": True,
@@ -36,54 +39,63 @@ class Command(BaseCommand):
             },
         )
         if admin_created:
-            admin.set_password("maxime@2006")
+            admin.set_password("password")
             admin.save()
+            self.stdout.write(self.style.SUCCESS("✓ Admin créé: kogonmaxime@gmail.com / password"))
 
-        users_seed = [
-            {
-                "email": "alice@demo.com",
-                "username": "alice@demo.com",
-                "first_name": "Alice",
-                "last_name": "Kossi",
-                "telephone": "+22890000001",
+        # ==================== USER (CLIENT) ====================
+        user_client, user_created = Utilisateur.objects.get_or_create(
+            email="kogonmaxime+0@gmail.com",
+            defaults={
+                "username": "client_demo",
+                "first_name": "Jean",
+                "last_name": "Client",
+                "telephone": "+22890000000",
                 "is_active": True,
                 "email_verifie": True,
                 "documents_complets": True,
-                "password": "User12345!",
             },
-            {
-                "email": "brice@demo.com",
-                "username": "brice@demo.com",
-                "first_name": "Brice",
-                "last_name": "Mensah",
-                "telephone": "+22890000002",
-                "is_active": True,
-                "email_verifie": False,
-                "documents_complets": False,
-                "password": "User12345!",
-            },
-            {
-                "email": "carine@demo.com",
-                "username": "carine@demo.com",
-                "first_name": "Carine",
-                "last_name": "Abalo",
-                "telephone": "+22890000003",
+        )
+        if user_created:
+            user_client.set_password("password")
+            user_client.save()
+            ClientInfo.objects.get_or_create(
+                utilisateur=user_client,
+                defaults={
+                    "profession": "Développeur",
+                    "numero_piece": "PIECE-CLIENT-001",
+                    "revenus_mensuels": Decimal("500000.00"),
+                },
+            )
+            self.stdout.write(self.style.SUCCESS("✓ Client créé: kogonmaxime+0@gmail.com / password"))
+
+        # ==================== PROPRIETAIRE ====================
+        proprio, proprio_created = Utilisateur.objects.get_or_create(
+            email="kogonmaxime+1@gmail.com",
+            defaults={
+                "username": "proprietaire_demo",
+                "first_name": "Pierre",
+                "last_name": "Proprio",
+                "telephone": "+22891000001",
                 "is_active": True,
                 "email_verifie": True,
                 "documents_complets": True,
-                "password": "User12345!",
             },
-        ]
+        )
+        if proprio_created:
+            proprio.set_password("password")
+            proprio.save()
+            proprietaire_info, _ = ProprietaireInfo.objects.get_or_create(
+                utilisateur=proprio,
+                defaults={
+                    "iban": "TG00BANK000000000000001",
+                    "adresse_fiscale": "123 Rue de la Paix, Lomé",
+                    "numero_piece": "PIECE-PROPRIO-001",
+                },
+            )
+            self.stdout.write(self.style.SUCCESS("✓ Propriétaire créé: kogonmaxime+1@gmail.com / password"))
 
-        created_users = []
-        for payload in users_seed:
-            password = payload.pop("password")
-            user, created = Utilisateur.objects.get_or_create(email=payload["email"], defaults=payload)
-            if created:
-                user.set_password(password)
-                user.save()
-            created_users.append(user)
-
+        # ==================== CATÉGORIES ====================
         categories_seed = [
             {"nom": "Appartement", "slug": "appartement", "ordre": 1, "actif": True},
             {"nom": "Maison", "slug": "maison", "ordre": 2, "actif": True},
@@ -120,43 +132,12 @@ class Command(BaseCommand):
             defaults={"nom": "Villa", "ordre": 1, "actif": True},
         )
 
-        for idx, owner in enumerate(created_users, start=1):
-            proprietaire_info, _ = ProprietaireInfo.objects.get_or_create(
-                utilisateur=owner,
-                defaults={
-                    "iban": f"TG00BANK00000000000000{idx}",
-                    "adresse_fiscale": f"Adresse fiscale {idx}",
-                    "numero_piece": f"PIECE-PROP-{idx:03d}",
-                },
-            )
-
-            client_info, _ = ClientInfo.objects.get_or_create(
-                utilisateur=owner,
-                defaults={
-                    "profession": "Salarié",
-                    "numero_piece": f"PIECE-CL-{idx:03d}",
-                    "revenus_mensuels": Decimal("450000.00"),
-                },
-            )
-
-            if owner.documents_complets:
-                doc, _ = Document.objects.get_or_create(
-                    nom=f"piece_identite_{owner.id}.pdf",
-                    type=TypeDocumentEnum.PIECE_IDENTITE,
-                    defaults={
-                        "url": f"https://example.com/documents/piece_identite_{owner.id}.pdf",
-                        "taille_octets": 102400,
-                        "mime_type": "application/pdf",
-                    },
-                )
-                proprietaire_info.carte_identite = doc
-                proprietaire_info.save(update_fields=["carte_identite"])
-                client_info.carte_identite = doc
-                client_info.save(update_fields=["carte_identite"])
+        # ==================== BIENS (liés au propriétaire) ====================
+        proprietaire_info = ProprietaireInfo.objects.get(utilisateur=proprio)
 
         biens_seed = [
             {
-                "reference": "BIEN-DEMO-001",
+                "reference": "BIEN-PROP-001",
                 "categorie": appartement,
                 "sous_type": studio,
                 "adresse": "123 Rue de la Paix",
@@ -165,7 +146,7 @@ class Command(BaseCommand):
                 "code_postal": "00001",
                 "latitude": Decimal("6.131900"),
                 "longitude": Decimal("1.222800"),
-                "description": "Studio meublé proche centre-ville",
+                "description": "Studio meublé proche centre-ville avec vue dégagée",
                 "superficie": Decimal("35.00"),
                 "nb_pieces": 1,
                 "etage": 2,
@@ -176,9 +157,10 @@ class Command(BaseCommand):
                 "charges": Decimal("10000.00"),
                 "depot_garantie": Decimal("120000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-002",
+                "reference": "BIEN-PROP-002",
                 "categorie": appartement,
                 "sous_type": t3,
                 "adresse": "45 Avenue des Cocotiers",
@@ -187,7 +169,7 @@ class Command(BaseCommand):
                 "code_postal": "00002",
                 "latitude": Decimal("6.137500"),
                 "longitude": Decimal("1.212300"),
-                "description": "Appartement T3 lumineux",
+                "description": "Appartement T3 lumineux avec balcon",
                 "superficie": Decimal("82.00"),
                 "nb_pieces": 3,
                 "etage": 4,
@@ -198,9 +180,10 @@ class Command(BaseCommand):
                 "charges": Decimal("20000.00"),
                 "depot_garantie": Decimal("280000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-003",
+                "reference": "BIEN-PROP-003",
                 "categorie": maison,
                 "sous_type": villa,
                 "adresse": "9 Route de Kpalime",
@@ -209,7 +192,7 @@ class Command(BaseCommand):
                 "code_postal": "00003",
                 "latitude": Decimal("6.904900"),
                 "longitude": Decimal("0.633300"),
-                "description": "Villa familiale avec jardin",
+                "description": "Villa familiale avec jardin et terrasse",
                 "superficie": Decimal("150.00"),
                 "nb_pieces": 5,
                 "etage": 0,
@@ -219,10 +202,11 @@ class Command(BaseCommand):
                 "loyer_hc": Decimal("450000.00"),
                 "charges": Decimal("35000.00"),
                 "depot_garantie": Decimal("450000.00"),
-                "statut": StatutBienEnum.EN_ATTENTE_VALIDATION,
+                "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-004",
+                "reference": "BIEN-PROP-004",
                 "categorie": maison,
                 "sous_type": villa,
                 "adresse": "12 Rue des Bougainvilliers",
@@ -231,7 +215,7 @@ class Command(BaseCommand):
                 "code_postal": "00004",
                 "latitude": Decimal("9.551100"),
                 "longitude": Decimal("1.186700"),
-                "description": "Villa moderne avec piscine",
+                "description": "Villa moderne avec piscine et garage",
                 "superficie": Decimal("180.00"),
                 "nb_pieces": 6,
                 "etage": 1,
@@ -242,9 +226,10 @@ class Command(BaseCommand):
                 "charges": Decimal("40000.00"),
                 "depot_garantie": Decimal("600000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-005",
+                "reference": "BIEN-PROP-005",
                 "categorie": appartement,
                 "sous_type": t3,
                 "adresse": "78 Boulevard du 13 Janvier",
@@ -253,7 +238,7 @@ class Command(BaseCommand):
                 "code_postal": "00005",
                 "latitude": Decimal("7.533300"),
                 "longitude": Decimal("1.133300"),
-                "description": "Appartement T3 rénové",
+                "description": "Appartement T3 rénové avec climatisation",
                 "superficie": Decimal("90.00"),
                 "nb_pieces": 3,
                 "etage": 5,
@@ -264,9 +249,10 @@ class Command(BaseCommand):
                 "charges": Decimal("25000.00"),
                 "depot_garantie": Decimal("320000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-006",
+                "reference": "BIEN-PROP-006",
                 "categorie": maison,
                 "sous_type": villa,
                 "adresse": "5 Rue des Manguiers",
@@ -275,7 +261,7 @@ class Command(BaseCommand):
                 "code_postal": "00006",
                 "latitude": Decimal("8.983300"),
                 "longitude": Decimal("1.133300"),
-                "description": "Villa de luxe avec terrasse",
+                "description": "Villa de luxe avec terrasse panoramique",
                 "superficie": Decimal("200.00"),
                 "nb_pieces": 7,
                 "etage": 2,
@@ -286,9 +272,10 @@ class Command(BaseCommand):
                 "charges": Decimal("50000.00"),
                 "depot_garantie": Decimal("800000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-007",
+                "reference": "BIEN-PROP-007",
                 "categorie": appartement,
                 "sous_type": studio,
                 "adresse": "34 Rue des Palmiers",
@@ -308,9 +295,10 @@ class Command(BaseCommand):
                 "charges": Decimal("8000.00"),
                 "depot_garantie": Decimal("100000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-008",
+                "reference": "BIEN-PROP-008",
                 "categorie": maison,
                 "sous_type": villa,
                 "adresse": "22 Rue des Orangers",
@@ -319,7 +307,7 @@ class Command(BaseCommand):
                 "code_postal": "00008",
                 "latitude": Decimal("6.227900"),
                 "longitude": Decimal("1.591900"),
-                "description": "Villa spacieuse avec garage",
+                "description": "Villa spacieuse avec garage double",
                 "superficie": Decimal("220.00"),
                 "nb_pieces": 8,
                 "etage": 1,
@@ -330,9 +318,10 @@ class Command(BaseCommand):
                 "charges": Decimal("60000.00"),
                 "depot_garantie": Decimal("900000.00"),
                 "statut": StatutBienEnum.EN_ATTENTE_VALIDATION,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-009",
+                "reference": "BIEN-PROP-009",
                 "categorie": appartement,
                 "sous_type": studio,
                 "adresse": "56 Rue des Hibiscus",
@@ -341,7 +330,7 @@ class Command(BaseCommand):
                 "code_postal": "00009",
                 "latitude": Decimal("6.133000"),
                 "longitude": Decimal("1.224000"),
-                "description": "Studio moderne avec balcon",
+                "description": "Studio moderne avec balcon et vue mer",
                 "superficie": Decimal("32.00"),
                 "nb_pieces": 1,
                 "etage": 3,
@@ -352,9 +341,10 @@ class Command(BaseCommand):
                 "charges": Decimal("9000.00"),
                 "depot_garantie": Decimal("110000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
             {
-                "reference": "BIEN-DEMO-010",
+                "reference": "BIEN-PROP-010",
                 "categorie": maison,
                 "sous_type": villa,
                 "adresse": "17 Rue des Baobabs",
@@ -363,7 +353,7 @@ class Command(BaseCommand):
                 "code_postal": "00010",
                 "latitude": Decimal("9.550000"),
                 "longitude": Decimal("1.170000"),
-                "description": "Villa contemporaine avec jardin tropical",
+                "description": "Villa contemporaine avec jardin tropical et piscine",
                 "superficie": Decimal("250.00"),
                 "nb_pieces": 9,
                 "etage": 2,
@@ -374,37 +364,36 @@ class Command(BaseCommand):
                 "charges": Decimal("70000.00"),
                 "depot_garantie": Decimal("1000000.00"),
                 "statut": StatutBienEnum.VACANT,
+                "is_active": True,
             },
         ]
 
-        for idx, bien_data in enumerate(biens_seed):
-            owner = created_users[idx % len(created_users)]
-            proprietaire_info = ProprietaireInfo.objects.get(utilisateur=owner)
-            bien, _ = Bien.objects.get_or_create(
+        created_biens = []
+        for bien_data in biens_seed:
+            bien, created = Bien.objects.get_or_create(
                 reference=bien_data["reference"],
                 defaults={
                     **bien_data,
                     "proprietaire_info": proprietaire_info,
                 },
             )
-            for field, value in bien_data.items():
-                setattr(bien, field, value)
-            bien.proprietaire_info = proprietaire_info
-            bien.save()
+            if created:
+                # Ajout de photos pour chaque bien
+                nb_photos = random.randint(3, 8)
+                for i in range(nb_photos):
+                    Photo.objects.create(
+                        bien=bien,
+                        url=f"https://example.com/photos/{bien.reference.lower()}_{i+1}.jpg",
+                        description=f"Photo {i+1} du bien {bien.reference}",
+                        principale=(i == 0),
+                        ordre=i,
+                    )
+                created_biens.append(bien)
 
-            # Ajout d'un nombre aléatoire de photos (entre 3 et 8) pour chaque bien
-            import random
-            from immobilier.models.patrimoine import Photo
-            nb_photos = random.randint(3, 8)
-            for i in range(nb_photos):
-                Photo.objects.create(
-                    bien=bien,
-                    url=f"https://example.com/photos/{bien.reference.lower()}_{i+1}.jpg",
-                    description=f"Photo {i+1} du bien {bien.reference}",
-                    principale=(i == 0),
-                    ordre=i
-                )
-
-        self.stdout.write(self.style.SUCCESS("Seeding terminé avec succès."))
-        self.stdout.write("Admin: admin@immobilierpro.local / Admin12345!")
-        self.stdout.write("Users: alice@demo.com, brice@demo.com, carine@demo.com / User12345!")
+        self.stdout.write(self.style.SUCCESS(f"\n✓ {len(biens_seed)} biens créés pour le propriétaire"))
+        self.stdout.write(self.style.SUCCESS("\n=================== RÉCAPITULATIF ==================="))
+        self.stdout.write(self.style.SUCCESS("Admin: kogonmaxime@gmail.com / password"))
+        self.stdout.write(self.style.SUCCESS("Client: kogonmaxime+0@gmail.com / password"))
+        self.stdout.write(self.style.SUCCESS("Proprio: kogonmaxime+1@gmail.com / password"))
+        self.stdout.write(self.style.SUCCESS(f"Total biens: {len(biens_seed)} (tous liés à proprio)"))
+        self.stdout.write(self.style.SUCCESS("=====================================================\n"))

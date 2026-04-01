@@ -11,8 +11,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 export default function AdminCreateLeasePage() {
   const router = useRouter();
   const params = useParams();
-  const bienId = parseInt(params.bienId as string, 10);
-  
+  const bienId = parseInt(params?.bienId as string, 10);
+
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     client_info_id: "",
@@ -26,8 +26,12 @@ export default function AdminCreateLeasePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.client_info_id || !formData.date_entree || !formData.date_sortie) {
+
+    if (
+      !formData.client_info_id ||
+      !formData.date_entree ||
+      !formData.date_sortie
+    ) {
       toast.error("Veuillez remplir les champs obligatoires.");
       return;
     }
@@ -99,7 +103,10 @@ export default function AdminCreateLeasePage() {
         subtitle="Générer et envoyer un contrat de bail au locataire"
       />
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-white p-6 rounded-2xl border border-neutral-200">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-8 space-y-6 bg-white p-6 rounded-2xl border border-neutral-200"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-semibold text-neutral-700 mb-2">
@@ -108,7 +115,9 @@ export default function AdminCreateLeasePage() {
             <input
               type="number"
               value={formData.client_info_id}
-              onChange={(e) => setFormData({ ...formData, client_info_id: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, client_info_id: e.target.value })
+              }
               placeholder="Ex: 123"
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500"
               required
@@ -124,7 +133,9 @@ export default function AdminCreateLeasePage() {
             </label>
             <select
               value={formData.duree_mois}
-              onChange={(e) => setFormData({ ...formData, duree_mois: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, duree_mois: e.target.value })
+              }
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500"
             >
               <option value="6">6 mois</option>
@@ -141,7 +152,9 @@ export default function AdminCreateLeasePage() {
             <input
               type="date"
               value={formData.date_entree}
-              onChange={(e) => setFormData({ ...formData, date_entree: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, date_entree: e.target.value })
+              }
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500"
               required
             />
@@ -154,7 +167,9 @@ export default function AdminCreateLeasePage() {
             <input
               type="date"
               value={formData.date_sortie}
-              onChange={(e) => setFormData({ ...formData, date_sortie: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, date_sortie: e.target.value })
+              }
               min={formData.date_entree}
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500"
               required
@@ -168,7 +183,9 @@ export default function AdminCreateLeasePage() {
             <input
               type="number"
               value={formData.loyer_actuel}
-              onChange={(e) => setFormData({ ...formData, loyer_actuel: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, loyer_actuel: e.target.value })
+              }
               placeholder="Ex: 150000"
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500"
             />
@@ -181,7 +198,9 @@ export default function AdminCreateLeasePage() {
             <input
               type="number"
               value={formData.depot_garantie}
-              onChange={(e) => setFormData({ ...formData, depot_garantie: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, depot_garantie: e.target.value })
+              }
               placeholder="Ex: 150000"
               className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500"
             />
@@ -194,7 +213,9 @@ export default function AdminCreateLeasePage() {
           </label>
           <textarea
             value={formData.note_proprietaire}
-            onChange={(e) => setFormData({ ...formData, note_proprietaire: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, note_proprietaire: e.target.value })
+            }
             placeholder="Message optionnel à inclure dans l'email..."
             rows={4}
             className="w-full rounded-xl border border-neutral-300 px-4 py-3 outline-none focus:border-blue-500 resize-none"

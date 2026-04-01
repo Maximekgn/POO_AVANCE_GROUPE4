@@ -132,8 +132,8 @@ export const RevenueHistoryChart = ({ data }: { data: RevenueHistory }) => {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 backgroundColor: "white",
               }}
-              formatter={(value: number) => [
-                `${value.toLocaleString("fr-FR")} FCFA`,
+              formatter={(value) => [
+                `${Number(value ?? 0).toLocaleString("fr-FR")} FCFA`,
                 "Encaissement",
               ]}
               labelStyle={{ fontWeight: "600", marginBottom: "8px" }}

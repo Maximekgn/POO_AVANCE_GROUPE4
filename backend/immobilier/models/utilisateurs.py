@@ -14,6 +14,23 @@ class Utilisateur(AbstractUser):
     compte_verifie = models.BooleanField(default=False)
     email_verifie = models.BooleanField(default=False)
     documents_complets = models.BooleanField(default=False)
+    
+    # Vérification d'identité (obligatoire pour tous)
+    piece_identite_recto = models.ImageField(upload_to='identite/recto/', blank=True, null=True)
+    piece_identite_verso = models.ImageField(upload_to='identite/verso/', blank=True, null=True)
+    photo_avec_piece = models.ImageField(upload_to='identite/photo/', blank=True, null=True)
+    verification_statut = models.CharField(
+        max_length=20,
+        choices=[
+            ('NON_SOUMIS', 'Non soumis'),
+            ('EN_ATTENTE', 'En attente de vérification'),
+            ('VERIFIE', 'Vérifié'),
+            ('REFUSE', 'Refusé'),
+        ],
+        default='NON_SOUMIS'
+    )
+    verification_motif_refus = models.TextField(blank=True, null=True)
+    
     date_creation = models.DateTimeField(auto_now_add=True, null=True)
     dernier_login_custom = models.DateTimeField(null=True, blank=True)
 
@@ -60,6 +77,13 @@ class ProprietaireInfo(models.Model):
     adresse_fiscale = models.TextField(blank=True, null=True)
     numero_piece = models.CharField(max_length=100, blank=True, null=True)
     carte_identite = models.ForeignKey('immobilier.Document', on_delete=models.SET_NULL, null=True, blank=True, related_name='proprietaire_identite')
+    
+    # Vérification de propriété (obligatoire pour créer des biens)
+    titre_propriete = models.ImageField(upload_to='propriete/titres/', blank=True, null=True)
+    video_avec_titre = models.FileField(upload_to='propriete/videos/', blank=True, null=True)
+    propriete_verifiee = models.BooleanField(default=False)
+    propriete_motif_refus = models.TextField(blank=True, null=True)
+    
     date_creation = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

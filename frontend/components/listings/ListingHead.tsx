@@ -48,6 +48,7 @@ interface IListingHeadProps {
   imageSrc: string;
   imageSources?: string[];
   id: string;
+  currentUser?: any;
 }
 
 const ListingHead: React.FC<IListingHeadProps> = ({

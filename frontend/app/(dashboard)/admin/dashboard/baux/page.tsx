@@ -106,12 +106,7 @@ export default async function AdminBauxPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Heading
-            title={
-              <div className="flex items-center gap-2">
-                <FileText className="w-6 h-6" />
-                <span>Gestion des baux</span>
-              </div>
-            }
+            title="Gestion des baux"
             subtitle="Liste de tous les baux de la plateforme"
           />
         </div>

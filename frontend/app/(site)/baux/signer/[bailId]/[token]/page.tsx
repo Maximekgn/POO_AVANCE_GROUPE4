@@ -213,12 +213,7 @@ export default function BailSignerPage(props: PageProps) {
         </div>
 
         <Heading
-          title={
-            <div className="flex items-center gap-2">
-              <PenTool className="w-6 h-6" />
-              <span>Signature du bail</span>
-            </div>
-          }
+          title="Signature du bail"
           subtitle={`Bail n° ${bail.numero_bail}`}
         />
 
@@ -376,7 +371,7 @@ export default function BailSignerPage(props: PageProps) {
 
               <button
                 onClick={handleSign}
-                disabled={busy || bail.date_signature_client}
+                disabled={busy || !!bail.date_signature_client}
                 className="w-full rounded-xl bg-green-600 px-6 py-4 text-base font-bold text-white hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-5 h-5" />

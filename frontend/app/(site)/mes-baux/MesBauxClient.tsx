@@ -4,7 +4,18 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Container from "@/components/Container";
-import { FileText, Home, User, Calendar, MapPin, Euro, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import Heading from "@/components/Heading";
+import {
+  FileText,
+  Home,
+  User,
+  Calendar,
+  MapPin,
+  Euro,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
@@ -46,11 +57,15 @@ interface MesBauxClientProps {
 export default function MesBauxClient({ user }: MesBauxClientProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"locataire" | "proprietaire">("locataire");
-  const [baux, setBaux] = useState<{ locataire: Bail[]; proprietaire: Bail[] }>({
-    locataire: [],
-    proprietaire: [],
-  });
+  const [activeTab, setActiveTab] = useState<"locataire" | "proprietaire">(
+    "locataire",
+  );
+  const [baux, setBaux] = useState<{ locataire: Bail[]; proprietaire: Bail[] }>(
+    {
+      locataire: [],
+      proprietaire: [],
+    },
+  );
 
   const fetchBaux = useCallback(async () => {
     setLoading(true);
@@ -131,9 +146,13 @@ export default function MesBauxClient({ user }: MesBauxClientProps) {
             <User className="w-4 h-4" />
             En tant que locataire
             {baux.locataire.length > 0 && (
-              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === "locataire" ? "bg-white text-neutral-900" : "bg-neutral-200"
-              }`}>
+              <span
+                className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                  activeTab === "locataire"
+                    ? "bg-white text-neutral-900"
+                    : "bg-neutral-200"
+                }`}
+              >
                 {baux.locataire.length}
               </span>
             )}
@@ -149,9 +168,13 @@ export default function MesBauxClient({ user }: MesBauxClientProps) {
             <Home className="w-4 h-4" />
             En tant que propriétaire
             {baux.proprietaire.length > 0 && (
-              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                activeTab === "proprietaire" ? "bg-white text-neutral-900" : "bg-neutral-200"
-              }`}>
+              <span
+                className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                  activeTab === "proprietaire"
+                    ? "bg-white text-neutral-900"
+                    : "bg-neutral-200"
+                }`}
+              >
                 {baux.proprietaire.length}
               </span>
             )}
@@ -178,7 +201,9 @@ export default function MesBauxClient({ user }: MesBauxClientProps) {
               onClick={() => router.push("/properties")}
               className="mt-6 rounded-xl bg-neutral-900 px-6 py-3 text-sm font-semibold text-white hover:bg-neutral-800 transition"
             >
-              {activeTab === "locataire" ? "Trouver un logement" : "Gérer vos biens"}
+              {activeTab === "locataire"
+                ? "Trouver un logement"
+                : "Gérer vos biens"}
             </button>
           </div>
         ) : (
@@ -226,16 +251,12 @@ export default function MesBauxClient({ user }: MesBauxClientProps) {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-neutral-600">
                       <Calendar className="w-4 h-4" />
-                      <span>
-                        {formatDate(bail.date_entree)}
-                      </span>
+                      <span>{formatDate(bail.date_entree)}</span>
                     </div>
                     {bail.date_sortie && (
                       <div className="flex items-center gap-2 text-sm text-neutral-600">
                         <Clock className="w-4 h-4" />
-                        <span>
-                          Au {formatDate(bail.date_sortie)}
-                        </span>
+                        <span>Au {formatDate(bail.date_sortie)}</span>
                       </div>
                     )}
                   </div>
@@ -267,18 +288,29 @@ export default function MesBauxClient({ user }: MesBauxClientProps) {
                   {/* Footer */}
                   <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between">
                     <span className="text-xs text-neutral-500">
-                      {bail.date_signature_proprietaire && bail.date_signature_client
+                      {bail.date_signature_proprietaire &&
+                      bail.date_signature_client
                         ? "Bail signé par les deux parties"
                         : bail.date_signature_proprietaire
-                        ? "En attente du locataire"
-                        : bail.date_signature_client
-                        ? "En attente du propriétaire"
-                        : "En attente de signatures"}
+                          ? "En attente du locataire"
+                          : bail.date_signature_client
+                            ? "En attente du propriétaire"
+                            : "En attente de signatures"}
                     </span>
                     <span className="text-sm font-semibold text-neutral-900 flex items-center gap-1">
                       Voir le bail
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </span>
                   </div>

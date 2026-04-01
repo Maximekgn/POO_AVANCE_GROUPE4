@@ -246,6 +246,7 @@ class CurrentUserFinanceView(APIView):
     def get(self, request: Request) -> Response:
         user = request.user
 
+        # 1. Demandes d'actions (privatisations, etc.) - Dépenses du user
         outgoing_qs = (
             DemandeAction.objects
             .select_related('bien')
@@ -254,6 +255,7 @@ class CurrentUserFinanceView(APIView):
             .order_by('-date_creation', '-id')
         )
 
+        # 2. Demandes d'actions - Revenus du user (propriétaire)
         incoming_qs = (
             DemandeAction.objects
             .select_related('bien')
@@ -262,10 +264,49 @@ class CurrentUserFinanceView(APIView):
             .order_by('-date_creation', '-id')
         )
 
+        # 3. Paiements des loyers - dépend si user est proprio ou locataire
+        # Récupérer tous les biens du propriétaire
+        proprio_biens = Bien.objects.filter(proprietaire_info__utilisateur=user).values_list('id', flat=True)
+        
+        # Paiements REVERSÉS au propriétaire (via ses biens)
+        paiements_proprio_qs = (
+            Paiement.objects
+            .filter(bail__bien_id__in=proprio_biens)
+            .filter(statut=StatutPaiementEnum.REVERSE_AU_PROPRIETAIRE)
+            .select_related('bail__bien', 'bail__client_info__utilisateur')
+            .order_by('-date_paiement', '-date_echeance', '-id')
+        )
+        
+        # Paiements FAITS par le locataire (user = client_info)
+        paiements_locataire_qs = (
+            Paiement.objects
+            .filter(bail__client_info__utilisateur=user)
+            .exclude(statut=StatutPaiementEnum.EN_ATTENTE)
+            .select_related('bail__bien', 'bail__client_info__utilisateur')
+            .order_by('-date_paiement', '-date_echeance', '-id')
+        )
+
+        # 4. Dépenses du propriétaire
+        depenses_qs = (
+            Depense.objects
+            .filter(proprietaire_info__utilisateur=user)
+            .select_related('bien')
+            .order_by('-date_depense', '-id')
+        )
+
+        # Calcul des totaux
         total_depenses = outgoing_qs.aggregate(total=Sum('montant_total')).get('total') or 0
+        total_depenses += depenses_qs.aggregate(total=Sum('montant')).get('total') or 0
+        # Si locataire, ajouter ses paiements
+        total_depenses += paiements_locataire_qs.aggregate(total=Sum('montant')).get('total') or 0
+        
+        # Revenus = demandes acceptées + reversements perçus (pour proprio)
         total_revenus = incoming_qs.filter(statut=StatutDemandeEnum.ACCEPTEE).aggregate(total=Sum('montant_total')).get('total') or 0
+        total_revenus += paiements_proprio_qs.aggregate(total=Sum('montant_reverse')).get('total') or 0
 
         history = []
+        
+        # Ajouter les demandes sortantes (dépenses - privatisations)
         for item in outgoing_qs[:50]:
             history.append(
                 {
@@ -275,14 +316,15 @@ class CurrentUserFinanceView(APIView):
                     'bien_reference': getattr(item.bien, 'reference', None),
                     'type_demande': item.type_demande,
                     'statut': item.statut,
-                    'montant': item.montant_total,
+                    'montant': float(item.montant_total),
                     'date_debut': item.date_debut,
                     'date_fin': item.date_fin,
                     'date_creation': item.date_creation,
                 }
             )
 
-        for item in incoming_qs[:50]:
+        # Ajouter les demandes entrantes (revenus - privatisations acceptées)
+        for item in incoming_qs.filter(statut=StatutDemandeEnum.ACCEPTEE)[:50]:
             history.append(
                 {
                     'kind': 'REVENU',
@@ -291,24 +333,89 @@ class CurrentUserFinanceView(APIView):
                     'bien_reference': getattr(item.bien, 'reference', None),
                     'type_demande': item.type_demande,
                     'statut': item.statut,
-                    'montant': item.montant_total,
+                    'montant': float(item.montant_total),
                     'date_debut': item.date_debut,
                     'date_fin': item.date_fin,
                     'date_creation': item.date_creation,
                 }
             )
+        
+        # Ajouter les reversements de loyers perçus (pour propriétaire)
+        for paiement in paiements_proprio_qs[:50]:
+            history.append(
+                {
+                    'kind': 'REVENU',
+                    'demande_id': None,
+                    'bien_id': paiement.bail.bien_id,
+                    'bien_reference': getattr(paiement.bail.bien, 'reference', None),
+                    'type_demande': 'LOYER',
+                    'statut': paiement.statut,
+                    'montant': float(paiement.montant_reverse or 0),
+                    'date_debut': paiement.date_echeance,
+                    'date_fin': None,
+                    'date_creation': paiement.date_paiement,
+                    'details': f"Reversement - Ref: {paiement.reference}",
+                }
+            )
+        
+        # Ajouter les paiements effectués (pour locataire)
+        for paiement in paiements_locataire_qs[:50]:
+            history.append(
+                {
+                    'kind': 'DEPENSE',
+                    'demande_id': None,
+                    'bien_id': paiement.bail.bien_id,
+                    'bien_reference': getattr(paiement.bail.bien, 'reference', None),
+                    'type_demande': 'LOYER',
+                    'statut': paiement.statut,
+                    'montant': float(paiement.montant),
+                    'date_debut': paiement.date_echeance,
+                    'date_fin': None,
+                    'date_creation': paiement.date_paiement,
+                    'details': f"Paiement loyer - Ref: {paiement.reference}",
+                }
+            )
+        
+        # Ajouter les dépenses
+        for depense in depenses_qs[:50]:
+            history.append(
+                {
+                    'kind': 'DEPENSE',
+                    'demande_id': None,
+                    'bien_id': depense.bien_id if depense.bien_id else None,
+                    'bien_reference': getattr(depense.bien, 'reference', None) if depense.bien else None,
+                    'type_demande': 'DEPENSE',
+                    'statut': 'VALIDE',
+                    'montant': float(depense.montant),
+                    'date_debut': depense.date_depense,
+                    'date_fin': None,
+                    'date_creation': depense.date_depense,
+                    'details': depense.libelle,
+                }
+            )
 
-        history.sort(key=lambda entry: entry.get('date_creation') or '', reverse=True)
+        # Trier par date (plus récent en premier)
+        # Normaliser les dates en string pour éviter les erreurs de comparaison datetime vs date
+        def get_sort_key(entry):
+            date_val = entry.get('date_creation') or entry.get('date_debut')
+            if date_val:
+                # Convertir en string ISO pour trier correctement
+                if hasattr(date_val, 'isoformat'):
+                    return date_val.isoformat()
+                return str(date_val)
+            return ''
+        
+        history.sort(key=get_sort_key, reverse=True)
 
         return Response(
             {
                 'summary': {
                     'depenses_total': total_depenses,
                     'revenus_total': total_revenus,
-                    'nombre_depenses': outgoing_qs.count(),
-                    'nombre_revenus': incoming_qs.filter(statut=StatutDemandeEnum.ACCEPTEE).count(),
+                    'nombre_depenses': outgoing_qs.count() + depenses_qs.count() + paiements_locataire_qs.count(),
+                    'nombre_revenus': incoming_qs.filter(statut=StatutDemandeEnum.ACCEPTEE).count() + paiements_proprio_qs.count(),
                 },
-                'history': history[:100],
+                'history': history[:200],
             },
             status=status.HTTP_200_OK,
         )

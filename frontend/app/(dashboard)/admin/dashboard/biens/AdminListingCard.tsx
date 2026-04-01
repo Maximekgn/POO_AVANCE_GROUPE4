@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { AdminBien } from "../lib/adminApi";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AiFillStar } from "react-icons/ai";
+import { Star } from "lucide-react";
 
 interface AdminListingCardProps {
   data: AdminBien;
@@ -157,7 +157,7 @@ const AdminListingCard: React.FC<AdminListingCardProps> = ({
 
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-1 text-sm">
-              <AiFillStar className="text-neutral-900" size={14} />
+              <Star className="text-neutral-900 fill-yellow-400" size={14} />
               <span className="font-bold text-neutral-900">4,5</span>
             </div>
             {data.date_creation && (

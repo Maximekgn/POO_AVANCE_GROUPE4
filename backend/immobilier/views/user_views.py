@@ -472,7 +472,7 @@ class AdminUserDetailView(APIView):
             Utilisateur.objects.select_related('client_info__carte_identite', 'proprietaire_info__carte_identite'),
             pk=pk,
         )
-        serializer = AdminUserDetailsSerializer(user)
+        serializer = AdminUserDetailsSerializer(user, context={'request': request})
         payload = dict(serializer.data)
 
         biens_possedes_count = 0

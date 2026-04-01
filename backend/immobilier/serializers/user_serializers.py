@@ -66,6 +66,10 @@ class AdminUserDetailsSerializer(serializers.ModelSerializer):
     is_admin = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     nombre_biens = serializers.SerializerMethodField()
+    
+    # Champs de vérification d'identité
+    verification_identite = serializers.SerializerMethodField()
+    verification_propriete = serializers.SerializerMethodField()
 
     class Meta:
         model = Utilisateur
@@ -85,6 +89,11 @@ class AdminUserDetailsSerializer(serializers.ModelSerializer):
             'compte_verifie',
             'email_verifie',
             'documents_complets',
+            'verification_statut',
+            'verification_motif_refus',
+            'piece_identite_recto',
+            'piece_identite_verso',
+            'photo_avec_piece',
             'last_login',
             'date_joined',
             'date_creation',
@@ -92,6 +101,8 @@ class AdminUserDetailsSerializer(serializers.ModelSerializer):
             'client_info',
             'proprietaire_info',
             'nombre_biens',
+            'verification_identite',
+            'verification_propriete',
         ]
 
     def get_is_admin(self, obj: Utilisateur) -> bool:
@@ -105,6 +116,35 @@ class AdminUserDetailsSerializer(serializers.ModelSerializer):
         if not hasattr(obj, 'proprietaire_info') or obj.proprietaire_info is None:
             return 0
         return obj.proprietaire_info.biens.filter(is_active=True).count()
+    
+    def get_verification_identite(self, obj: Utilisateur) -> dict:
+        """Retourne les URLs des documents d'identité."""
+        request = self.context.get('request')
+        return {
+            'statut': obj.verification_statut,
+            'motif_refus': obj.verification_motif_refus,
+            'piece_identite_recto': request.build_absolute_uri(obj.piece_identite_recto.url) if obj.piece_identite_recto else None,
+            'piece_identite_verso': request.build_absolute_uri(obj.piece_identite_verso.url) if obj.piece_identite_verso else None,
+            'photo_avec_piece': request.build_absolute_uri(obj.photo_avec_piece.url) if obj.photo_avec_piece else None,
+        }
+    
+    def get_verification_propriete(self, obj: Utilisateur) -> dict:
+        """Retourne les URLs des documents de propriété."""
+        request = self.context.get('request')
+        proprietaire_info = getattr(obj, 'proprietaire_info', None)
+        if not proprietaire_info:
+            return {
+                'statut': None,
+                'motif_refus': None,
+                'titre_propriete': None,
+                'video_avec_titre': None,
+            }
+        return {
+            'statut': 'VERIFIE' if proprietaire_info.propriete_verifiee else ('EN_ATTENTE' if proprietaire_info.titre_propriete else 'NON_SOUMIS'),
+            'motif_refus': proprietaire_info.propriete_motif_refus,
+            'titre_propriete': request.build_absolute_uri(proprietaire_info.titre_propriete.url) if proprietaire_info.titre_propriete else None,
+            'video_avec_titre': request.build_absolute_uri(proprietaire_info.video_avec_titre.url) if proprietaire_info.video_avec_titre else None,
+        }
 
 
 class CurrentUserProfileSerializer(serializers.ModelSerializer):

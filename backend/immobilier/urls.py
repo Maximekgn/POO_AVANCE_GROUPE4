@@ -17,7 +17,6 @@ from immobilier.views import (
     VerifyOTPView,
     ResendOTPView,
     CategorieBienListCreateView,
-    CategorieBienDetailView,
     SousTypeBienListCreateView,
     SousTypeBienDetailView,
     BienListCreateView,
@@ -48,6 +47,9 @@ from immobilier.views import (
     LocataireListView,
     LocataireDetailView,
     LocataireHistoryView,
+    IdentityVerificationView,
+    PropertyVerificationView,
+    VerificationStatusView,
     LocataireOnboardingView,
     AdminFinanceStatsView,
     AdminPaiementListView,
@@ -210,6 +212,29 @@ urlpatterns = [
     #   → Renvoie un code OTP pour le login en cours
     #   → HTTP 200 | 400 | 401 | 429
     path('auth/resend-otp', ResendOTPView.as_view(), name='auth-resend-otp'),
+
+    # ── Vérification d'identité et de propriété ──────────────────────────────
+    #
+    
+    # POST /api/verification/identite
+    #   Auth: Bearer JWT
+    #   Body (multipart/form-data): { piece_identite_recto, piece_identite_verso, photo_avec_piece }
+    #   → Soumet les documents d'identité pour vérification
+    #   → HTTP 200 | 400 | 401
+    path('verification/identite', IdentityVerificationView.as_view(), name='verification-identite'),
+
+    # POST /api/verification/propriete
+    #   Auth: Bearer JWT
+    #   Body (multipart/form-data): { titre_propriete, video_avec_titre }
+    #   → Soumet les documents de propriété pour vérification
+    #   → HTTP 200 | 400 | 401
+    path('verification/propriete', PropertyVerificationView.as_view(), name='verification-propriete'),
+
+    # GET /api/verification/statut
+    #   Auth: Bearer JWT
+    #   → Retourne le statut de vérification (identité et propriété)
+    #   → HTTP 200 | 401
+    path('verification/statut', VerificationStatusView.as_view(), name='verification-statut'),
 
     # ── Catégories de biens (Sprint 2) ───────────────────────────────────────
     # GET/POST /api/categories

@@ -9,6 +9,7 @@ interface ButtonProps {
   outline?: boolean;
   small?: boolean;
   icon?: IconType;
+  secondary?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -18,6 +19,7 @@ const Button: React.FC<ButtonProps> = ({
   outline,
   small,
   icon: Icon,
+  secondary,
 }) => {
   return (
     <button
@@ -31,9 +33,7 @@ const Button: React.FC<ButtonProps> = ({
         hover:opacity-80
         transition
         w-full
-        ${outline ? "bg-white" : "bg-blue-500"}
-        ${outline ? "border-black" : "bg-blue-500"}
-        ${outline ? "text-black" : "text-white"}
+        ${secondary ? "bg-neutral-600 text-white border-neutral-700" : outline ? "bg-white border-black text-black" : "bg-blue-500 text-white"}
         ${small ? "py-1" : "py-3"}
         ${small ? "text-sm" : "text-md"}
         ${small ? "font-light" : "font-semibold"}

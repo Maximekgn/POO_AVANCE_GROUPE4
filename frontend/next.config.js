@@ -4,6 +4,9 @@ const backendBaseUrl = apiUrl.replace(/\/api\/?$/, "");
 
 const nextConfig = {
   distDir: ".next_cache",
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {

@@ -79,7 +79,10 @@ interface BailDetailClientProps {
   user: User;
 }
 
-export default function BailDetailClient({ bail, user }: BailDetailClientProps) {
+export default function BailDetailClient({
+  bail,
+  user,
+}: BailDetailClientProps) {
   const router = useRouter();
   const [signing, setSigning] = useState(false);
 
@@ -120,12 +123,14 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
           headers: {
             Authorization: `Bearer ${user.accessToken}`,
           },
-        }
+        },
       );
       toast.success("Bail signé avec succès !");
       router.refresh();
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || "Erreur lors de la signature.");
+      toast.error(
+        error?.response?.data?.detail || "Erreur lors de la signature.",
+      );
     } finally {
       setSigning(false);
     }
@@ -140,11 +145,14 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
           headers: {
             Authorization: `Bearer ${user.accessToken}`,
           },
-        }
+        },
       );
       toast.success("Email de relance envoyé avec succès !");
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || "Erreur lors de l'envoi de la relance.");
+      toast.error(
+        error?.response?.data?.detail ||
+          "Erreur lors de l'envoi de la relance.",
+      );
     }
   };
 
@@ -164,11 +172,16 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
   };
 
   const canSign = bail.statut === "EN_ATTENTE_SIGNATURE";
-  const isProprietaire = user.id === bail.proprietaire_info?.utilisateur.id.toString();
-  const isLocataire = user.id === bail.client_info?.utilisateur.id.toString();
+  const isProprietaire =
+    user.id === bail.proprietaire_info?.utilisateur?.id?.toString();
+  const isLocataire = user.id === bail.client_info?.utilisateur?.id?.toString();
 
-  const signatureProprietaire = bail.signatures?.find((s) => s.type_signataire === "PROPRIETAIRE");
-  const signatureLocataire = bail.signatures?.find((s) => s.type_signataire === "LOCATAIRE");
+  const signatureProprietaire = bail.signatures?.find(
+    (s) => s.type_signataire === "PROPRIETAIRE",
+  );
+  const signatureLocataire = bail.signatures?.find(
+    (s) => s.type_signataire === "LOCATAIRE",
+  );
 
   return (
     <Container>
@@ -188,7 +201,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
             }`}
           >
             {bail.statut === "ACTIF" && <CheckCircle className="w-4 h-4" />}
-            {bail.statut === "EN_ATTENTE_SIGNATURE" && <Clock className="w-4 h-4" />}
+            {bail.statut === "EN_ATTENTE_SIGNATURE" && (
+              <Clock className="w-4 h-4" />
+            )}
             {statutLabels[bail.statut]}
           </span>
         </div>
@@ -206,7 +221,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-neutral-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-neutral-500">Adresse</p>
+                    <p className="text-sm font-medium text-neutral-500">
+                      Adresse
+                    </p>
                     <p className="text-neutral-900">{bail.bien.adresse}</p>
                     <p className="text-neutral-600">{bail.bien.ville}</p>
                   </div>
@@ -214,7 +231,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-neutral-400" />
                   <div>
-                    <p className="text-sm font-medium text-neutral-500">Référence</p>
+                    <p className="text-sm font-medium text-neutral-500">
+                      Référence
+                    </p>
                     <p className="text-neutral-900">{bail.bien.reference}</p>
                   </div>
                 </div>
@@ -229,13 +248,17 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl bg-neutral-50 p-4">
-                  <p className="text-sm font-medium text-neutral-500">Date d'entrée</p>
+                  <p className="text-sm font-medium text-neutral-500">
+                    Date d'entrée
+                  </p>
                   <p className="mt-1 text-lg font-semibold text-neutral-900">
                     {formatDate(bail.date_entree)}
                   </p>
                 </div>
                 <div className="rounded-xl bg-neutral-50 p-4">
-                  <p className="text-sm font-medium text-neutral-500">Date de sortie</p>
+                  <p className="text-sm font-medium text-neutral-500">
+                    Date de sortie
+                  </p>
                   <p className="mt-1 text-lg font-semibold text-neutral-900">
                     {formatDate(bail.date_sortie)}
                   </p>
@@ -251,7 +274,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-neutral-100">
-                  <span className="text-neutral-600">Loyer mensuel (HC + Charges)</span>
+                  <span className="text-neutral-600">
+                    Loyer mensuel (HC + Charges)
+                  </span>
                   <span className="font-semibold text-neutral-900">
                     {bail.loyer_actuel?.toLocaleString("fr-FR")} FCFA
                   </span>
@@ -274,11 +299,13 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      signatureProprietaire?.signe_le
-                        ? "bg-green-100 text-green-600"
-                        : "bg-neutral-200 text-neutral-500"
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        signatureProprietaire?.signe_le
+                          ? "bg-green-100 text-green-600"
+                          : "bg-neutral-200 text-neutral-500"
+                      }`}
+                    >
                       {signatureProprietaire?.signe_le ? (
                         <CheckCircle className="w-5 h-5" />
                       ) : (
@@ -286,7 +313,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-neutral-900">Propriétaire</p>
+                      <p className="font-medium text-neutral-900">
+                        Propriétaire
+                      </p>
                       <p className="text-sm text-neutral-500">
                         {signatureProprietaire?.signe_le
                           ? `Signé le ${formatDate(signatureProprietaire.signe_le)}`
@@ -298,11 +327,13 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
 
                 <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      signatureLocataire?.signe_le
-                        ? "bg-green-100 text-green-600"
-                        : "bg-neutral-200 text-neutral-500"
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        signatureLocataire?.signe_le
+                          ? "bg-green-100 text-green-600"
+                          : "bg-neutral-200 text-neutral-500"
+                      }`}
+                    >
                       {signatureLocataire?.signe_le ? (
                         <CheckCircle className="w-5 h-5" />
                       ) : (
@@ -334,7 +365,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
               <div className="space-y-4">
                 {bail.proprietaire_info?.utilisateur && (
                   <div>
-                    <p className="text-xs font-medium text-neutral-500 uppercase">Propriétaire</p>
+                    <p className="text-xs font-medium text-neutral-500 uppercase">
+                      Propriétaire
+                    </p>
                     <p className="font-medium text-neutral-900">
                       {bail.proprietaire_info.utilisateur.first_name}{" "}
                       {bail.proprietaire_info.utilisateur.last_name}
@@ -346,7 +379,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
                 )}
                 {bail.client_info?.utilisateur && (
                   <div>
-                    <p className="text-xs font-medium text-neutral-500 uppercase">Locataire</p>
+                    <p className="text-xs font-medium text-neutral-500 uppercase">
+                      Locataire
+                    </p>
                     <p className="font-medium text-neutral-900">
                       {bail.client_info.utilisateur.first_name}{" "}
                       {bail.client_info.utilisateur.last_name}
@@ -361,7 +396,9 @@ export default function BailDetailClient({ bail, user }: BailDetailClientProps) 
 
             {/* Actions */}
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-neutral-900 mb-4">Actions</h3>
+              <h3 className="text-lg font-bold text-neutral-900 mb-4">
+                Actions
+              </h3>
               <div className="space-y-3">
                 {canSign && (
                   <Button

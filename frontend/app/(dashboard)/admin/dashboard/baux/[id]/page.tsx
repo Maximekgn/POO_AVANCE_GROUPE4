@@ -326,7 +326,8 @@ export default async function AdminBailDetailPage(props: {
             )}
           </>
         )}
-        {(bail.statut === "EN_COURS" || bail.signatures?.length > 0) &&
+        {(bail.statut === "EN_COURS" ||
+          (bail.signatures && bail.signatures.length > 0)) &&
           currentUser?.accessToken && (
             <EnvoiBailButton
               bailId={bail.id}

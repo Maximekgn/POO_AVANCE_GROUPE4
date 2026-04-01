@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  FiAlertCircle,
-  FiCheckCircle,
-  FiClock,
-  FiDollarSign,
-  FiSend,
-  FiTrendingUp,
-} from "react-icons/fi";
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Send,
+  TrendingUp,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -88,22 +88,21 @@ export default function FinancesDashboardClient({
 
   const handleReversion = async () => {
     if (!reversionPayment) return;
-    if (!reversionData.preuve) {
-      toast.error("Veuillez saisir une référence de preuve.");
-      return;
-    }
+    // La référence est générée automatiquement par le backend
+    // On peut envoyer une preuve optionnelle ou laisser vide
 
     setSubmitting(true);
     try {
       const token = localStorage.getItem("accessToken") || "";
       const res = await reverserPaiement(reversionPayment.id, token, {
         mode_reversement: reversionData.mode,
-        preuve_reversement: reversionData.preuve,
+        preuve_reversement: reversionData.preuve || "", // Optionnel, le backend générera une ref auto
       });
 
       if (res.ok) {
         toast.success("Fonds reversés avec succès !");
         setReversionPayment(null);
+        setReversionData({ mode: "Virement Bancaire", preuve: "" });
         router.refresh();
       } else {
         toast.error(res.message || "Erreur.");
@@ -194,7 +193,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-neutral-500">Loyers attendus</p>
-            <FiDollarSign className="text-black" />
+            <DollarSign className="text-black" size={20} />
           </div>
           <p className="mt-3 text-2xl font-bold text-neutral-800">
             {formatFcfa(stats.loyers_attendus)}
@@ -204,7 +203,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-emerald-700">Loyers payés</p>
-            <FiCheckCircle className="text-emerald-600" />
+            <CheckCircle className="text-emerald-600" size={20} />
           </div>
           <p className="mt-3 text-2xl font-bold text-emerald-700">
             {formatFcfa(stats.loyers_payes)}
@@ -214,7 +213,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-amber-700">En attente</p>
-            <FiClock className="text-amber-600" />
+            <Clock className="text-amber-600" size={20} />
           </div>
           <p className="mt-3 text-2xl font-bold text-amber-700">
             {formatFcfa(stats.en_attente)}
@@ -224,7 +223,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-rose-700">Impayés</p>
-            <FiAlertCircle className="text-rose-600" />
+            <AlertCircle className="text-rose-600" size={20} />
           </div>
           <p className="mt-3 text-2xl font-bold text-rose-700">
             {formatFcfa(stats.impayes)}
@@ -234,7 +233,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-indigo-700">Dépenses</p>
-            <FiDollarSign className="text-indigo-600" />
+            <DollarSign className="text-indigo-600" size={20} />
           </div>
           <p className="mt-3 text-2xl font-bold text-indigo-700">
             {formatFcfa(stats.total_depenses)}
@@ -244,7 +243,7 @@ export default function FinancesDashboardClient({
         <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-purple-700">Commissions (5%)</p>
-            <FiTrendingUp className="text-purple-600" />
+            <TrendingUp className="text-purple-600" size={20} />
           </div>
           <p className="mt-3 text-2xl font-bold text-purple-700">
             {formatFcfa(stats.commissions_plateforme || 0)}
@@ -366,7 +365,7 @@ export default function FinancesDashboardClient({
                             onClick={() => setReversionPayment(payment)}
                             className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
                           >
-                            <FiSend size={12} />
+                            <Send size={12} />
                             Reverser au Proprio
                           </button>
                         ) : null}
@@ -490,29 +489,25 @@ export default function FinancesDashboardClient({
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-bold uppercase text-neutral-400">
-                  Référence de la preuve
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Ref Virement, Transaction ID..."
-                  value={reversionData.preuve}
-                  onChange={(e) =>
-                    setReversionData({
-                      ...reversionData,
-                      preuve: e.target.value,
-                    })
-                  }
-                  className="mt-1 w-full rounded-xl border border-neutral-200 p-3 text-sm outline-none focus:border-indigo-500"
-                />
+              <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3">
+                <p className="text-xs text-indigo-700">
+                  <strong>Référence générée automatiquement :</strong>{" "}
+                  <code className="bg-white px-2 py-1 rounded">
+                    REV-
+                    {new Date().toISOString().slice(0, 10).replace(/-/g, "")}-
+                    {String(reversionPayment.id).padStart(4, "0")}
+                  </code>
+                </p>
               </div>
             </div>
 
             <div className="mt-8 flex gap-3">
               <button
                 disabled={submitting}
-                onClick={() => setReversionPayment(null)}
+                onClick={() => {
+                  setReversionPayment(null);
+                  setReversionData({ mode: "Virement Bancaire", preuve: "" });
+                }}
                 className="flex-1 rounded-xl border border-neutral-200 py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50"
               >
                 Annuler
@@ -522,7 +517,7 @@ export default function FinancesDashboardClient({
                 onClick={handleReversion}
                 className="flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
               >
-                {submitting ? "Traitement..." : "Confirmer"}
+                {submitting ? "Traitement..." : "✅ Confirmer le reversement"}
               </button>
             </div>
           </div>

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import {
-  FiHome,
-  FiUsers,
-  FiFileText,
-  FiTrendingUp,
-  FiClock,
-  FiActivity,
-} from "react-icons/fi";
+  Home,
+  Users,
+  FileText,
+  TrendingUp,
+  Clock,
+  Activity,
+} from "lucide-react";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 import Heading from "@/components/Heading";
@@ -37,35 +37,35 @@ export default async function AdminDashboardHomePage() {
     {
       label: "Total Biens",
       value: stats.kpis.total_biens,
-      icon: FiHome,
+      icon: Home,
       color: "text-blue-500",
       bg: "bg-blue-50",
     },
     {
       label: "Utilisateurs",
       value: stats.kpis.total_users,
-      icon: FiUsers,
+      icon: Users,
       color: "text-purple-600",
       bg: "bg-purple-50",
     },
     {
       label: "Contrats Actifs",
       value: stats.kpis.total_baux,
-      icon: FiFileText,
+      icon: FileText,
       color: "text-green-600",
       bg: "bg-green-50",
     },
     {
       label: "Dossiers en attente",
       value: stats.kpis.pending_demands,
-      icon: FiClock,
+      icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-50",
     },
     {
       label: "Revenus Totaux",
       value: `${stats.kpis.total_revenue.toLocaleString()} FCFA`,
-      icon: FiTrendingUp,
+      icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
     },
@@ -121,7 +121,7 @@ export default async function AdminDashboardHomePage() {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <FiTrendingUp className="text-emerald-600" />
+                <TrendingUp className="text-emerald-600" size={20} />
                 Encaissements (Loyers payés)
               </h2>
               <p className="text-xs text-neutral-500 mt-1">
@@ -138,7 +138,8 @@ export default async function AdminDashboardHomePage() {
         <article className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
-              <FiActivity className="text-blue-500" /> Répartition par catégorie
+              <Activity className="text-blue-500" size={20} /> Répartition par
+              catégorie
             </h2>
           </div>
           <CategoryPieChart data={stats.category_stats} />
