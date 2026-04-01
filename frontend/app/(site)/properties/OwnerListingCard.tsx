@@ -71,14 +71,22 @@ const OwnerListingCard: React.FC<OwnerListingCardProps> = ({
   const router = useRouter();
   const { getByValue } = useCountries();
 
-  const location = data.locationValue ? getByValue(data.locationValue) : undefined;
-  
-  const safeImageSrc = useMemo(() => getSafeImageSrc(data.imageSrc), [data.imageSrc]);
-  const shouldDisableOptimization = useMemo(() => isLocalDevImage(safeImageSrc), [safeImageSrc]);
+  const location = data.locationValue
+    ? getByValue(data.locationValue)
+    : undefined;
+
+  const safeImageSrc = useMemo(
+    () => getSafeImageSrc(data.imageSrc),
+    [data.imageSrc],
+  );
+  const shouldDisableOptimization = useMemo(
+    () => isLocalDevImage(safeImageSrc),
+    [safeImageSrc],
+  );
 
   return (
     <div className="col-span-1 flex flex-col gap-2 w-full group">
-      <div 
+      <div
         className="aspect-square w-full relative overflow-hidden rounded-3xl cursor-pointer"
         onClick={() => router.push(`/listings/${data.id}`)}
       >
@@ -98,7 +106,7 @@ const OwnerListingCard: React.FC<OwnerListingCardProps> = ({
 
       <div className="px-1 mt-1">
         <div className="font-bold text-lg text-neutral-900 line-clamp-1">
-            {data.title}
+          {data.title}
         </div>
         <div className="font-medium text-neutral-500 text-sm">
           {location?.region && location?.label
@@ -116,28 +124,37 @@ const OwnerListingCard: React.FC<OwnerListingCardProps> = ({
           Modifier le bien
         </button>
         <div className="grid grid-cols-2 gap-2">
-            <button
-                disabled={disabled}
-                onClick={() => onAction?.(data.id, "TENANTS")}
-                className="w-full bg-blue-50 text-blue-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-blue-100 disabled:opacity-50 line-clamp-1 px-1"
-            >
-                Locataires
-            </button>
-            <button
-                disabled={disabled}
-                onClick={() => onAction?.(data.id, "FINANCE")}
-                className="w-full bg-emerald-50 text-emerald-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-emerald-100 disabled:opacity-50 line-clamp-1 px-1"
-            >
-                Finances
-            </button>
+          <button
+            disabled={disabled}
+            onClick={() => onAction?.(data.id, "TENANTS")}
+            className="w-full bg-blue-50 text-blue-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-blue-100 disabled:opacity-50 line-clamp-1 px-1"
+          >
+            Locataires
+          </button>
+          <button
+            disabled={disabled}
+            onClick={() => onAction?.(data.id, "FINANCE")}
+            className="w-full bg-emerald-50 text-emerald-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-emerald-100 disabled:opacity-50 line-clamp-1 px-1"
+          >
+            Finances
+          </button>
         </div>
-        <button
-          disabled={disabled}
-          onClick={() => onAction?.(data.id, "DELETE")}
-          className="w-full bg-white border border-rose-200 text-rose-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-rose-50 disabled:opacity-50"
-        >
-          Supprimer
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            disabled={disabled}
+            onClick={() => onAction?.(data.id, "REVIEWS")}
+            className="w-full bg-purple-50 text-purple-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-purple-100 disabled:opacity-50 line-clamp-1 px-1"
+          >
+            ⭐ Avis
+          </button>
+          <button
+            disabled={disabled}
+            onClick={() => onAction?.(data.id, "DELETE")}
+            className="w-full bg-white border border-rose-200 text-rose-600 font-semibold py-2 rounded-xl text-xs transition hover:bg-rose-50 disabled:opacity-50"
+          >
+            Supprimer
+          </button>
+        </div>
       </div>
     </div>
   );

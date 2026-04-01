@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import getCurrentUser from "@/app/(site)/actions/getCurrentUser";
 import Heading from "@/components/Heading";
+import BienActionButtons from "@/components/BienActionButtons";
 
 import { getAdminBienById } from "../../lib/adminApi";
 import AdminBienSidebar from "./AdminBienSidebar";
@@ -358,6 +359,19 @@ export default async function AdminBienDetailPage(props: PageProps) {
                     </Link>
                   )}
                 </div>
+
+                {/* Boutons d'action (Dépense / Incident) */}
+                {currentUser?.accessToken && (
+                  <BienActionButtons
+                    bienId={bien.id}
+                    bienReference={bien.reference}
+                    isProprio={false}
+                    isAdmin={true}
+                    isLocataire={false}
+                    token={currentUser.accessToken}
+                    apiUrl={API_URL}
+                  />
+                )}
               </div>
 
               <hr className="my-6" />

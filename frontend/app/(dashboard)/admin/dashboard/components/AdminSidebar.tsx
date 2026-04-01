@@ -13,6 +13,7 @@ import {
   Layers,
   FileText,
   FileCheck,
+  Wrench,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
@@ -27,6 +28,7 @@ const links = [
     icon: FileText,
   },
   { href: "/admin/dashboard/baux", label: "Baux", icon: FileCheck },
+  { href: "/admin/dashboard/incidents", label: "Incidents", icon: Wrench },
   { href: "/admin/dashboard/utilisateurs", label: "Utilisateurs", icon: Users },
   { href: "/admin/dashboard/categories", label: "Catégories", icon: Layers },
   {

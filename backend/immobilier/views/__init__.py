@@ -71,6 +71,18 @@ from .lease_views import (
 	BailEnvoyerBailView,
 )
 from .dashboard_views import AdminDashboardStatsView
+from .verification_views import (
+    IdentityVerificationView,
+    PropertyVerificationView,
+    VerificationStatusView,
+)
+from .incident_review_views import (
+    IncidentViewSet,
+    IncidentPhotoViewSet,
+    ReviewViewSet,
+    ReviewSignalementViewSet,
+    StatsAvisView,
+)
 
 __all__ = [
 	'RegisterView',
@@ -138,4 +150,12 @@ __all__ = [
 	'BailRelancerSignatureView',
 	'BailEnvoyerBailView',
 	'AdminDashboardStatsView',
+	'IdentityVerificationView',
+	'PropertyVerificationView',
+	'VerificationStatusView',
+	'IncidentViewSet',
+	'IncidentPhotoViewSet',
+	'ReviewViewSet',
+	'ReviewSignalementViewSet',
+	'StatsAvisView',
 ]

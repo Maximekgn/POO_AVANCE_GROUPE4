@@ -4,7 +4,7 @@ URLs de l'application immobilier.
 Préfixe global : /api/  (défini dans core/urls.py)
 """
 
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -17,6 +17,7 @@ from immobilier.views import (
     VerifyOTPView,
     ResendOTPView,
     CategorieBienListCreateView,
+    CategorieBienDetailView,
     SousTypeBienListCreateView,
     SousTypeBienDetailView,
     BienListCreateView,
@@ -78,6 +79,14 @@ from immobilier.views import (
     BailRelancerSignatureView,
     BailEnvoyerBailView,
     AdminDashboardStatsView,
+    IdentityVerificationView,
+    PropertyVerificationView,
+    VerificationStatusView,
+    IncidentViewSet,
+    IncidentPhotoViewSet,
+    ReviewViewSet,
+    ReviewSignalementViewSet,
+    StatsAvisView,
 )
 
 from immobilier.views.billing_views import (
@@ -339,4 +348,27 @@ urlpatterns = [
     path('demandes-actions/<int:pk>/facture', DemandeActionFactureView.as_view(), name='demandes-actions-facture'),
     path('demandes-actions/<int:pk>/payment-link', DemandeActionPaiementLinkView.as_view(), name='demandes-actions-payment-link'),
     path('paiement-public/<int:pk>/<str:token>', DemandeActionPaiementPublicView.as_view(), name='demandes-actions-paiement-public'),
+
+    # ── Incidents & Maintenance ────────────────────────────────────────────
+    path('incidents/', include([
+        path('', IncidentViewSet.as_view({'get': 'list', 'post': 'create'}), name='incidents-list'),
+        path('<int:pk>/', IncidentViewSet.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'}), name='incidents-detail'),
+        path('<int:pk>/assigner/', IncidentViewSet.as_view({'post': 'assigner'}), name='incidents-assigner'),
+        path('<int:pk>/resoudre/', IncidentViewSet.as_view({'post': 'resoudre'}), name='incidents-resoudre'),
+        path('<int:pk>/messages/', IncidentViewSet.as_view({'get': 'messages', 'post': 'ajouter_message'}), name='incidents-messages'),
+        path('<int:incident_pk>/photos/', IncidentPhotoViewSet.as_view({'get': 'list', 'post': 'create'}), name='incident-photos-list'),
+        path('<int:incident_pk>/photos/<int:pk>/', IncidentPhotoViewSet.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'}), name='incident-photos-detail'),
+    ])),
+
+    # ── Avis & Notations ───────────────────────────────────────────────────
+    path('reviews/', include([
+        path('', ReviewViewSet.as_view({'get': 'list', 'post': 'create'}), name='reviews-list'),
+        path('<int:pk>/', ReviewViewSet.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'}), name='reviews-detail'),
+        path('<int:pk>/repondre/', ReviewViewSet.as_view({'post': 'repondre'}), name='reviews-repondre'),
+        path('<int:pk>/signaler/', ReviewViewSet.as_view({'post': 'signaler'}), name='reviews-signaler'),
+        path('par-cible/', ReviewViewSet.as_view({'get': 'par_cible'}), name='reviews-par-cible'),
+        path('signalements/', ReviewSignalementViewSet.as_view({'get': 'list'}), name='reviews-signalements-list'),
+        path('signalements/<int:pk>/traiter/', ReviewSignalementViewSet.as_view({'post': 'traiter'}), name='reviews-signalements-traiter'),
+        path('stats/', StatsAvisView.as_view(), name='reviews-stats'),
+    ])),
 ]

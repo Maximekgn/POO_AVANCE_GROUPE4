@@ -18,6 +18,7 @@ from immobilier.models import (
 )
 from immobilier.models.location import DemandeAction, Dossier, Bail, SignatureBail
 from immobilier.models.comptabilite import Paiement, Depense
+from immobilier.models.incidents_reviews import Incident, IncidentMessage, Review
 from immobilier.models.enums import (
     StatutBienEnum,
     StatutBailEnum,
@@ -481,6 +482,141 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("  ✓ 2 signatures créées"))
 
+        # ==================== INCIDENTS ====================
+        self.stdout.write(self.style.SUCCESS("\n🔧 Création des incidents..."))
+        
+        Incident.objects.create(
+            bien=created_biennes[0],
+            locataire=created_clients[0][0],
+            proprietaire=proprio,
+            titre="Fuite d'eau dans la cuisine",
+            description="L'eau coule sous l'évier depuis ce matin. Urgent !",
+            categorie="EAU",
+            urgence="ELEVEE",
+            statut="EN_COURS",
+            cout_estime=Decimal("50000.00"),
+        )
+        
+        Incident.objects.create(
+            bien=created_biennes[1],
+            locataire=created_clients[1][0],
+            proprietaire=proprio,
+            titre="Prise électrique défectueuse",
+            description="Une prise ne fonctionne plus dans le salon, risque de court-circuit.",
+            categorie="ELECTRICITE",
+            urgence="MOYENNE",
+            statut="OUVERT",
+            cout_estime=Decimal("25000.00"),
+        )
+        
+        incident_resolu = Incident.objects.create(
+            bien=created_biennes[2],
+            locataire=client_info.utilisateur,
+            proprietaire=proprio,
+            titre="Porte fenêtre mal fermée",
+            description="La porte fenêtre de la chambre ferme mal.",
+            categorie="PORTES_FENETRES",
+            urgence="FAIBLE",
+            statut="RESOLU",
+            resolution_notes="Joint remplacé, porte réglée.",
+            date_resolution=now - timedelta(days=5),
+            cout_reel=Decimal("15000.00"),
+            pris_en_charge="PROPRIETAIRE",
+        )
+        
+        IncidentMessage.objects.create(
+            incident=incident_resolu,
+            auteur=proprio,
+            message="J'envoie un prestataire demain."
+        )
+        IncidentMessage.objects.create(
+            incident=incident_resolu,
+            auteur=client_info.utilisateur,
+            message="Merci, c'est résolu !"
+        )
+
+        self.stdout.write(self.style.SUCCESS("  ✓ 3 incidents créés"))
+
+        # ==================== AVIS ====================
+        self.stdout.write(self.style.SUCCESS("\n⭐ Création des avis..."))
+        
+        # Supprimer les anciens avis
+        Review.objects.all().delete()
+        
+        # Avis pour BIEN-001 (Studio Lomé) - bail1
+        Review.objects.create(
+            bail=bail1,
+            auteur=created_clients[0][0],
+            cible_type="LOCATAIRE_BIEN",
+            cible_id=created_biennes[0].id,
+            note_globale=5,
+            note_proprete=5,
+            note_exactitude=5,
+            note_communication=5,
+            note_emplacement=5,
+            note_enregistrement=5,
+            commentaire="Studio parfait pour un séjour court ! Très propre et bien meublé. Le propriétaire est très réactif. Je recommande vivement !",
+            points_positifs="Propreté irréprochable, excellente communication, bien situé",
+            points_negatifs="",
+            est_visible=True,
+        )
+        
+        # Avis pour BIEN-002 (T3 Lomé) - bail2
+        Review.objects.create(
+            bail=bail2,
+            auteur=created_clients[1][0],
+            cible_type="LOCATAIRE_BIEN",
+            cible_id=created_biennes[1].id,
+            note_globale=4,
+            note_proprete=4,
+            note_exactitude=4,
+            note_communication=5,
+            note_emplacement=4,
+            note_enregistrement=4,
+            commentaire="Appartement spacieux et lumineux. Quelques petits travaux à prévoir mais dans l'ensemble très satisfait.",
+            points_positifs="Grand espace, bon rapport qualité-prix, propriétaire à l'écoute",
+            points_negatifs="Quelques réparations nécessaires",
+            est_visible=True,
+        )
+        
+        # Avis pour BIEN-003 (Villa Kpalimé) - bail3
+        Review.objects.create(
+            bail=bail3,
+            auteur=client_info.utilisateur,
+            cible_type="LOCATAIRE_BIEN",
+            cible_id=created_biennes[2].id,
+            note_globale=5,
+            note_proprete=5,
+            note_exactitude=5,
+            note_communication=5,
+            note_emplacement=5,
+            note_enregistrement=5,
+            commentaire="Villa magnifique dans un cadre paisible ! Parfait pour une famille. Le jardin est un vrai plus. Séjour inoubliable !",
+            points_positifs="Cadre exceptionnel, villa impeccable, jardin magnifique",
+            points_negatifs="Un peu loin du centre-ville",
+            est_visible=True,
+        )
+        
+        # Avis pour BIEN-005 (T3 Atakpamé) - bail5
+        Review.objects.create(
+            bail=bail5,
+            auteur=created_clients[0][0],
+            cible_type="LOCATAIRE_BIEN",
+            cible_id=created_biennes[4].id,
+            note_globale=3,
+            note_proprete=3,
+            note_exactitude=3,
+            note_communication=4,
+            note_emplacement=3,
+            note_enregistrement=3,
+            commentaire="Séjour correct. L'appartement a besoin d'un bon nettoyage et quelques équipements sont vétustes.",
+            points_positifs="Propriétaire réactif, quartier calme",
+            points_negatifs="Propreté à améliorer, équipements vieillissants",
+            est_visible=True,
+        )
+
+        self.stdout.write(self.style.SUCCESS("  ✓ 4 avis créés"))
+
         # ==================== PHOTOS ====================
         self.stdout.write(self.style.SUCCESS("\n📷 Ajout des photos..."))
         
@@ -517,8 +653,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("   • 1 impayé (en retard de 10 jours)"))
         self.stdout.write(self.style.SUCCESS("   • 1 échéance aujourd'hui"))
         self.stdout.write(self.style.SUCCESS("   • 2 à payer dans 3-20 jours"))
-        
+
         self.stdout.write(self.style.SUCCESS(f"\n💸 DÉPENSES: {len(depenses_data)} créées"))
         self.stdout.write(self.style.SUCCESS(f"📩 DEMANDES: 3 créées"))
         self.stdout.write(self.style.SUCCESS(f"📁 DOSSIERS: 2 créés"))
+        self.stdout.write(self.style.SUCCESS(f"🔧 INCIDENTS: 3 créés"))
+        self.stdout.write(self.style.SUCCESS(f"⭐ AVIS: 5 créés"))
         self.stdout.write(self.style.SUCCESS("="*60 + "\n"))

@@ -6,6 +6,7 @@ import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import BackButton from "@/components/BackButton";
 import Button from "@/components/Button";
+import BienActionButtons from "@/components/BienActionButtons";
 import {
   FileText,
   Home,
@@ -422,6 +423,19 @@ export default function BailDetailClient({
                   />
                 )}
               </div>
+
+              {/* Bouton Signaler un incident pour le locataire */}
+              {isLocataire && user.accessToken && (
+                <BienActionButtons
+                  bienId={bail.bien.id}
+                  bienReference={bail.bien.reference}
+                  isProprio={false}
+                  isAdmin={false}
+                  isLocataire={true}
+                  token={user.accessToken}
+                  apiUrl={API_URL}
+                />
+              )}
             </div>
           </div>
         </div>
